@@ -1,0 +1,62 @@
+package br.com.armange.commons.thread;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.function.BiConsumer;
+
+/**
+ * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
+ * Consider seeing <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
+ * @author Diego Armange Costa
+ * @since 2019-11-26 V1.0.0 (JDK 1.8)
+ * @see java.util.concurrent.ScheduledThreadPoolExecutor
+ * @see #afterExecute(Runnable, Throwable)
+ * @see #addAfterExecuteConsumer(BiConsumer)
+ */
+public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor {
+    private List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
+    
+    /**
+     * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int)
+     */
+    public ScheduledCaughtExecutorService(final int corePoolSize) {
+        super(corePoolSize);
+    }
+    
+    /**
+     * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)
+     */
+    public ScheduledCaughtExecutorService(final int corePoolSize, final ThreadFactory threadFactory) {
+        super(corePoolSize, threadFactory);
+    }
+
+    /**
+     * Method invoked upon completion of execution of the given Runnable.
+     * This method is invoked by the thread that executed the task. If
+     * non-null, the Throwable is the uncaught {@link java.lang.RuntimeException}
+     * or {@link java.lang.Error} that caused execution to terminate abruptly.
+     * @param runnable the runnable that has completed
+     * @param throwable the exception that caused termination, or null if execution completed normally
+     */
+    @Override
+    public void afterExecute(final Runnable runnable, final Throwable throwable) {
+        super.afterExecute(runnable, throwable);
+        afterExecuteConsumers.forEach(consumer -> consumer.accept(runnable, throwable));
+    }
+
+    /**
+     * @return the consumers list that will be performed after thread completed normally.
+     */
+    public List<BiConsumer<Runnable, Throwable>> getAfterExecuteConsumers() {
+        return afterExecuteConsumers;
+    }
+
+    /**
+     * @param afterExecuteBiConsumer the consumer that will be performed after thread has completed normally.
+     */
+    public void addAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteBiConsumer) {
+        this.afterExecuteConsumers.add(afterExecuteBiConsumer);
+    }
+}
