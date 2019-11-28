@@ -15,26 +15,18 @@ import java.util.function.Consumer;
 /**
  * Useful structure for thread creation in the following scenarios:
  * <ul>
- * <li><em>Timeout</em></li>
- * <p>
- * The thread will be active only until the timeout be fired.
- * </p>
- * <li><em>Delay</em></li>
- * <p>
- * The thread will be active only after the time delay be completed.
- * </p>
- * <li><em>Interval</em></li>
- * <p>
- * The thread will be repeated after the time interval be completed.
- * </p>
- * <li><em>Exception handling</em></li>
- * <p>
- * Handles of uncaught exceptions can be thrown and handled within threads.
- * </p>
+ * <li><em><b>Timeout</b></em><br>
+ * <p>The thread will be active only until the timeout be fired.</p></li>
+ * <li><em><b>Delay</b></em><br>
+ * <p>The thread will be active only after the time delay be completed.</p></li>
+ * <li><em><b>Interval</b></em><br>
+ * <p>The thread will be repeated after the time interval be completed.</p></li>
+ * <li><em><b>Exception handling</b></em><br>
+ * <p>Handles of uncaught exceptions can be thrown and handled within threads.</p></li>
  * </ul>
  * <b>Note:</b><br>
  * <em>The thread will wait a minimum delay
- * ({@link br.com.armange.commons.thread.ThreadBuilder.MINIMAL_REQUIRED_DELAY}) if and only if a
+ * ({@link br.com.armange.commons.thread.ThreadBuilder#MINIMAL_REQUIRED_DELAY}) if and only if a
  * ({@link br.com.armange.commons.thread.ThreadBuilder#setAfterExecuteConsumer(BiConsumer)}) 
  * or a ({@link br.com.armange.commons.thread.ThreadBuilder#setUncaughtExceptionConsumer(Consumer)}) 
  * is present.</em>
