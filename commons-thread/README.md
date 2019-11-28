@@ -10,3 +10,5 @@ The first version contains a framework that simplifies segmentation for some spe
 - Thread loop.
 - Exception handling.
 - The combination of these factors together.
+
+###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/)
