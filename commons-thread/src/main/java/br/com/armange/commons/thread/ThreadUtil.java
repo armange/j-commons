@@ -13,7 +13,7 @@ public class ThreadUtil {
     private ThreadUtil() {}
     
     /**
-     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@Link java.lang.RuntimeException.RuntimeException(Throwable)} 
+     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@link java.lang.RuntimeException#RuntimeException(Throwable)} 
      * if any exception is thrown.
      * @param millis the time in milliseconds to sleep the current thread.
      * @see java.lang.Thread#sleep(long)
@@ -29,9 +29,9 @@ public class ThreadUtil {
     /**
      * @param relativePath the resource relative path.
      * @return The input stream found or null if not found.
-     * @see java.lang.ClassLoader.getResourceAsStream(String)
-     * @see java.lang.Thread.getContextClassLoader()
-     * @see java.lang.Thread.currentThread()
+     * @see java.lang.ClassLoader#getResourceAsStream(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
      */
     public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(relativePath);
@@ -40,9 +40,9 @@ public class ThreadUtil {
     /**
      * @param relativePath the resource relative path.
      * @return The URL found or null if not found.
-     * @see java.lang.ClassLoader.getResource(String)
-     * @see java.lang.Thread.getContextClassLoader()
-     * @see java.lang.Thread.currentThread()
+     * @see java.lang.ClassLoader#getResource(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
      */
     public static URL getCurrentThreadResource(final String relativePath) {
         return Thread.currentThread().getContextClassLoader().getResource(relativePath);

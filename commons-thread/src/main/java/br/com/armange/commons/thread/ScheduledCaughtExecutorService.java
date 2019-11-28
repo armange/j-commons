@@ -19,6 +19,8 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
     private List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
     
     /**
+     * @param corePoolSize the number of threads to keep in the pool, even 
+     * if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int)
      */
     public ScheduledCaughtExecutorService(final int corePoolSize) {
@@ -26,6 +28,9 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
     }
     
     /**
+     * @param corePoolSize the number of threads to keep in the pool, even 
+     * if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param threadFactory the factory to use when the executor creates a new thread
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)
      */
     public ScheduledCaughtExecutorService(final int corePoolSize, final ThreadFactory threadFactory) {
