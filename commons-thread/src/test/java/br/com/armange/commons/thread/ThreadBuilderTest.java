@@ -64,6 +64,7 @@ public class ThreadBuilderTest {
     private LazyRunnableWithException lazyRunnableWithException = Mockito.spy(new LazyRunnableWithException());
     private ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
     private AfterExecuteConsumer afterExecuteConsumer = Mockito.spy(new AfterExecuteConsumer());
+    private volatile Thread lastThread;
     
     @Before
     public void beforeTests() {
@@ -694,5 +695,35 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("executorService", Matchers.notNullValue()));
         Assert.assertThat(result, Matchers.hasProperty("futures", Matchers.hasSize(1)));
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
+    }
+    
+    @Test
+    public void threadName() {
+        final String threadName = "Thread name";
+        
+        ThreadBuilder
+            .newBuilder()
+            .setThreadNameSupplier(() -> threadName)
+            .setExecution(() -> lastThread = Thread.currentThread())
+            .start();
+        
+        ThreadUtil.sleepUnchecked(1000);
+        
+        Assert.assertEquals(threadName, lastThread.getName());
+    }
+    
+    @Test
+    public void threadPriority() {
+        final int threadPriority = 4;
+        
+        ThreadBuilder
+            .newBuilder()
+            .setThreadPrioritySupplier(() -> threadPriority)
+            .setExecution(() -> lastThread = Thread.currentThread())
+            .start();
+        
+        ThreadUtil.sleepUnchecked(1000);
+        
+        Assert.assertEquals(threadPriority, lastThread.getPriority());
     }
 }
