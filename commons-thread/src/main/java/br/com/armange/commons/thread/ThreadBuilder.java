@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Useful structure for thread creation in the following scenarios:
@@ -61,11 +62,14 @@ public class ThreadBuilder {
     private Optional<Duration> interval = Optional.empty();
     private Optional<BiConsumer<Runnable, Throwable>> afterExecuteConsumer = Optional.empty();
     private Optional<Consumer<Throwable>> uncaughtExceptionConsumer = Optional.empty();
+    private Optional<CaughtExecutorThreadFactory> threadFactory = Optional.empty();
+    private Optional<Supplier<String>> threadNameSupplier = Optional.empty();
+    private Optional<Supplier<Integer>> threadPrioritySupplier = Optional.empty();
     private Runnable execution;
     private ScheduledCaughtExecutorService executor;
     private ExecutorResult executorResult;
     private boolean mayInterruptIfRunning;
-    private boolean silentInterruption;
+    private boolean silentInterruption; 
     private final int corePoolSize;
 
     private ThreadBuilder() {
@@ -148,6 +152,30 @@ public class ThreadBuilder {
 
         return this;
     }
+    
+    /**
+     * Sets the thread name supplier.The thread factory will consume this supplier to generate a thread name 
+     * before return a new thread.
+     * @param threadName the thread name supplier.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setThreadNameSupplier(final Supplier<String> threadNameSupplier) {
+        this.threadNameSupplier = Optional.ofNullable(threadNameSupplier);
+        
+        return this;
+    }
+    
+    /**
+     * Sets the thread priority supplier.The thread factory will consume this supplier to generate a thread priority 
+     * before return a new thread.
+     * @param threadPrioritySupplier the thread priority supplier.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setThreadPrioritySupplier(final Supplier<Integer> threadPrioritySupplier) {
+        this.threadPrioritySupplier = Optional.ofNullable(threadPrioritySupplier);
+        
+        return this;
+    }
 
     /**
      * Sets the thread execution.
@@ -221,9 +249,16 @@ public class ThreadBuilder {
     }
 
     private ThreadFactory getThreadFactory() {
-        return uncaughtExceptionConsumer
-                .map(ueh -> new CaughtExecutorThreadFactory((thread, throwable) -> ueh.accept(throwable)))
-                .orElse(new CaughtExecutorThreadFactory(null));
+        final CaughtExecutorThreadFactory factory = threadFactory.orElse(new CaughtExecutorThreadFactory());
+        
+        uncaughtExceptionConsumer
+                .ifPresent(uec -> factory.setUncaughtExceptionHandler((thread, throwable) -> uec.accept(throwable)));
+        
+        threadNameSupplier.ifPresent(tns -> factory.setThreadName(tns.get()));
+        
+        threadPrioritySupplier.ifPresent(tps -> factory.setThreadPriority(tps.get()));
+        
+        return factory;
     }
 
     private void runThread() {

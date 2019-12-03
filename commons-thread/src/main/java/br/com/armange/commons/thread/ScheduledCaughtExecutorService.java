@@ -42,6 +42,8 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
      * This method is invoked by the thread that executed the task. If
      * non-null, the Throwable is the uncaught {@link java.lang.RuntimeException}
      * or {@link java.lang.Error} that caused execution to terminate abruptly.
+     * This method will consume a list of {@code java.util.function.BiConsumer} with a runnable and a throwable as 
+     * arguments. See {@link #addAfterExecuteConsumer(BiConsumer)}
      * @param runnable the runnable that has completed
      * @param throwable the exception that caused termination, or null if execution completed normally
      */
