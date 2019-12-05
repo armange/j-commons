@@ -1,3 +1,10 @@
+buildscript {
+    project.ext {
+        nexusUsername = "$System.env.NEXUS_USERNAME"
+        nexusPassword = "$System.env.NEXUS_PASSWORD"
+    }
+}
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
