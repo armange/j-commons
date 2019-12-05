@@ -1,8 +1,6 @@
 # Commons-thread
 
-This release is being created based on the need to simplify daily software development tasks.
-
-The first version contains a framework that simplifies segmentation for some specific scenarios that may be routine for some types of software projects.
+This release was created based based on the need to simplify daily software development tasks. It contains a framework that simplifies thread building for some specific scenarios that may be routine for some types of software projects.
 
 ##### The tasks simplified by this lib thread are:
 - Thread delayed.
