@@ -45,8 +45,8 @@ import java.util.function.Supplier;
  *          .setMayInterruptIfRunning(true) //The thread interruption/cancellation will not wait execution.
  *          .setSilentInterruption(true) //Interruption and Cancellation exceptions will not be thrown.
  *          .setExecution(anyRunnable) //The thread execution.
- *          .setThreadNameSupplier(() -> "Thread name")
- *          .setThreadPrioritySupplier(() -> 4)
+ *          .setThreadNameSupplier(() -&gt; "Thread name")
+ *          .setThreadPrioritySupplier(() -&gt; 4)
  *          .start();
  * </pre>
  * 
