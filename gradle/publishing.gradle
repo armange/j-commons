@@ -55,5 +55,5 @@ uploadArchives {
 }
     
 signing {
-    if (isReleaseVersion) sign configurations.archives
+    if (hasSigning && isReleaseVersion) sign configurations.archives
 }
