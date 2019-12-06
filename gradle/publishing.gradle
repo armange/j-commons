@@ -11,7 +11,10 @@ publishing {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "${nexusUrl}/content/repositories/releases") {
+            beforeDeployment { 
+                MavenDeployment deployment -> signing.signPom(deployment) 
+            }
+            repository(url: "${nexusUrl}/service/local/staging/deploy/maven2/") {
                 authentication(userName: nexusUsername, password: nexusPassword)
             }
             
@@ -43,9 +46,14 @@ uploadArchives {
                    developer {
                        id 'diegoarmangecosta'
                        name 'Diego Armange Costa'
+                       email 'diego.armange.costa@gmail.com'
                    }
                }
            }
         }
     }
+}
+    
+signing {
+    if (isReleaseVersion) sign configurations.archives
 }

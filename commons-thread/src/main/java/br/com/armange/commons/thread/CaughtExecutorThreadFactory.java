@@ -28,7 +28,7 @@ public class CaughtExecutorThreadFactory implements ThreadFactory {
      * <li>Uncaught exception handler</li>
      * </ul>
      * These thread parameters will be used if they are not null.
-     * @see #setUncaughtExceptionHandler(UncaughtExceptionHandler)
+     * @see br.com.armange.commons.thread.CaughtExecutorThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
      * @see #setThreadName(String)
      * @see #setThreadPriority(Integer)
      * @see java.util.concurrent.ThreadFactory#newThread(Runnable)

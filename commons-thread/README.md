@@ -1,6 +1,6 @@
 # Commons-thread
 
-This release was created based based on the need to simplify daily software development tasks. It contains a framework that simplifies thread building for some specific scenarios that may be routine for some types of software projects.
+This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies thread creation for some specific scenarios that may be routine for some types of software projects.
 
 ##### The tasks simplified by this lib thread are:
 - Thread delayed.
@@ -47,6 +47,15 @@ This release was created based based on the need to simplify daily software deve
         .setUncaughtExceptionConsumer(throwable -> {throw new RuntimeException(throwable);})
         .setExecution(() -> System.out.println("An execution with uncaught exception"))
         .start();
+```
+
+#### After execution consumer
+```java
+    ThreadBuilder
+        .newBuilder()
+        .setExecution(() -> System.out.println("An execution with am after-execution consumer"))
+        .setAfterExecuteConsumer((runnable, throwable) -> System.out.println("The thread has already been finished"))
+        .start()
 ```
 
 #### Naming

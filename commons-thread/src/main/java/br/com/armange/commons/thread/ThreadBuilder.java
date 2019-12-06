@@ -45,6 +45,8 @@ import java.util.function.Supplier;
  *          .setMayInterruptIfRunning(true) //The thread interruption/cancellation will not wait execution.
  *          .setSilentInterruption(true) //Interruption and Cancellation exceptions will not be thrown.
  *          .setExecution(anyRunnable) //The thread execution.
+ *          .setThreadNameSupplier(() -&gt; "Thread name")
+ *          .setThreadPrioritySupplier(() -&gt; 4)
  *          .start();
  * </pre>
  * 
@@ -156,7 +158,7 @@ public class ThreadBuilder {
     /**
      * Sets the thread name supplier.The thread factory will consume this supplier to generate a thread name 
      * before return a new thread.
-     * @param threadName the thread name supplier.
+     * @param threadNameSupplier the thread name supplier.
      * @return the current thread builder.
      */
     public ThreadBuilder setThreadNameSupplier(final Supplier<String> threadNameSupplier) {

@@ -5,11 +5,15 @@ buildscript {
     }
 }
 
+version = '1.0.0-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
     
     group = 'br.com.armange'
     sourceCompatibility = 1.8
@@ -17,6 +21,10 @@ allprojects {
     apply from: "$rootDir/gradle/library.gradle"
     apply from: "$rootDir/gradle/repositories.gradle"
     apply from: "$rootDir/gradle/configurations.gradle"
+    
+    ext."signing.keyId" = "$System.env.SIGNING_KEY_ID"
+    ext."signing.password" = "$System.env.SIGNING_PASSWORD"
+    ext."signing.secretKeyRingFile" = "$System.env.SIGNING_SECRET_KEY_RING_FILE"
 }
 
 subprojects {
@@ -24,7 +32,5 @@ subprojects {
     apply from: "$projectDir/gradle/jar.gradle"
     apply from: "$projectDir/gradle/publishing.gradle"
 }
-
-version = '1.0.0-SNAPSHOT'
 
 apply from: "$projectDir/gradle/dependencies.gradle"
