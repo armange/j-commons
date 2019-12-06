@@ -11,7 +11,9 @@ publishing {
 uploadArchives {
     repositories {
         mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            beforeDeployment { 
+                MavenDeployment deployment -> signing.signPom(deployment) 
+            }
             repository(url: "${nexusUrl}/service/local/staging/deploy/maven2/") {
                 authentication(userName: nexusUsername, password: nexusPassword)
             }
@@ -51,7 +53,7 @@ uploadArchives {
         }
     }
 }
-
+    
 signing {
-    sign configurations.archives
+    if (isReleaseVersion) sign configurations.archives
 }

@@ -5,6 +5,9 @@ buildscript {
     }
 }
 
+version = '1.0.0-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
 allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
@@ -29,7 +32,5 @@ subprojects {
     apply from: "$projectDir/gradle/jar.gradle"
     apply from: "$projectDir/gradle/publishing.gradle"
 }
-
-version = '1.0.0-SNAPSHOT'
 
 apply from: "$projectDir/gradle/dependencies.gradle"
