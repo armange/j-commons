@@ -1,0 +1,50 @@
+apply plugin: 'signing'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { 
+                MavenDeployment deployment -> signing.signPom(deployment) 
+            }
+            repository(url: "${nexusUrl}/service/local/staging/deploy/maven2/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+            
+            snapshotRepository(url: "${nexusUrl}/content/repositories/snapshots") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            pom.project {
+               name 'commons-thread'
+               packaging 'jar'
+               description 'It is a framework that simplifies thread building'
+               url 'https://github.com/armange/j-commons/tree/master/commons-thread'
+
+               scm {
+                   url 'scm:git@github.com:armange/j-commons.git'
+                   connection 'scm:git@github.com:armange/j-commons.git'
+                   developerConnection 'scm:git@github.com:armange/j-commons.git'
+               }
+
+               licenses {
+                   license {
+                       name 'The Apache Software License, Version 2.0'
+                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                       distribution 'repo'
+                   }
+               }
+
+               developers {
+                   developer {
+                       id 'diegoarmangecosta'
+                       name 'Diego Armange Costa'
+                   }
+               }
+           }
+        }
+    }
+}
+
+signing {
+    if (hasSigning && isReleaseVersion) sign configurations.archives
+}
