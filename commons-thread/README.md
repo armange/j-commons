@@ -11,7 +11,7 @@ This release was created based on the need to simplify daily software developmen
 
 ###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/)
 
-![](https://img.shields.io/github/workflow/status/armange/j-commons/Java CI?style=for-the-badge)
+![](https://img.shields.io/github/workflow/status/armange/j-commons/Java%20CI?style=for-the-badge)
 
 ![](https://img.shields.io/nexus/r/br.com.armange/commons-thread?server=https%3A%2F%2Foss.sonatype.org&style=for-the-badge)
 
