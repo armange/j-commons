@@ -11,6 +11,22 @@ This release was created based on the need to simplify daily software developmen
 
 ###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/)
 
+##### [Maven import](https://search.maven.org/artifact/br.com.armange/commons-thread)
+
+```xml
+<dependency>
+    <groupId>br.com.armange</groupId>
+    <artifactId>commons-thread</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+##### [Gradle import](https://search.maven.org/artifact/br.com.armange/commons-thread)
+
+```
+compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
+```
+
 ### Samples
 
 #### Delay
