@@ -1,0 +1,8 @@
+sonarqube {
+  properties {
+    property "sonar.projectKey", "armange_j-commons"
+    property "sonar.organization", "armange"
+    property "sonar.host.url", "https://sonarcloud.io"
+    property "sonar.login", "624d0c3289d7efed3aac210a44f45c5f2f333f93"
+  }
+}
