@@ -22,7 +22,8 @@ import java.util.concurrent.Future;
 public class ExecutorResult {
 
     private final ExecutorService executorService;
-    private final List<Future<?>> futures = new LinkedList<Future<?>>();
+    @SuppressWarnings("rawtypes")
+    private final List<Future> futures = new LinkedList<>();
     private final List<ExecutorResult> timeoutExecutorResults = new LinkedList<>();
     
     public ExecutorResult(final ExecutorService executorService) {
@@ -39,7 +40,8 @@ public class ExecutorResult {
     /**
      * @return the {@link Future}s list.
      */
-    public List<Future<?>> getFutures() {
+    @SuppressWarnings("rawtypes")
+    public List<Future> getFutures() {
         return futures;
     }
     
