@@ -22,7 +22,7 @@ public class ThreadUtil {
         try {
             Thread.sleep(millis);
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new UncheckedException(e);
         }
     }
     
