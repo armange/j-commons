@@ -1,0 +1,8 @@
+dependencies {
+    testCompile (library.junit_junit){
+        exclude group: 'org.hamcrest'
+    }
+    testCompile library.org_assertj_assertj_core
+    testCompile library.org_mockito_mockito_core
+    testCompile library.org_hamcrest_hamcrest
+}
