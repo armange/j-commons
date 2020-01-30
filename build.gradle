@@ -31,6 +31,7 @@ subprojects {
     apply from: "$projectDir/gradle/jar.gradle"
     apply from: "$projectDir/gradle/publishing.gradle"
     apply from: "$projectDir/gradle/maven.central.gradle"
+    apply from: "$projectDir/gradle/test.gradle"
 }
 
 apply from: "$projectDir/gradle/dependencies.gradle"
