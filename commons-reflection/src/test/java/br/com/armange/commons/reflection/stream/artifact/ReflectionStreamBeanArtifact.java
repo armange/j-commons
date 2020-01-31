@@ -1,5 +1,6 @@
 package br.com.armange.commons.reflection.stream.artifact;
 
+@AnnotationTestOne
 public class ReflectionStreamBeanArtifact extends AbstractReflectionStreamBeanArtifact {
     @SuppressWarnings("unused")
     private String field1;

@@ -1,5 +1,7 @@
 package br.com.armange.commons.reflection.stream;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -37,9 +39,11 @@ class ReflectionStreamSupport {
                 return (T[]) (declared ? sourceClass.getDeclaredFields() : sourceClass.getFields());
             } else if (getMemberClass().equals(Method.class)) {
                 return (T[]) (declared ? sourceClass.getDeclaredMethods() : sourceClass.getMethods());
+            } else if (getMemberClass().equals(Constructor.class)) {
+                return (T[]) (declared ? sourceClass.getDeclaredConstructors() : sourceClass.getConstructors());
+            } else {
+                return (T[]) (declared ? sourceClass.getDeclaredAnnotations() : sourceClass.getAnnotations());
             }
-            
-            throw new RuntimeException("Class not compatible with reflection");
         }
         
         public Stream<T> build() {
@@ -104,6 +108,65 @@ class ReflectionStreamSupport {
         @Override
         protected Class<Method> getMemberClass() {
             return Method.class;
+        }
+    }
+    
+    @SuppressWarnings("rawtypes")
+    static final class ConstructorStreamSupport  extends AbstractReflectionMemberSupport<Constructor, ConstructorStreamSupport> implements ConstructorStream {
+        protected ConstructorStreamSupport(final Class<?> sourceClass) {
+            super(sourceClass);
+        }
+
+        static ConstructorStreamSupport from(final Class<?> sourceClass) {
+            return new ConstructorStreamSupport(sourceClass);
+        }
+
+        @Override
+        public ConstructorStreamSupport declared() {
+            declared = true;
+            
+            return this;
+        }
+
+        @Override
+        public ConstructorStreamSupport nested() {
+            nested = true;
+            
+            return this;
+        }
+
+        @Override
+        protected Class<Constructor> getMemberClass() {
+            return Constructor.class;
+        }
+    }
+    
+    static final class AnnotationStreamSupport  extends AbstractReflectionMemberSupport<Annotation, AnnotationStreamSupport> implements AnnotationStream {
+        protected AnnotationStreamSupport(final Class<?> sourceClass) {
+            super(sourceClass);
+        }
+
+        static AnnotationStreamSupport from(final Class<?> sourceClass) {
+            return new AnnotationStreamSupport(sourceClass);
+        }
+
+        @Override
+        public AnnotationStreamSupport declared() {
+            declared = true;
+            
+            return this;
+        }
+
+        @Override
+        public AnnotationStreamSupport nested() {
+            nested = true;
+            
+            return this;
+        }
+
+        @Override
+        protected Class<Annotation> getMemberClass() {
+            return Annotation.class;
         }
     }
 }
