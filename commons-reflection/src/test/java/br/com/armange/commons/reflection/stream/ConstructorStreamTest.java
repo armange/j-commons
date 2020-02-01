@@ -13,18 +13,14 @@ import org.junit.Test;
 
 import br.com.armange.commons.reflection.stream.artifact.ReflectionStreamBeanArtifact;
 
-public class FieldStreamTest {
+public class ConstructorStreamTest {
 
-    private static final String FIELD4 = "field4";
-    private static final String FIELD1 = "field1";
-    private static final String NESTED_FIELD1 = "nestedField1";
-    private static final String NESTED_FIELD4 = "nestedField4";
-    private static final String NAME = "name";
+    private static final String PARAMETER_TYPES = "parameterTypes";
 
     @Test
-    public void findDeclaredFields() {
+    public void findDeclaredConstructors() {
         assertThat(
-                FieldStream
+                ConstructorStream
                     .of(ReflectionStreamBeanArtifact.class)
                     .declared()
                     .build()
@@ -33,16 +29,16 @@ public class FieldStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                NAME, Matchers.is(NESTED_FIELD1)))),
+                                                PARAMETER_TYPES, Matchers.is(new Class[] {long.class})))),
                         hasItem(
                                 hasProperty(
-                                        NAME, Matchers.is(FIELD1)))));
+                                        PARAMETER_TYPES, Matchers.is(new Class[] {})))));
     }
     
     @Test
-    public void findNonDeclaredFields() {
+    public void findNonDeclaredConstructor() {
         assertThat(
-                FieldStream
+                ConstructorStream
                     .of(ReflectionStreamBeanArtifact.class)
                     .build()
                     .collect(Collectors.toList()), 
@@ -50,20 +46,20 @@ public class FieldStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                NAME, Matchers.is(FIELD1)))),
+                                                PARAMETER_TYPES, Matchers.is(new Class[] {long.class})))),
                         not(
                                 hasItem(
                                         hasProperty(
-                                                NAME, Matchers.is(NESTED_FIELD1)))),
+                                                PARAMETER_TYPES, Matchers.is(new Class[] {String.class, long.class})))),
                     hasItem(
                             hasProperty(
-                                    NAME, Matchers.is(FIELD4)))));
+                                    PARAMETER_TYPES, Matchers.is(new Class[] {})))));
     }
     
     @Test
     public void findDeclaredNestedFields() {
         assertThat(
-                FieldStream
+                ConstructorStream
                     .of(ReflectionStreamBeanArtifact.class)
                     .declared()
                     .nested()
@@ -72,16 +68,16 @@ public class FieldStreamTest {
                 allOf(
                         hasItem(
                                 hasProperty(
-                                        NAME, Matchers.is(NESTED_FIELD1))),
+                                        PARAMETER_TYPES, Matchers.is(new Class[] {long.class}))),
                         hasItem(
                                 hasProperty(
-                                        NAME, Matchers.is(FIELD1)))));
+                                        PARAMETER_TYPES, Matchers.is(new Class[] {String.class, long.class})))));
     }
     
     @Test
     public void findNonDeclaredNestedFields() {
         assertThat(
-                FieldStream
+                ConstructorStream
                     .of(ReflectionStreamBeanArtifact.class)
                     .nested()
                     .build()
@@ -90,9 +86,9 @@ public class FieldStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                NAME, Matchers.is(NESTED_FIELD1)))),
+                                                PARAMETER_TYPES, Matchers.is(new Class[] {String.class, long.class})))),
                         hasItem(
                                 hasProperty(
-                                        NAME, Matchers.is(NESTED_FIELD4)))));
+                                        PARAMETER_TYPES, Matchers.is(new Class[] {long.class})))));
     }
 }
