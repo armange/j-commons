@@ -3,6 +3,6 @@ sonarqube {
     property "sonar.projectKey", "armange_j-commons-commons-thread"
     property "sonar.organization", "armange"
     property "sonar.host.url", "https://sonarcloud.io"
-    property "sonar.login", "624d0c3289d7efed3aac210a44f45c5f2f333f93"
+    property "sonar.login", "0abf33c41889e1d54402c738ec2c0f448cb5b1b6"
   }
 }
