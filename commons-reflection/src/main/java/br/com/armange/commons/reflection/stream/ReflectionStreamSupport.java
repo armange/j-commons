@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 class ReflectionStreamSupport {
-    @SuppressWarnings("rawtypes")
-    private static abstract class AbstractReflectionMemberSupport<T, U extends ReflectionMemberStream> {
+    private ReflectionStreamSupport() {
+        throw new IllegalStateException("Utility class");
+    }
+    
+    private abstract static class AbstractReflectionMemberSupport<T> {
         protected final List<T> memberList = new ArrayList<>();
         protected final Class<?> sourceClass;
         protected boolean declared;
@@ -53,7 +56,7 @@ class ReflectionStreamSupport {
         }
     }
     
-    static final class FieldStreamSupport extends AbstractReflectionMemberSupport<Field, FieldStreamSupport> implements FieldStream{
+    static final class FieldStreamSupport extends AbstractReflectionMemberSupport<Field> implements FieldStream{
         protected FieldStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
@@ -82,7 +85,7 @@ class ReflectionStreamSupport {
         }
     }
     
-    static final class MethodStreamSupport  extends AbstractReflectionMemberSupport<Method, MethodStreamSupport> implements MethodStream {
+    static final class MethodStreamSupport  extends AbstractReflectionMemberSupport<Method> implements MethodStream {
         protected MethodStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
@@ -112,7 +115,7 @@ class ReflectionStreamSupport {
     }
     
     @SuppressWarnings("rawtypes")
-    static final class ConstructorStreamSupport  extends AbstractReflectionMemberSupport<Constructor, ConstructorStreamSupport> implements ConstructorStream {
+    static final class ConstructorStreamSupport  extends AbstractReflectionMemberSupport<Constructor> implements ConstructorStream {
         protected ConstructorStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
@@ -141,7 +144,7 @@ class ReflectionStreamSupport {
         }
     }
     
-    static final class AnnotationStreamSupport  extends AbstractReflectionMemberSupport<Annotation, AnnotationStreamSupport> implements AnnotationStream {
+    static final class AnnotationStreamSupport  extends AbstractReflectionMemberSupport<Annotation> implements AnnotationStream {
         protected AnnotationStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
