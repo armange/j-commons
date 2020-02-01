@@ -8,6 +8,11 @@ public class ReflectionStreamBeanArtifact extends AbstractReflectionStreamBeanAr
     private long field3;
     public long field4;
     
+    public ReflectionStreamBeanArtifact() {}
+    public ReflectionStreamBeanArtifact(final String field1) {}
+    @SuppressWarnings("unused")
+    private ReflectionStreamBeanArtifact(final String field1, final long field3) {}
+    
     public Integer getField2() {
         return field2;
     }

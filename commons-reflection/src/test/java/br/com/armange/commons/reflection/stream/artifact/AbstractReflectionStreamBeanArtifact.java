@@ -8,6 +8,9 @@ public class AbstractReflectionStreamBeanArtifact {
     private long nestedField3;
     public long nestedField4;
     
+    protected AbstractReflectionStreamBeanArtifact() {}
+    public AbstractReflectionStreamBeanArtifact(final long nestedField3) {}
+    
     public long getNestedField3() {
         return nestedField3;
     }

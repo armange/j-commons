@@ -14,6 +14,12 @@ import org.junit.Test;
 import br.com.armange.commons.reflection.stream.artifact.ReflectionStreamBeanArtifact;
 
 public class MethodStreamTest {
+    private static final String GET_FIELD2 = "getField2";
+    private static final String INTERNAL_METHOD = "internalMethod";
+    private static final String NESTED_METHOD = "nestedMethod";
+    private static final String GET_NESTED_FIELD3 = "getNestedField3";
+    private static final String NAME = "name";
+
     @Test
     public void findDeclaredMethods() {
         assertThat(
@@ -26,10 +32,10 @@ public class MethodStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                "name", Matchers.is("nestedMethod")))),
+                                                NAME, Matchers.is(NESTED_METHOD)))),
                         hasItem(
                                 hasProperty(
-                                        "name", Matchers.is("internalMethod")))));
+                                        NAME, Matchers.is(INTERNAL_METHOD)))));
     }
     
     @Test
@@ -43,14 +49,14 @@ public class MethodStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                "name", Matchers.is("internalMethod")))),
+                                                NAME, Matchers.is(INTERNAL_METHOD)))),
                         not(
                                 hasItem(
                                         hasProperty(
-                                                "name", Matchers.is("nestedMethod")))),
+                                                NAME, Matchers.is(NESTED_METHOD)))),
                     hasItem(
                             hasProperty(
-                                    "name", Matchers.is("getField2")))));
+                                    NAME, Matchers.is(GET_FIELD2)))));
     }
     
     @Test
@@ -65,10 +71,10 @@ public class MethodStreamTest {
                 allOf(
                         hasItem(
                                 hasProperty(
-                                        "name", Matchers.is("internalMethod"))),
+                                        NAME, Matchers.is(INTERNAL_METHOD))),
                         hasItem(
                                 hasProperty(
-                                        "name", Matchers.is("nestedMethod")))));
+                                        NAME, Matchers.is(NESTED_METHOD)))));
     }
     
     @Test
@@ -83,9 +89,9 @@ public class MethodStreamTest {
                         not(
                                 hasItem(
                                         hasProperty(
-                                                "name", Matchers.is("nestedMethod")))),
+                                                NAME, Matchers.is(NESTED_METHOD)))),
                         hasItem(
                                 hasProperty(
-                                        "name", Matchers.is("getNestedField3")))));
+                                        NAME, Matchers.is(GET_NESTED_FIELD3)))));
     }
 }

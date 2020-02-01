@@ -16,6 +16,9 @@ import org.junit.Test;
 import br.com.armange.commons.reflection.stream.artifact.ReflectionStreamBeanArtifact;
 
 public class AnnotationStreamTest {
+    private static final String ANNOTATION_TEST_ONE = "AnnotationTestOne";
+    private static final String ANNOTATION_TEST_TWO = "AnnotationTestTwo";
+
     @Test
     public void findDeclaredAnnotations() {
         final List<Annotation> list = AnnotationStream
@@ -26,7 +29,7 @@ public class AnnotationStreamTest {
         
         assertThat(list, hasSize(1));
         
-        assertEquals("AnnotationTestOne", list.get(0).annotationType().getSimpleName());
+        assertEquals(ANNOTATION_TEST_ONE, list.get(0).annotationType().getSimpleName());
     }
     
     @Test
@@ -43,8 +46,8 @@ public class AnnotationStreamTest {
                 .map(Class::getSimpleName)
                 .collect(Collectors.toList()), 
                     allOf(
-                            hasItem(is("AnnotationTestOne")),
-                            hasItem(is("AnnotationTestTwo"))));
+                            hasItem(is(ANNOTATION_TEST_ONE)),
+                            hasItem(is(ANNOTATION_TEST_TWO))));
     }
     
     @Test
@@ -63,8 +66,8 @@ public class AnnotationStreamTest {
                 .map(Class::getSimpleName)
                 .collect(Collectors.toList()), 
                     allOf(
-                            hasItem(is("AnnotationTestOne")),
-                            hasItem(is("AnnotationTestTwo"))));
+                            hasItem(is(ANNOTATION_TEST_ONE)),
+                            hasItem(is(ANNOTATION_TEST_TWO))));
     }
     
     @Test
@@ -85,8 +88,8 @@ public class AnnotationStreamTest {
             
             assertThat(names, 
                     allOf(
-                            hasItem(is("AnnotationTestOne")),
-                            hasItem(is("AnnotationTestTwo"))));
+                            hasItem(is(ANNOTATION_TEST_ONE)),
+                            hasItem(is(ANNOTATION_TEST_TWO))));
             
             assertThat(names, hasSize(2));
             
