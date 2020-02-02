@@ -81,7 +81,7 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
 ```java
     ThreadBuilder
         .newBuilder()
-        .setExecution(() -> System.out.println("An execution with am after-execution consumer"))
+        .setExecution(() -> System.out.println("An execution with an after-execution consumer"))
         .setAfterExecuteConsumer((runnable, throwable) -> System.out.println("The thread has already been finished"))
         .start()
 ```
