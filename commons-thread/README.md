@@ -2,12 +2,19 @@
 
 This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies thread creation for some specific scenarios that may be routine for some types of software projects.
 
+<a name="summary"></a>
+
 ##### The tasks simplified by this lib thread are:
-- Thread delayed.
-- Thread timed out.
-- Thread loop.
-- Exception handling.
-- The combination of these factors together.
+- [Thread delayed](#delay).
+- [Thread timed out](#timeout).
+- [Thread loop](#interval).
+- [Exception handling](#uncaughtexception).
+- [Trigger](#afterexecution).
+- [Naming](#naming).
+- [Prioritization](#prioritization).
+- [No Schedule](#noschedule).
+- [Thread Pool](#threadpool).
+- [The combination of all these factors together.](#allfeatures)
 
 ###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/)
 
@@ -41,7 +48,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
 
 ### Samples
 
-#### Delay
+<a name="delay"></a>
+
+#### Delay [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -50,7 +59,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### Timeout
+<a name="timeout"></a>
+
+#### Timeout [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -59,7 +70,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### Interval
+<a name="interval"></a>
+
+#### Interval(Thread loop) [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -68,7 +81,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### Uncaught exception
+<a name="uncaughtexception"></a>
+
+#### Uncaught exception(Exception handling) [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -77,16 +92,20 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### After execution consumer
+<a name="afterexecution"></a>
+
+#### After execution consumer(trigger) [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
-        .setExecution(() -> System.out.println("An execution with am after-execution consumer"))
+        .setExecution(() -> System.out.println("An execution with an after-execution consumer"))
         .setAfterExecuteConsumer((runnable, throwable) -> System.out.println("The thread has already been finished"))
         .start()
 ```
 
-#### Naming
+<a name="naming"></a>
+
+#### Naming [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -95,7 +114,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### Prioritization
+<a name="prioritization"></a>
+
+#### Prioritization [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -105,7 +126,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### No schedule
+<a name="noschedule"></a>
+
+#### No schedule [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder()
@@ -113,7 +136,9 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .start();
 ```
 
-#### Thread pool
+<a name="threadpool"></a>
+
+#### Thread pool [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder(5)
@@ -126,5 +151,22 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .setExecution(() -> System.out.println("Thread 4"))
         .startAndBuildOther()
         .setExecution(() -> System.out.println("Thread 5"))
+        .start();
+```
+<a name="allfeatures"></a>
+
+#### All features [:arrow_double_up:](#summary)
+```java
+    ThreadBuilder
+        .newBuilder(2)
+        .setDelay(1000)
+        .setTimeout(5000)
+        .setInterval(1000)
+        .setUncaughtExceptionConsumer(throwable -> {throw new RuntimeException(throwable);})
+        .setAfterExecuteConsumer((runnable, throwable) -> System.out.println("The thread has already been finished"))
+        .setThreadNameSupplier(() -> "Thread name")
+        .setThreadPrioritySupplier(() -> 4)
+        .setExecution(() -> System.out.println("All features"))
+        .startAndBuildOther()
         .start();
 ```
