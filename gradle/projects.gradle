@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-dependencies {
-    compile projects.commons_object_api
-    compile projects.commons_message
-    compile projects.commons_reflection
-
-    testCompile (library.junit_junit){
-        exclude group: 'org.hamcrest'
-    }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
-}
+ext.projects = [
+    commons_object_api: project(':commons-object-api'),
+    commons_message: project(':commons-message'),
+    commons_reflection: project(':commons-reflection')
+]

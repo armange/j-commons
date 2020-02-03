@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-dependencies {
-    compile projects.commons_object_api
-    compile projects.commons_message
-    compile projects.commons_reflection
+package br.com.armange.commons.object.api;
 
-    testCompile (library.junit_junit){
-        exclude group: 'org.hamcrest'
-    }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+public interface BeanConverter<S, T> extends ObjectConverter<S, T> {
+
 }

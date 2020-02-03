@@ -15,7 +15,7 @@
  * */
 package br.com.armange.commons.reflection.stream.artifact;
 
-@AnnotationTestTwo
+@AnnotationTestTwoArtifact
 public class AbstractReflectionStreamBeanArtifact {
     @SuppressWarnings("unused")
     private String nestedField1;

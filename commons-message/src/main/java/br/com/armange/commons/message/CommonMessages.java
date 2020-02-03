@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-dependencies {
-    compile projects.commons_object_api
-    compile projects.commons_message
-    compile projects.commons_reflection
+package br.com.armange.commons.message;
 
-    testCompile (library.junit_junit){
-        exclude group: 'org.hamcrest'
+public enum CommonMessages implements MessageFormat {
+    
+    REQUIRED_PARAMETER("The \"{0}\" parameter is required.");
+    
+    private String message;
+    
+    CommonMessages(final String message) {
+        this.message = message;
     }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+    
+    @Override
+    public String getMessage() {
+        return message;
+    }
+    
+    @Override
+    public String toString() {
+        return getMessage();
+    }
 }

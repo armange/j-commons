@@ -21,4 +21,8 @@ public interface AnnotationStream extends ReflectionMemberStream<Annotation, Ann
     public static AnnotationStream of(final Class<?> sourceClass) {
         return ReflectionStreamSupport.AnnotationStreamSupport.from(sourceClass);
     }
+    
+    public static AnnotationStream of(final Object sourceObject) {
+        return ReflectionStreamSupport.AnnotationStreamSupport.from(sourceObject.getClass());
+    }
 }

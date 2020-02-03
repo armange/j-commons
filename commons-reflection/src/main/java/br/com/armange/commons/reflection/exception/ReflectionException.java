@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.reflection.stream.artifact;
+package br.com.armange.commons.reflection.exception;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class ReflectionException extends RuntimeException {
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface AnnotationTestOne {}
+    private static final long serialVersionUID = 1L;
+
+    public ReflectionException() {
+        super();
+    }
+
+    public ReflectionException(final String message) {
+        super(message);
+    }
+
+    public ReflectionException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
+    public ReflectionException(final Throwable cause) {
+        super(cause);
+    }
+}

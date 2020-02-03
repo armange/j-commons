@@ -39,7 +39,7 @@ class ReflectionStreamSupport {
             this.sourceClass = sourceClass;
         }
         
-        protected abstract Class<T> getMemberClass();
+        protected abstract Class<?> getMemberClass();
         
         protected void findMembers(final Class<?> sourceClass, final boolean declared, final boolean nested) {
             if (!sourceClass.equals(Object.class)) {
@@ -130,13 +130,13 @@ class ReflectionStreamSupport {
     }
     
     @SuppressWarnings("rawtypes")
-    static final class ConstructorStreamSupport  extends AbstractReflectionMemberSupport<Constructor> implements ConstructorStream {
-        protected ConstructorStreamSupport(final Class<?> sourceClass) {
+    static final class ConstructorStreamSupport<T>  extends AbstractReflectionMemberSupport<Constructor<T>> implements ConstructorStream<T> {
+        protected ConstructorStreamSupport(final Class<T> sourceClass) {
             super(sourceClass);
         }
 
-        static ConstructorStreamSupport from(final Class<?> sourceClass) {
-            return new ConstructorStreamSupport(sourceClass);
+        static <T> ConstructorStreamSupport<T> from(final Class<T> sourceClass) {
+            return new ConstructorStreamSupport<T>(sourceClass);
         }
 
         @Override
