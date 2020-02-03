@@ -1,3 +1,18 @@
+/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
 package br.com.armange.commons.thread;
 
 import java.util.function.BiConsumer;
@@ -6,13 +21,8 @@ import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import br.com.armange.commons.thread.ExecutorResult;
-import br.com.armange.commons.thread.ThreadBuilder;
-import br.com.armange.commons.thread.ThreadUtil;
 
 /**
  * @author Diego Armange Costa
@@ -59,24 +69,11 @@ public class ThreadBuilderTest {
         }
     }
     
-    private LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-    private LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-    private LazyRunnableWithException lazyRunnableWithException = Mockito.spy(new LazyRunnableWithException());
-    private ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-    private AfterExecuteConsumer afterExecuteConsumer = Mockito.spy(new AfterExecuteConsumer());
     private volatile Thread lastThread;
-    
-    @Before
-    public void beforeTests() {
-        Mockito.reset(localRunnable);
-        Mockito.reset(localRunnableWithException);
-        Mockito.reset(throwableConsumer);
-        Mockito.reset(lazyRunnableWithException);
-        Mockito.reset(afterExecuteConsumer);
-    }
     
     @Test
     public void noSchedule() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setExecution(localRunnable)
@@ -92,6 +89,8 @@ public class ThreadBuilderTest {
     
     @Test
     public void noScheduleCaughtException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setExecution(localRunnableWithException)
@@ -110,6 +109,7 @@ public class ThreadBuilderTest {
     
     @Test
     public void useDelay() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(2000)
@@ -128,8 +128,11 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useDelayCaughtException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(2000)
@@ -151,8 +154,10 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void cancelByTimeout() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(1000)
@@ -182,8 +187,10 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void runBeforeTimeout() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(3000)
@@ -206,8 +213,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void runBeforeTimeoutCaughtException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(3000)
@@ -232,8 +242,10 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void useInterval() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setInterval(1000)
@@ -259,8 +271,11 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useIntervalCaughtException() {
+        final LazyRunnableWithException lazyRunnableWithException = Mockito.spy(new LazyRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setInterval(1000)
@@ -287,8 +302,10 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useIntervalAndDelay() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(1000)
@@ -315,8 +332,11 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useIntervalAndDelayAndCaughtException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(1000)
@@ -339,8 +359,10 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useTimeoutAndInterval() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(3000)
@@ -373,8 +395,10 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void cancelByTimeoutUsingInterval() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(2000)
@@ -405,8 +429,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void useTimeoutAndIntervalCaughtException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(3000)
@@ -436,8 +463,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void useAllDelayAndTimeout() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
+        
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(1000)
@@ -468,8 +498,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void useAllTimeControlsAndCaughtException() {
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(1000)
@@ -500,8 +533,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void useAllTimeControls() {
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(1000)
@@ -536,8 +572,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void silentCancellationException() {
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder(2)
             .setDelay(5000)
@@ -555,8 +594,11 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void throwingInterruptedException() {
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
+        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
         final ExecutorResult result = ThreadBuilder
             .newBuilder(2)
             .setExecution(() -> ThreadUtil.sleepUnchecked(5000))
@@ -576,8 +618,10 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void throwingCancellationException() {
+        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setExecution(() -> ThreadUtil.sleepUnchecked(5000))
@@ -599,8 +643,11 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void callingAfterExecutionConsumer() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
+        final AfterExecuteConsumer afterExecuteConsumer = Mockito.spy(new AfterExecuteConsumer());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setExecution(localRunnable)
@@ -623,8 +670,10 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void useIntervalForFiveTimes() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(500)
@@ -652,8 +701,10 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void buildTwoThreadsUsingTheSameBuilder() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setTimeout(1000)
@@ -677,8 +728,10 @@ public class ThreadBuilderTest {
                         Matchers.hasProperty("futures", Matchers.hasSize(1))));
     }
     
+    
     @Test
     public void cancelDelayBeforeExecution() {
+        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
         final ExecutorResult result = ThreadBuilder
             .newBuilder()
             .setDelay(3000)
@@ -697,6 +750,7 @@ public class ThreadBuilderTest {
         Assert.assertThat(result, Matchers.hasProperty("timeoutExecutorResults", Matchers.hasSize(0)));
     }
     
+    
     @Test
     public void threadName() {
         final String threadName = "Thread name";
@@ -711,6 +765,7 @@ public class ThreadBuilderTest {
         
         Assert.assertEquals(threadName, lastThread.getName());
     }
+    
     
     @Test
     public void threadPriority() {
