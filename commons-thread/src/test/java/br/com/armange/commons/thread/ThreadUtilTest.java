@@ -22,6 +22,8 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
+import br.com.armange.commons.thread.ThreadUtil;
+
 public class ThreadUtilTest {
 
     private static final String TEST_FILE_RELATIVE_PATH = "TestFile.txt";
