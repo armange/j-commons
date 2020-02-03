@@ -1,10 +1,24 @@
+/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
 sonarqube {
   properties {
-    property "sonar.projectKey", "armange_j-commons-commons-thread"
-    property "sonar.organization", "armange"
+    property "sonar.projectKey", "$System.env.J_COMMONS_THREAD_SONAR_PROJECT_KEY"
+    property "sonar.organization", "$System.env.J_COMMONS_SONAR_ORGANIZATION"
     property "sonar.host.url", "https://sonarcloud.io"
-    property "sonar.login", "0abf33c41889e1d54402c738ec2c0f448cb5b1b6"
-    property "sonar.coverage.jacoco.xmlReportsPath", "build/reports/"
+    property "sonar.login", "$System.env.J_COMMONS_THREAD_SONAR_LOGIN"
     property "sonar.exclusions", "**/*Generated.java"
   }
 }
