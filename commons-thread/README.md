@@ -16,7 +16,8 @@ This release was created based on the need to simplify daily software developmen
 - [Thread Pool](#threadpool).
 - [The combination of all these factors together.](#allfeatures)
 
-###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/)
+###### See [Javadoc](https://armange.github.io/j-commons/commons-thread/javadoc)
+###### See [Tests report](https://armange.github.io/j-commons/commons-thread/test)
 
 [![Build][buildbadge]](https://github.com/armange/j-commons/commits/master) 
 [![Nexus][nexusbadge]](https://search.maven.org/artifact/br.com.armange/commons-thread) 
