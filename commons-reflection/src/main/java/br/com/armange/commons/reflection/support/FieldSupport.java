@@ -32,15 +32,19 @@ public class FieldSupport {
     
     public Object getValue(final Object declaringInstance) {
         try {
+            field.setAccessible(true);
+            
             return field.get(declaringInstance);
         } catch (final IllegalArgumentException | IllegalAccessException e) {
             throw new ReflectionException(e);
         }
     }
     
-    public Object setValue(final Object declaringInstance, final Object value) {
+    public void setValue(final Object declaringInstance, final Object value) {
         try {
-            return field.get(declaringInstance);
+            field.setAccessible(true);
+            
+            field.set(declaringInstance, value);
         } catch (final IllegalArgumentException | IllegalAccessException e) {
             throw new ReflectionException(e);
         }

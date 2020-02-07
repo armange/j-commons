@@ -31,7 +31,7 @@ import org.junit.Test;
 import br.com.armange.commons.reflection.stream.artifact.ReflectionStreamBeanArtifact;
 
 public class AnnotationStreamTest {
-    private static final String ANNOTATION_TEST_ONE = "AnnotationTestOne";
+    private static final String ANNOTATION_TEST_ONE = "AnnotationTestOneArtifact";
     private static final String ANNOTATION_TEST_TWO = "AnnotationTestTwoArtifact";
 
     @Test

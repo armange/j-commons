@@ -17,7 +17,8 @@ jobs:
       run: ./gradlew build -x test
     - name: Test with Gradle
       run: ./gradlew test
+    - uses: actions/upload-artifact@v1
       if: failure()
       with:
-       name: jacoco-test-report
-       path: /home/runner/work/j-commons/j-commons/commons-reflection/build/reports/tests/test
+        name: jacoco-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-reflection/build/reports/tests/test

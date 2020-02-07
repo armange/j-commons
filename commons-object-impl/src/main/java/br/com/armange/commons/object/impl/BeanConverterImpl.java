@@ -96,7 +96,7 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
     }
 
     private void copyFieldValue(final Object targetObject, final Field targetField, final Field sourceField) {
-        FieldSupport.from(targetField).setValue(targetField, FieldSupport.from(sourceField).getValue(sourceObject));
+        FieldSupport.from(targetField).setValue(targetObject, FieldSupport.from(sourceField).getValue(sourceObject));
     }
 
     @Override
