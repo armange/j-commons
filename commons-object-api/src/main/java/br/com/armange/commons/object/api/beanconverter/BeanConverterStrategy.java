@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.api;
+package br.com.armange.commons.object.api.beanconverter;
 
-import br.com.armange.commons.object.api.beanconverter.BeanConverterStrategy;
+public enum BeanConverterStrategy {
 
-public interface BeanConverter<S, T> extends ObjectConverter<S, T> {
-
-    void setStrategy(BeanConverterStrategy strategy);
+    ANNOTATED,
+    SAME_NAME,
+    HYBRID,
 }
