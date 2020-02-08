@@ -15,11 +15,9 @@
  * */
 package br.com.armange.commons.reflection.stream;
 
-import java.util.stream.Stream;
+import java.lang.reflect.Member;
 
 @SuppressWarnings("rawtypes")
-public interface ReflectionMemberStream<T, U extends ReflectionMemberStream> {
-    U declared();
-    U nested();
-    Stream<T> build();
+public interface MemberStream<T extends Member, U extends MemberStream> extends ReflectionStream<T, U> {
+    U allowSyntheticMember();
 }

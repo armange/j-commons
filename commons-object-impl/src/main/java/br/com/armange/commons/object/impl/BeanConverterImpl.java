@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -84,13 +85,24 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
                 .build()
                 .collect(Collectors.toList());
         
-        //if
-        
-        targetFields
-            .parallelStream()
-            .forEach(forEachSourceFieldDoSameFieldConsumer(targetObject));
+        doConversionByStrategy(targetObject, targetFields);
         
         return targetObject;
+    }
+
+    private void doConversionByStrategy(final T targetObject, final List<Field> targetFields) {
+        switch (Optional.ofNullable(strategy).orElse(BeanConverterStrategy.SAME_NAME)) {
+        case ANNOTATED:
+            break;
+        case HYBRID:
+            break;
+        default:
+            //SAME_NAME
+            targetFields
+                .parallelStream()
+                .forEach(forEachSourceFieldDoSameFieldConsumer(targetObject));
+            break;
+        }
     }
 
     private Consumer<? super Field> forEachSourceFieldDoSameFieldConsumer(final T targetObject) {
