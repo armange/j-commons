@@ -15,10 +15,11 @@
  * */
 package br.com.armange.commons.reflection.stream;
 
-import java.lang.reflect.Constructor;
+import java.util.stream.Stream;
 
-public interface ConstructorStream<T> extends MemberStream<Constructor<T>, ConstructorStream<T>> {
-    public static <T> ConstructorStream<T> of(final Class<T> sourceClass) {
-        return ReflectionStreamSupport.ConstructorStreamSupport.<T>from(sourceClass);
-    }
+@SuppressWarnings("rawtypes")
+public interface ReflectionStream<T, U extends ReflectionStream> {
+    U declared();
+    U nested();
+    Stream<T> build();
 }

@@ -18,6 +18,7 @@ package br.com.armange.commons.reflection.stream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,21 +30,21 @@ class ReflectionStreamSupport {
         throw new IllegalStateException("Utility class");
     }
     
-    private abstract static class AbstractReflectionMemberSupport<T> {
-        protected final List<T> memberList = new ArrayList<>();
+    private abstract static class AbstractReflectionSupport<T> {
+        protected final List<T> objects = new ArrayList<>();
         protected final Class<?> sourceClass;
         protected boolean declared;
         protected boolean nested;
         
-        protected AbstractReflectionMemberSupport(final Class<?> sourceClass) {
+        protected AbstractReflectionSupport(final Class<?> sourceClass) {
             this.sourceClass = sourceClass;
         }
         
-        protected abstract Class<?> getMemberClass();
+        protected abstract Class<?> getReflectionType();
         
         protected void findMembers(final Class<?> sourceClass, final boolean declared, final boolean nested) {
             if (!sourceClass.equals(Object.class)) {
-                memberList.addAll(Arrays.asList(getMembers(sourceClass, declared)));
+                objects.addAll(Arrays.asList(getObjects(sourceClass, declared)));
                 
                 if (nested) {
                     findMembers(sourceClass.getSuperclass(), declared, nested);
@@ -52,12 +53,12 @@ class ReflectionStreamSupport {
         }
 
         @SuppressWarnings("unchecked")
-        private T[] getMembers(final Class<?> sourceClass, final boolean declared) {
-            if (getMemberClass().equals(Field.class)) {
+        private T[] getObjects(final Class<?> sourceClass, final boolean declared) {
+            if (getReflectionType().equals(Field.class)) {
                 return (T[]) (declared ? sourceClass.getDeclaredFields() : sourceClass.getFields());
-            } else if (getMemberClass().equals(Method.class)) {
+            } else if (getReflectionType().equals(Method.class)) {
                 return (T[]) (declared ? sourceClass.getDeclaredMethods() : sourceClass.getMethods());
-            } else if (getMemberClass().equals(Constructor.class)) {
+            } else if (getReflectionType().equals(Constructor.class)) {
                 return (T[]) (declared ? sourceClass.getDeclaredConstructors() : sourceClass.getConstructors());
             } else {
                 return (T[]) (declared ? sourceClass.getDeclaredAnnotations() : sourceClass.getAnnotations());
@@ -67,11 +68,30 @@ class ReflectionStreamSupport {
         public Stream<T> build() {
             findMembers(sourceClass, declared, nested);
             
-            return memberList.stream();
+            return objects.stream();
         }
     }
     
-    static final class FieldStreamSupport extends AbstractReflectionMemberSupport<Field> implements FieldStream{
+    private abstract static class AbstractReflectionMemberSupport<T extends Member> extends AbstractReflectionSupport<T> {
+        protected boolean allowedSyntheticMember;
+        
+        protected AbstractReflectionMemberSupport(final Class<?> sourceClass) {
+            super(sourceClass);
+        }
+
+        @Override
+        public Stream<T> build() {
+            final Stream<T> stream = super.build();
+            
+            if (!allowedSyntheticMember) {
+                return stream.filter(item -> !item.isSynthetic());
+            }
+            
+            return stream;
+        }
+    }
+    
+    static final class FieldStreamSupport extends AbstractReflectionMemberSupport<Field> implements FieldStream {
         protected FieldStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
@@ -95,8 +115,15 @@ class ReflectionStreamSupport {
         }
 
         @Override
-        protected Class<Field> getMemberClass() {
+        protected Class<Field> getReflectionType() {
             return Field.class;
+        }
+
+        @Override
+        public FieldStream allowSyntheticMember() {
+            allowedSyntheticMember = true;
+            
+            return this;
         }
     }
     
@@ -124,8 +151,15 @@ class ReflectionStreamSupport {
         }
 
         @Override
-        protected Class<Method> getMemberClass() {
+        protected Class<Method> getReflectionType() {
             return Method.class;
+        }
+
+        @Override
+        public MethodStream allowSyntheticMember() {
+            allowedSyntheticMember = true;
+            
+            return this;
         }
     }
     
@@ -154,12 +188,19 @@ class ReflectionStreamSupport {
         }
 
         @Override
-        protected Class<Constructor> getMemberClass() {
+        protected Class<Constructor> getReflectionType() {
             return Constructor.class;
+        }
+
+        @Override
+        public ConstructorStream<T> allowSyntheticMember() {
+            allowedSyntheticMember = true;
+            
+            return this;
         }
     }
     
-    static final class AnnotationStreamSupport  extends AbstractReflectionMemberSupport<Annotation> implements AnnotationStream {
+    static final class AnnotationStreamSupport  extends AbstractReflectionSupport<Annotation> implements AnnotationStream {
         protected AnnotationStreamSupport(final Class<?> sourceClass) {
             super(sourceClass);
         }
@@ -183,7 +224,7 @@ class ReflectionStreamSupport {
         }
 
         @Override
-        protected Class<Annotation> getMemberClass() {
+        protected Class<Annotation> getReflectionType() {
             return Annotation.class;
         }
     }
