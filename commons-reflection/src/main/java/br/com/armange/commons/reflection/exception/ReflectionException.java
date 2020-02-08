@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.reflection.stream;
+package br.com.armange.commons.reflection.exception;
 
-import java.util.stream.Stream;
+public class ReflectionException extends RuntimeException {
 
-@SuppressWarnings("rawtypes")
-public interface ReflectionMemberStream<T, U extends ReflectionMemberStream> {
-    U declared();
-    U nested();
-    Stream<T> build();
+    private static final long serialVersionUID = 1L;
+
+    public ReflectionException() {
+        super();
+    }
+
+    public ReflectionException(final String message) {
+        super(message);
+    }
+
+    public ReflectionException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
+    public ReflectionException(final Throwable cause) {
+        super(cause);
+    }
 }
