@@ -22,8 +22,6 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
-import br.com.armange.commons.thread.ThreadUtil;
-
 public class ThreadUtilTest {
 
     private static final String TEST_FILE_RELATIVE_PATH = "TestFile.txt";
@@ -44,6 +42,8 @@ public class ThreadUtilTest {
     
     @Test
     public void sleepUnchecked() {
+        Assert.fail();
+        
         final long start = System.currentTimeMillis();
         
         ThreadUtil.sleepUnchecked(1000);
