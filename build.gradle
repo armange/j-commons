@@ -40,6 +40,7 @@ allprojects {
     apply from: "$rootDir/gradle/repositories.gradle"
     apply from: "$rootDir/gradle/projects.gradle"
     apply from: "$rootDir/gradle/configurations.gradle"
+    apply from: "$rootDir/gradle/util.gradle"
 }
 
 subprojects {
