@@ -13,10 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-rootProject.name = 'commons'
-include 'commons-thread',
-        'commons-reflection',
-	'commons-object-api',
-	'commons-object-impl',
-	'commons-message',
-	'commons-spi'
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    
+    dependencies {
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.8"
+    }
+}
+
+version = '1.0.0-SNAPSHOT'
+
+apply plugin: "org.sonarqube"
+apply plugin: "jacoco"
+apply from: "$projectDir/gradle/jacoco.gradle"
+apply from: "$projectDir/gradle/$name/sonarqube.gradle"

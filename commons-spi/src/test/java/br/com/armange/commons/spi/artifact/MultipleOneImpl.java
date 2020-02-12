@@ -13,10 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-rootProject.name = 'commons'
-include 'commons-thread',
-        'commons-reflection',
-	'commons-object-api',
-	'commons-object-impl',
-	'commons-message',
-	'commons-spi'
+package br.com.armange.commons.spi.artifact;
+
+public class MultipleOneImpl implements MultipleServices{}

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-rootProject.name = 'commons'
-include 'commons-thread',
-        'commons-reflection',
-	'commons-object-api',
-	'commons-object-impl',
-	'commons-message',
-	'commons-spi'
+dependencies {
+    testCompile (library.junit_junit){
+        exclude group: 'org.hamcrest'
+    }
+    testCompile library.org_assertj_assertj_core
+    testCompile library.org_mockito_mockito_core
+    testCompile library.org_hamcrest_hamcrest
+}

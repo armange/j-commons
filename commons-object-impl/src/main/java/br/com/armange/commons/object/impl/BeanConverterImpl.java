@@ -21,7 +21,6 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -38,7 +37,6 @@ import br.com.armange.commons.reflection.stream.AnnotationStream;
 import br.com.armange.commons.reflection.stream.ConstructorStream;
 import br.com.armange.commons.reflection.stream.FieldStream;
 import br.com.armange.commons.reflection.support.ConstructorSupport;
-import br.com.armange.commons.reflection.support.FieldSupport;
 
 public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
 
@@ -98,17 +96,11 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
             break;
         default:
             //SAME_NAME
-            targetFields
-                .parallelStream()
-                .forEach(forEachSourceFieldDoSameFieldConsumer(targetObject));
+            BeanConverterBySameFieldStrategy
+                .readSource(sourceObject, sourceFields)
+                .writeInto(targetObject, targetFields);
             break;
         }
-    }
-
-    private Consumer<? super Field> forEachSourceFieldDoSameFieldConsumer(final T targetObject) {
-        return targetField -> {
-            sourceFields.parallelStream().forEach(sameFieldConsumer(targetObject, targetField));
-        };
     }
 
     private Predicate<? super Constructor<T>> noParams() {
@@ -121,18 +113,6 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
 
     private Supplier<? extends ObjectConverterException> newObjectConverterException(final Class<T> targetClass) {
         return () -> new ObjectConverterException(Messages.DEFAULT_CONSTRUCTOR_NOT_FOUND, targetClass.getName());
-    }
-
-    private Consumer<? super Field> sameFieldConsumer(final Object targetObject, final Field targetField) {
-        return sourceField -> { 
-            if (sourceField.getName().equals(targetField.getName())) {
-                copyFieldValue(targetObject, targetField, sourceField);
-            }
-        };
-    }
-
-    private void copyFieldValue(final Object targetObject, final Field targetField, final Field sourceField) {
-        FieldSupport.from(targetField).setValue(targetObject, FieldSupport.from(sourceField).getValue(sourceObject));
     }
 
     @Override

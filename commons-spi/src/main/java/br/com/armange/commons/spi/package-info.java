@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-rootProject.name = 'commons'
-include 'commons-thread',
-        'commons-reflection',
-	'commons-object-api',
-	'commons-object-impl',
-	'commons-message',
-	'commons-spi'
+/**
+ * Utility package for service loading.<br>
+ * <p><b>{@link br.com.armange.commons.spi.Loader}</b></p>
+ * <p>Useful structure for service loading.</p>
+ * <pre>
+ * //Loading a single service.
+ * final Service loadService = Loader.loadService(Service.class);
+ * 
+ * //loading a list of service.
+ * final List<Service> services = Loader.loadServices(Service.class);
+ * </pre>
+ * */
+package br.com.armange.commons.spi;
