@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -29,7 +28,6 @@ import org.mockito.Mockito;
  * @author Diego Armange Costa
  * @since 2019-11-18 V1.0.0 (JDK 1.8)
  */
-@Ignore
 public class ThreadBuilderTest {
     private static final RuntimeException RUNTIME_EXCEPTION = new RuntimeException();
     

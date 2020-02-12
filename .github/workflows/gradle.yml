@@ -41,7 +41,7 @@ jobs:
       uses: actions/upload-artifact@v1
       if: failure() && env.build_commons_message == 'ok'
       with:
-        name: commons-message-jacoco-test-report
+        name: commons-message-test-report
         path: /home/runner/work/j-commons/j-commons/commons-message/build/reports/tests/test
       
     #######################################################################################
@@ -63,7 +63,7 @@ jobs:
       uses: actions/upload-artifact@v1
       if: failure() && env.build_commons_thread == 'ok'
       with:
-        name: commons-thread-jacoco-test-report
+        name: commons-thread-test-report
         path: /home/runner/work/j-commons/j-commons/commons-thread/build/reports/tests/test
     
     #######################################################################################
@@ -85,7 +85,7 @@ jobs:
       uses: actions/upload-artifact@v1
       if: failure() && env.build_commons_reflection == 'ok'
       with:
-        name: commons-reflection-jacoco-test-report
+        name: commons-reflection-test-report
         path: /home/runner/work/j-commons/j-commons/commons-reflection/build/reports/tests/test
     
     #######################################################################################
@@ -107,7 +107,7 @@ jobs:
       uses: actions/upload-artifact@v1
       if: failure() && env.build_commons_object_api == 'ok'
       with:
-        name: commons-object-api-jacoco-test-report
+        name: commons-object-api-test-report
         path: /home/runner/work/j-commons/j-commons/commons-object-api/build/reports/tests/test
       
     #######################################################################################
@@ -129,6 +129,6 @@ jobs:
       uses: actions/upload-artifact@v1
       if: failure() && env.build_commons_object_impl == 'ok'
       with:
-        name: commons-object-impl-jacoco-test-report
+        name: commons-object-impl-test-report
         path: /home/runner/work/j-commons/j-commons/commons-object-impl/build/reports/tests/test
     

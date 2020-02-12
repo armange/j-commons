@@ -42,8 +42,6 @@ public class ThreadUtilTest {
     
     @Test
     public void sleepUnchecked() {
-        Assert.fail();
-        
         final long start = System.currentTimeMillis();
         
         ThreadUtil.sleepUnchecked(1000);
