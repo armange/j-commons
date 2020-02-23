@@ -30,8 +30,6 @@ public class LoaderTest {
 
     @Test
     public void loadSingleService() {
-        final Service loadService = Loader.loadService(Service.class);
-        
         Assert.assertNotNull(Loader.loadService(Service.class));
         
         final List<Service> services = Loader.loadServices(Service.class);
