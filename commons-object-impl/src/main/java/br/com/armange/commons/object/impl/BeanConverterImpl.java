@@ -88,6 +88,18 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
         return targetObject;
     }
 
+    private Predicate<? super Constructor<T>> noParams() {
+        return c -> c.getParameterCount() == 0;
+    }
+
+    private Function<? super Constructor<T>, ? extends T> newInstanceByConstructor() {
+        return c -> ConstructorSupport.from(c).newInstance();
+    }
+
+    private Supplier<? extends ObjectConverterException> newObjectConverterException(final Class<T> targetClass) {
+        return () -> new ObjectConverterException(Messages.DEFAULT_CONSTRUCTOR_NOT_FOUND, targetClass.getName());
+    }
+    
     private void doConversionByStrategy(final T targetObject, final List<Field> targetFields) {
         switch (Optional.ofNullable(strategy).orElse(BeanConverterStrategy.SAME_NAME)) {
         case ANNOTATED:
@@ -101,18 +113,6 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
                 .writeInto(targetObject, targetFields);
             break;
         }
-    }
-
-    private Predicate<? super Constructor<T>> noParams() {
-        return c -> c.getParameterCount() == 0;
-    }
-
-    private Function<? super Constructor<T>, ? extends T> newInstanceByConstructor() {
-        return c -> ConstructorSupport.from(c).newInstance();
-    }
-
-    private Supplier<? extends ObjectConverterException> newObjectConverterException(final Class<T> targetClass) {
-        return () -> new ObjectConverterException(Messages.DEFAULT_CONSTRUCTOR_NOT_FOUND, targetClass.getName());
     }
 
     @Override

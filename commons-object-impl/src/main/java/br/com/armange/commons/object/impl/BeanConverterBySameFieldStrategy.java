@@ -19,23 +19,27 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 
+import br.com.armange.commons.object.api.beanconverter.StrategicBeanConverter;
+import br.com.armange.commons.object.api.beanconverter.StrategicBeanConverterWriter;
 import br.com.armange.commons.reflection.support.FieldSupport;
 
-class BeanConverterBySameFieldStrategy<S, T> {
+class BeanConverterBySameFieldStrategy<S, T> implements StrategicBeanConverter<S, T> {
 
-    private final S sourceObject;
-    private final List<Field> sourceFields;
+    private S sourceObject;
+    private List<Field> sourceFields;
     
-    BeanConverterBySameFieldStrategy(final S sourceObject, final List<Field> sourceFields) {
+    BeanConverterBySameFieldStrategy() {}
+    
+    @Override
+    public StrategicBeanConverterWriter<S, T> readSource(final S sourceObject, final List<Field> sourceFields) {
         this.sourceObject = sourceObject;
         this.sourceFields = sourceFields;
+        
+        return this;
     }
     
-    static <S, T> BeanConverterBySameFieldStrategy<S, T> readSource(final S sourceObject, final List<Field> sourceFields) {
-        return new BeanConverterBySameFieldStrategy<S,T>(sourceObject, sourceFields);
-    }
-    
-    void writeInto(final T targetObject, final List<Field> targetFields) {
+    @Override
+    public void writeInto(final T targetObject, final List<Field> targetFields) {
         targetFields
             .parallelStream()
             .forEach(forEachSourceFieldDoSameFieldConsumer(targetObject));
