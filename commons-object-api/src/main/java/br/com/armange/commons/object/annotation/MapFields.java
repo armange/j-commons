@@ -13,13 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.reflection.stream;
+package br.com.armange.commons.object.annotation;
 
-import java.util.stream.Stream;
-
-@SuppressWarnings("rawtypes")
-public interface ReflectionMemberStream<T, U extends ReflectionMemberStream> {
-    U declared();
-    U nested();
-    Stream<T> build();
+public @interface MapFields {
+    Class<?> target() default Object.class;
+    FieldItem[] value(); 
 }

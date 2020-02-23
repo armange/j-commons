@@ -4,16 +4,131 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    
     steps:
-    - uses: actions/checkout@v1
+    #######################################################################################
+    ## Checkout                                                                          ##
+    #######################################################################################
+    - name: Checkout
+      uses: actions/checkout@v1
+    
+    #######################################################################################
+    ## JDK                                                                               ##
+    #######################################################################################
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Build with Gradle
-      run: ./gradlew build -x test
-    - name: Test with Gradle
-      run: ./gradlew test
+    
+    #######################################################################################
+    ## Build commons-message                                                             ##
+    #######################################################################################
+    - name: Build commons-message
+      run: ./gradlew :commons-message:build -x test
+    
+    #######################################################################################
+    ## Test commons-message                                                              ##
+    #######################################################################################
+    - name: Test commons-message
+      run: echo "::set-env name=build_commons_message::ok"; ./gradlew :commons-message:test
+      
+    #######################################################################################
+    ## Report commons-message failure tests                                              ##
+    #######################################################################################
+    - name: Report commons-message failure tests
+      uses: actions/upload-artifact@v1
+      if: failure() && env.build_commons_message == 'ok'
+      with:
+        name: commons-message-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-message/build/reports/tests/test
+      
+    #######################################################################################
+    ## Build commons-thread                                                              ##
+    #######################################################################################
+    - name: Build commons-thread
+      run: ./gradlew :commons-thread:build -x test
+    
+    #######################################################################################
+    ## Test commons-thread                                                               ##
+    #######################################################################################
+    - name: Test commons-thread
+      run: echo "::set-env name=build_commons_thread::ok"; ./gradlew :commons-thread:test
+    
+    #######################################################################################
+    ## Report commons-thread failure tests                                               ##
+    #######################################################################################
+    - name: Report commons-thread failure tests
+      uses: actions/upload-artifact@v1
+      if: failure() && env.build_commons_thread == 'ok'
+      with:
+        name: commons-thread-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-thread/build/reports/tests/test
+    
+    #######################################################################################
+    ## Build commons-reflection                                                          ##
+    #######################################################################################
+    - name: Build commons-reflection
+      run: ./gradlew :commons-reflection:build -x test
+    
+    #######################################################################################
+    ## Test commons-reflection                                                           ##
+    #######################################################################################
+    - name: Test commons-reflection
+      run: echo "::set-env name=build_commons_reflection::ok"; ./gradlew :commons-reflection:test
+    
+    #######################################################################################
+    ## Report commons-reflection failure tests                                           ##
+    #######################################################################################
+    - name: Report commons-reflection failure tests
+      uses: actions/upload-artifact@v1
+      if: failure() && env.build_commons_reflection == 'ok'
+      with:
+        name: commons-reflection-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-reflection/build/reports/tests/test
+    
+    #######################################################################################
+    ## Build commons-object-api                                                          ##
+    #######################################################################################
+    - name: Build commons-object-api
+      run: ./gradlew :commons-object-api:build -x test
+    
+    #######################################################################################
+    ## Test commons-object-api                                                           ##
+    #######################################################################################
+    - name: Test commons-object-api
+      run: echo "::set-env name=build_commons_object_api::ok"; ./gradlew :commons-object-api:test
+    
+    #######################################################################################
+    ## Report commons-object-api failure tests                                           ##
+    #######################################################################################
+    - name: Report commons-object-api failure tests
+      uses: actions/upload-artifact@v1
+      if: failure() && env.build_commons_object_api == 'ok'
+      with:
+        name: commons-object-api-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-object-api/build/reports/tests/test
+      
+    #######################################################################################
+    ## Build commons-object-impl                                                         ##
+    #######################################################################################
+    - name: Build commons-object-impl
+      run: ./gradlew :commons-object-impl:build -x test
+    
+    #######################################################################################
+    ## Test commons-object-impl                                                          ##
+    #######################################################################################
+    - name: Test commons-object-impl
+      run: echo "::set-env name=build_commons_object_impl::ok"; ./gradlew :commons-object-impl:test
+    
+    #######################################################################################
+    ## Report commons-object-impl failure tests                                          ##
+    #######################################################################################
+    - name: Report commons-object-impl failure tests
+      uses: actions/upload-artifact@v1
+      if: failure() && env.build_commons_object_impl == 'ok'
+      with:
+        name: commons-object-impl-test-report
+        path: /home/runner/work/j-commons/j-commons/commons-object-impl/build/reports/tests/test
+    
