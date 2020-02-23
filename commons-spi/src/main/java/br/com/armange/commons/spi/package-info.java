@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.annotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ConvertibleBean {}
+/**
+ * Utility package for service loading.<br>
+ * <p><b>{@link br.com.armange.commons.spi.Loader}</b></p>
+ * <p>Useful structure for service loading.</p>
+ * <pre>
+ * //Loading a single service.
+ * final Service loadService = Loader.loadService(Service.class);
+ * 
+ * //loading a list of service.
+ * final List<Service> services = Loader.loadServices(Service.class);
+ * </pre>
+ * */
+package br.com.armange.commons.spi;

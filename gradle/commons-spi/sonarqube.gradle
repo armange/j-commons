@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.annotation;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface ConvertibleBean {}
+sonarqube {
+  properties {
+    property "sonar.projectKey", "$System.env.J_COMMONS_REFLECTION_SONAR_PROJECT_KEY"
+    property "sonar.organization", "$System.env.J_COMMONS_SONAR_ORGANIZATION"
+    property "sonar.host.url", "https://sonarcloud.io"
+    property "sonar.login", "$System.env.J_COMMONS_REFLECTION_SONAR_LOGIN"
+    property "sonar.exclusions", "**/*Generated.java"
+    property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+  }
+}

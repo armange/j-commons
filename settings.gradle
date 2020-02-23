@@ -18,4 +18,5 @@ include 'commons-thread',
         'commons-reflection',
 	'commons-object-api',
 	'commons-object-impl',
-	'commons-message'
+	'commons-message',
+	'commons-spi'
