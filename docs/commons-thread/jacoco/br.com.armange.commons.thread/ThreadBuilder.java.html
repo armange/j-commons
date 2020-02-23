@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThreadBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread</a> &gt; <span class="el_source">ThreadBuilder.java</span></div><h1>ThreadBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread;
+
+import java.time.Duration;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
+/**
+ * Useful structure for thread creation in the following scenarios:
+ * &lt;ul&gt;
+ * &lt;li&gt;&lt;em&gt;&lt;b&gt;Timeout&lt;/b&gt;&lt;/em&gt;&lt;br&gt;
+ * &lt;p&gt;The thread will be active only until the timeout be fired.&lt;/p&gt;&lt;/li&gt;
+ * &lt;li&gt;&lt;em&gt;&lt;b&gt;Delay&lt;/b&gt;&lt;/em&gt;&lt;br&gt;
+ * &lt;p&gt;The thread will be active only after the time delay be completed.&lt;/p&gt;&lt;/li&gt;
+ * &lt;li&gt;&lt;em&gt;&lt;b&gt;Interval&lt;/b&gt;&lt;/em&gt;&lt;br&gt;
+ * &lt;p&gt;The thread will be repeated after the time interval be completed.&lt;/p&gt;&lt;/li&gt;
+ * &lt;li&gt;&lt;em&gt;&lt;b&gt;Exception handling&lt;/b&gt;&lt;/em&gt;&lt;br&gt;
+ * &lt;p&gt;Handles of uncaught exceptions can be thrown and handled within threads.&lt;/p&gt;&lt;/li&gt;
+ * &lt;/ul&gt;
+ * &lt;b&gt;Note:&lt;/b&gt;&lt;br&gt;
+ * &lt;em&gt;The thread will wait a minimum delay
+ * ({@link br.com.armange.commons.thread.ThreadBuilder#MINIMAL_REQUIRED_DELAY}) if and only if a
+ * ({@link br.com.armange.commons.thread.ThreadBuilder#setAfterExecuteConsumer(BiConsumer)}) 
+ * or a ({@link br.com.armange.commons.thread.ThreadBuilder#setUncaughtExceptionConsumer(Consumer)}) 
+ * is present.&lt;/em&gt;
+ * 
+ * &lt;pre&gt;
+ * &lt;b&gt;Example:&lt;/b&gt;
+ * 
+ * final ExecutorService thread = ThreadBuilder
+ *          .newBuilder() //New object to build a new thread.
+ *          .setDelay(1000) //The thread will wait one second before start.
+ *          .setTimeout(4000) //The thread will be canceled after four seconds.
+ *          .setInterval(1000) //The thread will be repeated every second. 
+ *          .setAfterExecuteConsumer(afterExecuteConsumer) //A consumer will be called after thread execution.
+ *          .setUncaughtExceptionConsumer(throwableConsumer) //A consumer will be called after any exception thrown.
+ *          .setMayInterruptIfRunning(true) //The thread interruption/cancellation will not wait execution.
+ *          .setSilentInterruption(true) //Interruption and Cancellation exceptions will not be thrown.
+ *          .setExecution(anyRunnable) //The thread execution.
+ *          .setThreadNameSupplier(() -&amp;gt; &quot;Thread name&quot;)
+ *          .setThreadPrioritySupplier(() -&amp;gt; 4)
+ *          .start();
+ * &lt;/pre&gt;
+ * 
+ * @author Diego Armange Costa
+ * @since 2019-11-26 V1.0.0 (JDK 1.8)
+ * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService
+ */
+public class ThreadBuilder {
+    /**
+     * 1000 milliseconds as a minimal delay.
+     */
+    public static final long MINIMAL_REQUIRED_DELAY = 1000;
+<span class="fc" id="L77">    private Optional&lt;Duration&gt; timeout = Optional.empty();</span>
+<span class="fc" id="L78">    private Optional&lt;Duration&gt; delay = Optional.empty();</span>
+<span class="fc" id="L79">    private Optional&lt;Duration&gt; interval = Optional.empty();</span>
+<span class="fc" id="L80">    private Optional&lt;BiConsumer&lt;Runnable, Throwable&gt;&gt; afterExecuteConsumer = Optional.empty();</span>
+<span class="fc" id="L81">    private Optional&lt;Consumer&lt;Throwable&gt;&gt; uncaughtExceptionConsumer = Optional.empty();</span>
+<span class="fc" id="L82">    private final Optional&lt;CaughtExecutorThreadFactory&gt; threadFactory = Optional.empty();</span>
+<span class="fc" id="L83">    private Optional&lt;Supplier&lt;String&gt;&gt; threadNameSupplier = Optional.empty();</span>
+<span class="fc" id="L84">    private Optional&lt;IntSupplier&gt; threadPrioritySupplier = Optional.empty();</span>
+    private Runnable execution;
+    private ScheduledCaughtExecutorService executor;
+    private ExecutorResult executorResult;
+    private boolean mayInterruptIfRunning;
+    private boolean silentInterruption; 
+    private final int corePoolSize;
+
+<span class="fc" id="L92">    private ThreadBuilder() {</span>
+<span class="fc" id="L93">        corePoolSize = 1;</span>
+<span class="fc" id="L94">    }</span>
+    
+<span class="fc" id="L96">    private ThreadBuilder(final int corePoolSize) {</span>
+<span class="fc" id="L97">        this.corePoolSize = corePoolSize;</span>
+<span class="fc" id="L98">    }</span>
+
+    /**
+     * @return a new object to perform a thread creation.
+     */
+    public static ThreadBuilder newBuilder() {
+<span class="fc" id="L104">        return new ThreadBuilder();</span>
+    }
+    
+    /**
+     * @param corePoolSize the {@link ScheduledCaughtExecutorService} pool size.
+     * @return a new object to perform a thread creation.
+     * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService#ScheduledCaughtExecutorService(int)
+     */
+    public static ThreadBuilder newBuilder(final int corePoolSize) {
+<span class="fc" id="L113">        return new ThreadBuilder(corePoolSize);</span>
+    }
+
+    /**
+     * Sets the timeout value.
+     * @param milliseconds the timeout value in milliseconds. 
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setTimeout(final long milliseconds) {
+<span class="fc" id="L122">        timeout = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L124">        return this;</span>
+    }
+
+    /**
+     * Sets the delay value.
+     * @param milliseconds the delay value in milliseconds.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setDelay(final long milliseconds) {
+<span class="fc" id="L133">        delay = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L135">        return this;</span>
+    }
+
+    /**
+     * Sets the repeating interval value.
+     * @param milliseconds the repeating interval value in milliseconds.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setInterval(final long milliseconds) {
+<span class="fc" id="L144">        interval = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L146">        return this;</span>
+    }
+
+    /**
+     * Sets the consumer to be called after thread execution.
+     * @param afterExecuteConsumer the consumer to be called after thread execution.
+     * @return the current thread builder.
+     * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService#afterExecute(Runnable, Throwable)
+     */
+    public ThreadBuilder setAfterExecuteConsumer(final BiConsumer&lt;Runnable, Throwable&gt; afterExecuteConsumer) {
+<span class="fc" id="L156">        this.afterExecuteConsumer = Optional.ofNullable(afterExecuteConsumer);</span>
+
+<span class="fc" id="L158">        return this;</span>
+    }
+
+    /**
+     * Sets the consumer to be called after exception throwing. This consumer will be called as a first after-executes 
+     * consumer.
+     * @param uncaughtExceptionConsumer the consumer to be called after exception throwing.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setUncaughtExceptionConsumer(final Consumer&lt;Throwable&gt; uncaughtExceptionConsumer) {
+<span class="fc" id="L168">        this.uncaughtExceptionConsumer = Optional.ofNullable(uncaughtExceptionConsumer);</span>
+
+<span class="fc" id="L170">        return this;</span>
+    }
+    
+    /**
+     * Sets the thread name supplier.The thread factory will consume this supplier to generate a thread name 
+     * before return a new thread.
+     * @param threadNameSupplier the thread name supplier.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setThreadNameSupplier(final Supplier&lt;String&gt; threadNameSupplier) {
+<span class="fc" id="L180">        this.threadNameSupplier = Optional.ofNullable(threadNameSupplier);</span>
+        
+<span class="fc" id="L182">        return this;</span>
+    }
+    
+    /**
+     * Sets the thread priority supplier.The thread factory will consume this supplier to generate a thread priority 
+     * before return a new thread.
+     * @param threadPrioritySupplier the thread priority supplier.
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier) {
+<span class="fc" id="L192">        this.threadPrioritySupplier = Optional.ofNullable(threadPrioritySupplier);</span>
+        
+<span class="fc" id="L194">        return this;</span>
+    }
+
+    /**
+     * Sets the thread execution.
+     * @param execution the thread execution({@link java.lang.Runnable})
+     * @return the current thread builder.
+     */
+    public ThreadBuilder setExecution(final Runnable execution) {
+<span class="fc" id="L203">        this.execution = execution;</span>
+
+<span class="fc" id="L205">        requireExecutionNonNull();</span>
+
+<span class="fc" id="L207">        return this;</span>
+    }
+
+    /**
+     * Sets the thread-interrupting-flag.
+     * @param flag true if the thread executing this task should be interrupted; 
+     * otherwise, in-progress tasks are allowed to complete.
+     * @return the current thread builder.
+     * @see java.util.concurrent.Future#cancel(boolean)
+     */
+    public ThreadBuilder setMayInterruptIfRunning(final boolean flag) {
+<span class="fc" id="L218">        mayInterruptIfRunning = flag;</span>
+
+<span class="fc" id="L220">        return this;</span>
+    }
+
+    /**
+     * Sets the thread-silent-interrupting-flag.
+     * @param flag true if the Interruption/Cancellation exceptions should be ignored.
+     * @return the current thread builder.
+     * @see java.util.concurrent.Future#cancel(boolean)
+     * @see java.util.concurrent.CancellationException
+     * @see java.lang.InterruptedException
+     */
+    public ThreadBuilder setSilentInterruption(final boolean flag) {
+<span class="fc" id="L232">        silentInterruption = flag;</span>
+
+<span class="fc" id="L234">        return this;</span>
+    }
+
+    /**
+     * Starts the thread.
+     * @return the executor's result after starting thread.
+     * @see ExecutorResult
+     */
+    public ExecutorResult start() {
+<span class="fc" id="L243">        createExecutorAndRunThread();</span>
+
+<span class="fc" id="L245">        return executorResult;</span>
+    }
+    
+    /**
+     * Starts the thread.
+     * @return the current thread builder to prepare another thread.
+     */
+    public ThreadBuilder startAndBuildOther() {
+<span class="fc" id="L253">        createExecutorAndRunThread();</span>
+
+<span class="fc" id="L255">        return this;</span>
+    }
+
+    private void createExecutorAndRunThread() {
+<span class="fc" id="L259">        requireExecutionNonNull();</span>
+
+<span class="fc" id="L261">        executor = new ScheduledCaughtExecutorService(corePoolSize, getThreadFactory());</span>
+        
+<span class="fc" id="L263">        runThread();</span>
+
+<span class="fc" id="L265">        afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);</span>
+<span class="fc" id="L266">    }</span>
+
+    private ThreadFactory getThreadFactory() {
+<span class="fc" id="L269">        final CaughtExecutorThreadFactory factory = threadFactory.orElse(new CaughtExecutorThreadFactory());</span>
+        
+<span class="fc" id="L271">        uncaughtExceptionConsumer</span>
+<span class="pc" id="L272">                .ifPresent(uec -&gt; factory.setUncaughtExceptionHandler((thread, throwable) -&gt; uec.accept(throwable)));</span>
+        
+<span class="fc" id="L274">        threadNameSupplier.ifPresent(tns -&gt; factory.setThreadName(tns.get()));</span>
+        
+<span class="fc" id="L276">        threadPrioritySupplier.ifPresent(tps -&gt; factory.setThreadPriority(tps.getAsInt()));</span>
+        
+<span class="fc" id="L278">        return factory;</span>
+    }
+
+    private void runThread() {
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (noSchedule()) {</span>
+<span class="fc" id="L283">            runWithNoSchedule();</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        } else if (onlyDelay()) {</span>
+<span class="fc" id="L285">            runWithDelay();</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">        } else if (onlyTimeout()) {</span>
+<span class="fc" id="L287">            runWithDelayAndTimeout();</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        } else if (onlyInterval()) {</span>
+<span class="fc" id="L289">            runWithDelayAndInterval();</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        } else if (delayAndTimeout()) {</span>
+<span class="fc" id="L291">            runWithDelayAndTimeout();</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        } else if (delayAndInterval()) {</span>
+<span class="fc" id="L293">            runWithDelayAndInterval();</span>
+        } else /* All */ {
+<span class="fc" id="L295">            runWithAllTimesControls();</span>
+        }
+<span class="fc" id="L297">    }</span>
+
+    private void requireExecutionNonNull() {
+<span class="fc" id="L300">        Objects.requireNonNull(execution, &quot;The {execution} parameter is required&quot;);</span>
+<span class="fc" id="L301">    }</span>
+
+    private boolean noSchedule() {
+<span class="fc bfc" id="L304" title="All 6 branches covered.">        return !delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyDelay() {
+<span class="fc bfc" id="L308" title="All 6 branches covered.">        return delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyTimeout() {
+<span class="fc bfc" id="L312" title="All 6 branches covered.">        return !delay.isPresent() &amp;&amp; timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyInterval() {
+<span class="pc bpc" id="L316" title="1 of 6 branches missed.">        return !delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; interval.isPresent();</span>
+    }
+
+    private boolean delayAndTimeout() {
+<span class="fc bfc" id="L320" title="All 6 branches covered.">        return delay.isPresent() &amp;&amp; timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean delayAndInterval() {
+<span class="pc bpc" id="L324" title="1 of 6 branches missed.">        return delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; interval.isPresent();</span>
+    }
+
+    private void runWithNoSchedule() {
+<span class="fc" id="L328">        final Future&lt;?&gt; future = executor.schedule(execution, handleDelay(), TimeUnit.MILLISECONDS);</span>
+
+<span class="fc" id="L330">        executor.addAfterExecuteConsumer(handleException(future));</span>
+<span class="fc" id="L331">        newExecutorResultIfNull();</span>
+<span class="fc" id="L332">        executorResult.getFutures().add(future);</span>
+<span class="fc" id="L333">    }</span>
+
+    private void runWithDelay() {
+<span class="fc" id="L336">        final ScheduledFuture&lt;?&gt; future = executor.schedule(execution, handleDelay(), TimeUnit.MILLISECONDS);</span>
+
+<span class="fc" id="L338">        executor.addAfterExecuteConsumer(handleException(future));</span>
+<span class="fc" id="L339">        newExecutorResultIfNull();</span>
+<span class="fc" id="L340">        executorResult.getFutures().add(future);</span>
+<span class="fc" id="L341">    }</span>
+
+    private void runWithDelayAndTimeout() {
+<span class="fc" id="L344">        final ScheduledFuture&lt;?&gt; future = executor.schedule(execution, handleDelay(), TimeUnit.MILLISECONDS);</span>
+
+<span class="fc" id="L346">        executor.addAfterExecuteConsumer(handleException(future));</span>
+
+<span class="fc" id="L348">        final ExecutorResult timeoutExecutorResult = handleInterruption(future);</span>
+        
+<span class="fc" id="L350">        newExecutorResultIfNull();</span>
+<span class="fc" id="L351">        executorResult.getFutures().add(future);</span>
+<span class="fc" id="L352">        executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);</span>
+<span class="fc" id="L353">    }</span>
+
+    private void runWithDelayAndInterval() {
+<span class="fc" id="L356">        final ScheduledFuture&lt;?&gt; future = executor.scheduleAtFixedRate(execution, handleDelay(),</span>
+<span class="fc" id="L357">                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);</span>
+
+<span class="fc" id="L359">        executor.addAfterExecuteConsumer(handleException(future));</span>
+<span class="fc" id="L360">        newExecutorResultIfNull();</span>
+<span class="fc" id="L361">        executorResult.getFutures().add(future);</span>
+<span class="fc" id="L362">    }</span>
+    
+    private void newExecutorResultIfNull() {
+<span class="fc bfc" id="L365" title="All 2 branches covered.">        executorResult = executorResult == null ? new ExecutorResult(executor) : executorResult;</span>
+<span class="fc" id="L366">    }</span>
+
+    private void runWithAllTimesControls() {
+<span class="fc" id="L369">        final ScheduledFuture&lt;?&gt; future = executor.scheduleAtFixedRate(execution, handleDelay(),</span>
+<span class="fc" id="L370">                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);</span>
+        
+<span class="fc" id="L372">        executor.addAfterExecuteConsumer(handleException(future));</span>
+
+<span class="fc" id="L374">        final ExecutorResult timeoutExecutorResult = handleInterruption(future);</span>
+        
+<span class="fc" id="L376">        newExecutorResultIfNull();</span>
+<span class="fc" id="L377">        executorResult.getFutures().add(future);</span>
+<span class="fc" id="L378">        executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);</span>
+<span class="fc" id="L379">    }</span>
+
+    private long handleDelay() {
+<span class="fc" id="L382">        final long localDelay = delay.orElse(Duration.ofMillis(0)).toMillis();</span>
+        
+<span class="fc bfc" id="L384" title="All 4 branches covered.">        if (uncaughtExceptionConsumer.isPresent() || afterExecuteConsumer.isPresent()) {</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">            return localDelay &gt;= MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + MINIMAL_REQUIRED_DELAY;</span>
+        } else {
+<span class="fc" id="L387">            return localDelay;</span>
+        }
+    }
+
+    private BiConsumer&lt;Runnable, Throwable&gt; handleException(final Future&lt;?&gt; future) {
+<span class="fc" id="L392">        return (a, b) -&gt; {</span>
+            try {
+<span class="fc bfc" id="L394" title="All 2 branches covered.">                if (future.isDone()) future.get();</span>
+<span class="fc" id="L395">            } catch (final Exception e) {</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">                if (isNotSilentOrIsExecutionException(e)) {</span>
+<span class="fc" id="L397">                    uncaughtExceptionConsumer.ifPresent(consumer -&gt; consumer.accept(e));</span>
+                }
+<span class="fc" id="L399">            }</span>
+<span class="fc" id="L400">        };</span>
+    }
+
+    private boolean isNotSilentOrIsExecutionException(final Exception e) {
+<span class="pc bpc" id="L404" title="1 of 6 branches missed.">        return !silentInterruption || !(e instanceof CancellationException) &amp;&amp; !(e instanceof InterruptedException);</span>
+    }
+
+    private ExecutorResult handleInterruption(final ScheduledFuture&lt;?&gt; future) {
+<span class="fc" id="L408">        final ScheduledCaughtExecutorService localExecutor = new ScheduledCaughtExecutorService(1);</span>
+        
+<span class="fc" id="L410">        localExecutor.addAfterExecuteConsumer(handleException(future));</span>
+<span class="fc" id="L411">        localExecutor.schedule(cancelFuture(future), timeout.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);</span>
+        
+<span class="fc" id="L413">        final ExecutorResult timeoutExecutorResult = new ExecutorResult(localExecutor);</span>
+        
+<span class="fc" id="L415">        timeoutExecutorResult.getFutures().add(future);</span>
+        
+<span class="fc" id="L417">        return timeoutExecutorResult;</span>
+    }
+
+    private Runnable cancelFuture(final ScheduledFuture&lt;?&gt; future) {
+<span class="pc bpc" id="L421" title="1 of 4 branches missed.">        return () -&gt; {if(!future.isDone() &amp;&amp; !future.isCancelled()) future.cancel(mayInterruptIfRunning);};</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>
