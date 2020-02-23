@@ -11,7 +11,7 @@ This release was created based on the need to simplify daily software developmen
 - [Exception handling](#excepton).
 
 ###### See [Javadoc](https://armange.github.io/j-commons/commons-spi/javadoc)
-###### See [Tests report](https://armange.github.io/j-commons/commons-thread/test)
+###### See [Tests report](https://armange.github.io/j-commons/commons-spi/test)
 
 [![Build][buildbadge]](https://github.com/armange/j-commons/commits/development) 
 [![Coverage][coveragebadge]](https://sonarcloud.io/dashboard?id=armange_j-commons-commons-spi) 
