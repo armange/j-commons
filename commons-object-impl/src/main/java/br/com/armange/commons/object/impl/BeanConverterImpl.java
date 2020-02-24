@@ -108,7 +108,7 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
             break;
         default:
             //SAME_NAME
-            final BeanConverterBySameFieldStrategy<S, T> bc = new BeanConverterBySameFieldStrategy<>();
+            final SameFieldNameStrategyConverter<S, T> bc = new SameFieldNameStrategyConverter<>();
             bc
                 .readSource(sourceObject, sourceFields)
                 .writeInto(targetObject, targetFields);

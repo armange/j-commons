@@ -23,12 +23,12 @@ import br.com.armange.commons.object.api.beanconverter.StrategicBeanConverter;
 import br.com.armange.commons.object.api.beanconverter.StrategicBeanConverterWriter;
 import br.com.armange.commons.reflection.support.FieldSupport;
 
-class BeanConverterBySameFieldStrategy<S, T> implements StrategicBeanConverter<S, T> {
+class SameFieldNameStrategyConverter<S, T> implements StrategicBeanConverter<S, T> {
 
     private S sourceObject;
     private List<Field> sourceFields;
     
-    BeanConverterBySameFieldStrategy() {}
+    SameFieldNameStrategyConverter() {}
     
     @Override
     public StrategicBeanConverterWriter<S, T> readSource(final S sourceObject, final List<Field> sourceFields) {
