@@ -72,7 +72,7 @@ final Stream<MultipleServices> serviceStream = Loader.loadServices(MultipleServi
 
 <a name="exception"></a>
 
-#### Services as stream [:arrow_double_up:](#summary)
+#### Exception class [:arrow_double_up:](#summary)
 ```java
 try {
     final List<Service> services = Loader.loadServices(Service.class);
