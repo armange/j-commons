@@ -8,7 +8,7 @@ This release was created based on the need to simplify daily software developmen
 - [Single service loagind](#single).
 - [Multiple service loaging](#multiple).
 - [Service's loading as stream.](#stream).
-- [Exception handling](#excepton).
+- [Exception handling](#exception).
 
 ##### Docs
  - [Javadoc](https://armange.github.io/j-commons/commons-spi/javadoc)
