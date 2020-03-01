@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import br.com.armange.commons.object.impl.artifact.BeanArtifact;
 import br.com.armange.commons.object.impl.artifact.ConvertibleBeanArtifact;
+import br.com.armange.commons.object.impl.typeconverter.bean.BeanConverterImpl;
 
 public class BeanConverterImplTest {
 

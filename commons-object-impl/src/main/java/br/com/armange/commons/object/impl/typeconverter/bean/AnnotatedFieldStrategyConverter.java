@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.beanconverter;
+package br.com.armange.commons.object.impl.typeconverter.bean;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -21,12 +21,19 @@ import java.util.List;
 import br.com.armange.commons.object.api.typeconverter.bean.StrategicBeanConverter;
 import br.com.armange.commons.object.api.typeconverter.bean.StrategicBeanConverterWriter;
 
-class NestedFieldNameStrategyConverter<S, T> implements StrategicBeanConverter<S, T> {
+class AnnotatedFieldStrategyConverter<S, T> implements StrategicBeanConverter<S, T> {
 
+    private S sourceObject;
+    private List<Field> sourceFields;
+    
+    AnnotatedFieldStrategyConverter() {}
+    
     @Override
     public StrategicBeanConverterWriter<S, T> readSource(final S sourceObject, final List<Field> sourceFields) {
-        // TODO Auto-generated method stub
-        return null;
+        this.sourceObject = sourceObject;
+        this.sourceFields = sourceFields;
+        
+        return this;
     }
 
     @Override

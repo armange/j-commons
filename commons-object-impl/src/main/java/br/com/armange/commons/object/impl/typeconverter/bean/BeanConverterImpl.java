@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl;
+package br.com.armange.commons.object.impl.typeconverter.bean;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -31,7 +31,6 @@ import br.com.armange.commons.object.api.typeconverter.BeanConverter;
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
 import br.com.armange.commons.object.api.typeconverter.annotation.ConvertibleBean;
 import br.com.armange.commons.object.api.typeconverter.bean.BeanConverterStrategy;
-import br.com.armange.commons.object.impl.beanconverter.SameFieldNameStrategyConverter;
 import br.com.armange.commons.object.impl.exception.ObjectConverterException;
 import br.com.armange.commons.object.impl.message.Messages;
 import br.com.armange.commons.reflection.stream.AnnotationStream;

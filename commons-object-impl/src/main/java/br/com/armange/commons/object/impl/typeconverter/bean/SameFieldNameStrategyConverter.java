@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.beanconverter;
+package br.com.armange.commons.object.impl.typeconverter.bean;
 
 import java.lang.reflect.Field;
 import java.util.List;
