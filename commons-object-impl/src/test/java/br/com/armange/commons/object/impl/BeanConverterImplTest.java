@@ -6,7 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 
@@ -27,7 +27,8 @@ public class BeanConverterImplTest {
     public void anyConvertibleBeanIsMatchingWithItsConverter() {
         final BeanConverterImpl<ConvertibleBeanArtifact, ConvertibleBeanArtifact> converter = new BeanConverterImpl<>();
         
-        assertTrue(converter.matches(new ConvertibleBeanArtifact()));
+//        assertTrue(converter.matches(new ConvertibleBeanArtifact()));
+        fail();
     }
     
     @Test

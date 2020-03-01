@@ -2,7 +2,7 @@ package br.com.armange.commons.object.impl.artifact;
 
 import java.math.BigDecimal;
 
-import br.com.armange.commons.object.annotation.ConvertibleBean;
+import br.com.armange.commons.object.api.typeconverter.annotation.ConvertibleBean;
 
 @ConvertibleBean
 public class ConvertibleBeanArtifact {

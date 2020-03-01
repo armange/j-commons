@@ -27,10 +27,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import br.com.armange.commons.message.CommonMessages;
-import br.com.armange.commons.object.annotation.ConvertibleBean;
-import br.com.armange.commons.object.api.BeanConverter;
-import br.com.armange.commons.object.api.ObjectConverter;
-import br.com.armange.commons.object.api.beanconverter.BeanConverterStrategy;
+import br.com.armange.commons.object.api.typeconverter.BeanConverter;
+import br.com.armange.commons.object.api.typeconverter.TypeConverter;
+import br.com.armange.commons.object.api.typeconverter.annotation.ConvertibleBean;
+import br.com.armange.commons.object.api.typeconverter.bean.BeanConverterStrategy;
+import br.com.armange.commons.object.impl.beanconverter.SameFieldNameStrategyConverter;
 import br.com.armange.commons.object.impl.exception.ObjectConverterException;
 import br.com.armange.commons.object.impl.message.Messages;
 import br.com.armange.commons.reflection.stream.AnnotationStream;
@@ -48,7 +49,7 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
     private BeanConverterStrategy strategy;
     
     @Override
-    public ObjectConverter<S, T> from(final S sourceObject) {
+    public TypeConverter<S, T> from(final S sourceObject) {
         Objects.requireNonNull(sourceObject, CommonMessages.REQUIRED_PARAMETER.format(SOURCE));
         
         this.sourceObject = sourceObject;
@@ -117,12 +118,17 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
     }
 
     @Override
-    public boolean matches(final Object source) {
+    public boolean matches(final Object source, final Class<?> targetClass) {
         return AnnotationStream.of(source).build().map(Annotation::annotationType).anyMatch(ConvertibleBean.class::equals);
     }
     
     @Override
     public void setStrategy(final BeanConverterStrategy strategy) {
         this.strategy = strategy;
+    }
+    
+    public static void main(final String[] args) {
+        System.out.println(int.class.getName());
+        System.out.println(Integer.class.getName());
     }
 }
