@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.longvalue;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.longinteger.LongToByteConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class LongToByteConverterImpl implements LongToByteConverter {
 
-    private Integer result;
+    private Byte result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<Long, Byte> from(final Long sourceObject) {
+        result = sourceObject != null ? sourceObject.byteValue() : null;
         
         return this; 
     }
 
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public Byte to(final Class<Byte> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(Long.class) && targetClass.equals(Byte.class);
     }
 }

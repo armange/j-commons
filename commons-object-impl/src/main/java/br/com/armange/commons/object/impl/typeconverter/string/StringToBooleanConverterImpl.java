@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.string;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.string.StringToBooleanConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class StringToBooleanConverterImpl implements StringToBooleanConverter {
 
-    private Integer result;
+    private Boolean result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<String, Boolean> from(final String sourceObject) {
+        result = sourceObject != null ? Boolean.valueOf(sourceObject) : null; 
         
         return this; 
     }
 
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public Boolean to(final Class<Boolean> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(String.class) && targetClass.equals(Boolean.class);
     }
 }

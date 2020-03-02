@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.string;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.string.StringToCharactereConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class StringToCharactereConverterImpl implements StringToCharactereConverter {
 
-    private Integer result;
+    private Character result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<String, Character> from(final String sourceObject) {
+        result = sourceObject != null ? toChar(sourceObject) : null;
         
         return this; 
     }
 
+    private char toChar(final String sourceObject) {
+        return sourceObject.isEmpty() ? Character.MIN_VALUE : sourceObject.charAt(0);
+    }
+
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public Character to(final Class<Character> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(String.class) && targetClass.equals(Character.class);
     }
 }

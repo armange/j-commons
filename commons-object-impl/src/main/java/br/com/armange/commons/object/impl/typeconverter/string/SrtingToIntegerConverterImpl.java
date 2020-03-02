@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.string;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.string.StringToIntegerConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class SrtingToIntegerConverterImpl implements StringToIntegerConverter {
 
     private Integer result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<String, Integer> from(final String sourceObject) {
+        result = sourceObject != null ? new Integer(sourceObject) : null;
         
         return this; 
     }
@@ -36,6 +36,6 @@ public class IntegerToIntegerImpl implements IntegerToInteger {
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(String.class) && targetClass.equals(Integer.class);
     }
 }

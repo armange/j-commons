@@ -13,29 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.string;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.string.StringToDoubleConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class StringToDoubleConverterImpl implements StringToDoubleConverter {
 
-    private Integer result;
+    private Double result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<String, Double> from(final String sourceObject) {
+        result = sourceObject != null ? new Double(sourceObject) : null;
         
         return this; 
     }
 
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public Double to(final Class<Double> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(String.class) && targetClass.equals(Double.class);
     }
 }

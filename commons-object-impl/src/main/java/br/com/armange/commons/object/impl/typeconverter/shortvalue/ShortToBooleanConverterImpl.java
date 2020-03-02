@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.shortvalue;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.shortinteger.ShortToBooleanConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class ShortToBooleanConverterImpl implements ShortToBooleanConverter {
 
-    private Integer result;
+    private Boolean result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<Short, Boolean> from(final Short sourceObject) {
+        result = sourceObject != null ? toBoolean(sourceObject) : null; 
         
         return this; 
     }
 
+    private Boolean toBoolean(final Short sourceObject) {
+        return sourceObject > 0 || sourceObject < 0;
+    }
+
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public Boolean to(final Class<Boolean> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(Short.class) && targetClass.equals(Boolean.class);
     }
 }

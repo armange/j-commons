@@ -13,29 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.object.impl.typeconverter.integer;
+package br.com.armange.commons.object.impl.typeconverter.string;
+
+import java.math.BigDecimal;
 
 import br.com.armange.commons.object.api.typeconverter.TypeConverter;
-import br.com.armange.commons.object.api.typeconverter.integer.IntegerToInteger;
+import br.com.armange.commons.object.api.typeconverter.string.StringToBigDecimalConverter;
 
-public class IntegerToIntegerImpl implements IntegerToInteger {
+public class StringToBigDecimalConverterImpl implements StringToBigDecimalConverter {
 
-    private Integer result;
+    private BigDecimal result;
     
     @Override
-    public TypeConverter<Integer, Integer> from(final Integer sourceObject) {
-        result = sourceObject;
+    public TypeConverter<String, BigDecimal> from(final String sourceObject) {
+        result = sourceObject != null ? new BigDecimal(sourceObject) : null;
         
         return this; 
     }
 
     @Override
-    public Integer to(final Class<Integer> targetClass) {
+    public BigDecimal to(final Class<BigDecimal> targetClass) {
         return result;
     }
 
     @Override
     public boolean matches(final Object sourceObject, final Class<?> targetClass) {
-        return sourceObject.getClass().equals(Integer.class) && targetClass.equals(Integer.class);
+        return sourceObject.getClass().equals(String.class) && targetClass.equals(BigDecimal.class);
     }
 }
