@@ -15,9 +15,11 @@
  * */
 package br.com.armange.commons.object.api.typeconverter.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Repeatable;
 
 @Repeatable(MapFields.class)
+@Documented
 public @interface FieldItem {
     String sourceField() default "";
     String targetField() default "";

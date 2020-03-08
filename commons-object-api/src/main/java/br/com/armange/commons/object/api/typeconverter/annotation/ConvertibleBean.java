@@ -15,6 +15,7 @@
  * */
 package br.com.armange.commons.object.api.typeconverter.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,4 +23,10 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ConvertibleBean {}
+@Documented
+public @interface ConvertibleBean {
+    /**
+     * @return The known compatibilities
+     */
+    Class<?>[] value() default {};
+}

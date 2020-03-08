@@ -39,7 +39,5 @@ class AnnotatedFieldStrategyConverter<S, T> implements StrategicBeanConverter<S,
     @Override
     public void writeInto(final T targetObject, final List<Field> targetFields) {
         // TODO Auto-generated method stub
-        
     }
-
 }

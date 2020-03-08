@@ -15,7 +15,6 @@
  * */
 package br.com.armange.commons.object.impl.typeconverter.bean;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import br.com.armange.commons.message.CommonMessages;
 import br.com.armange.commons.object.api.typeconverter.BeanConverter;
@@ -33,7 +33,6 @@ import br.com.armange.commons.object.api.typeconverter.annotation.ConvertibleBea
 import br.com.armange.commons.object.api.typeconverter.bean.BeanConverterStrategy;
 import br.com.armange.commons.object.impl.exception.ObjectConverterException;
 import br.com.armange.commons.object.impl.message.Messages;
-import br.com.armange.commons.reflection.stream.AnnotationStream;
 import br.com.armange.commons.reflection.stream.ConstructorStream;
 import br.com.armange.commons.reflection.stream.FieldStream;
 import br.com.armange.commons.reflection.support.ConstructorSupport;
@@ -107,9 +106,7 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
         case HYBRID:
             break;
         default:
-            //SAME_NAME
-            final SameFieldNameStrategyConverter<S, T> bc = new SameFieldNameStrategyConverter<>();
-            bc
+            new SameFieldNameStrategyConverter<>()
                 .readSource(sourceObject, sourceFields)
                 .writeInto(targetObject, targetFields);
             break;
@@ -118,16 +115,19 @@ public class BeanConverterImpl<S, T> implements BeanConverter<S, T> {
 
     @Override
     public boolean matches(final Object source, final Class<?> targetClass) {
-        return AnnotationStream.of(source).build().map(Annotation::annotationType).anyMatch(ConvertibleBean.class::equals);
+        if (source == null || targetClass == null) {
+            return false;
+        }
+        
+        return Optional.ofNullable(source
+                .getClass()
+                .getAnnotation(ConvertibleBean.class))
+                .map(a -> Stream.of(a.value()).anyMatch(targetClass::equals))
+                .orElse(false);
     }
     
     @Override
     public void setStrategy(final BeanConverterStrategy strategy) {
         this.strategy = strategy;
-    }
-    
-    public static void main(final String[] args) {
-        System.out.println(int.class.getName());
-        System.out.println(Integer.class.getName());
     }
 }

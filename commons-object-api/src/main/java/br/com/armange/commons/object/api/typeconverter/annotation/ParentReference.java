@@ -15,6 +15,9 @@
  * */
 package br.com.armange.commons.object.api.typeconverter.annotation;
 
+import java.lang.annotation.Documented;
+
+@Documented
 public @interface ParentReference {
     String[] fields() default "";
 }
