@@ -16,5 +16,6 @@
 ext.projects = [
     commons_object_api: project(':commons-object-api'),
     commons_message: project(':commons-message'),
-    commons_reflection: project(':commons-reflection')
+    commons_reflection: project(':commons-reflection'),
+    commons_spi: project(':commons-spi')
 ]

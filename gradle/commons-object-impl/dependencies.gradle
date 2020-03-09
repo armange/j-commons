@@ -17,6 +17,7 @@ dependencies {
     compile projects.commons_object_api
     compile projects.commons_message
     compile projects.commons_reflection
+    compile projects.commons_spi
 
     testCompile (library.junit_junit){
         exclude group: 'org.hamcrest'

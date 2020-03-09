@@ -19,9 +19,11 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 
+import br.com.armange.commons.object.api.typeconverter.TypeConverter;
 import br.com.armange.commons.object.api.typeconverter.bean.StrategicBeanConverter;
 import br.com.armange.commons.object.api.typeconverter.bean.StrategicBeanConverterWriter;
 import br.com.armange.commons.reflection.support.FieldSupport;
+import br.com.armange.commons.spi.Loader;
 
 public class SameFieldNameStrategyConverter<S, T> implements StrategicBeanConverter<S, T> {
 
@@ -59,7 +61,29 @@ public class SameFieldNameStrategyConverter<S, T> implements StrategicBeanConver
         };
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void copyFieldValue(final Object targetObject, final Field targetField, final Field sourceField) {
-        FieldSupport.from(targetField).setValue(targetObject, FieldSupport.from(sourceField).getValue(sourceObject));
+        final Object sourceValue = FieldSupport.from(sourceField).getValue(sourceObject);
+        final Class sourceClass = sourceField.getType();
+        final Class targetClass = targetField.getType();
+        
+        if (sourceClass.equals(targetClass)) {
+            FieldSupport
+                .from(targetField)
+                .setValue(targetObject, sourceValue);
+        } else {
+            final TypeConverter<Object, Object> typeConverter = Loader
+                    .loadServices(TypeConverter.class, true)
+                    .filter(t -> t.matches(sourceValue, targetField.getType()))
+                    .findFirst()
+                    .orElseThrow(RuntimeException::new);
+            
+            FieldSupport
+                .from(targetField)
+                .setValue(targetObject, typeConverter
+                    .from(sourceValue)
+                    .to(targetClass));
+        }
+        
     }
 }
