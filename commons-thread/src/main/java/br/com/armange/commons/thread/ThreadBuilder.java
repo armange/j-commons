@@ -78,7 +78,7 @@ public class ThreadBuilder {
     private Optional<Duration> delay = Optional.empty();
     private Optional<Duration> interval = Optional.empty();
     private Optional<BiConsumer<Runnable, Throwable>> afterExecuteConsumer = Optional.empty();
-    private Optional<Consumer<Throwable>> uncaughtExceptionConsumer = Optional.empty();
+    private Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = Optional.empty();
     private final Optional<CaughtExecutorThreadFactory> threadFactory = Optional.empty();
     private Optional<Supplier<String>> threadNameSupplier = Optional.empty();
     private Optional<IntSupplier> threadPrioritySupplier = Optional.empty();
@@ -95,6 +95,14 @@ public class ThreadBuilder {
     
     private ThreadBuilder(final int corePoolSize) {
         this.corePoolSize = corePoolSize;
+    }
+    
+    public static ForkJoinBuilder forkingRecursiveTask(final int corePoolSize) {
+        return ForkJoinTaskBuilder.newForkJoinBuilder(corePoolSize);
+    }
+    
+    public static ForkJoinBuilder forkingRecursiveAction(final int corePoolSize) {
+        return ForkJoinActionBuilder.newForkJoinBuilder(corePoolSize);
     }
 
     /**
@@ -164,7 +172,7 @@ public class ThreadBuilder {
      * @param uncaughtExceptionConsumer the consumer to be called after exception throwing.
      * @return the current thread builder.
      */
-    public ThreadBuilder setUncaughtExceptionConsumer(final Consumer<Throwable> uncaughtExceptionConsumer) {
+    public ThreadBuilder setUncaughtExceptionConsumer(final Consumer<? super Throwable> uncaughtExceptionConsumer) {
         this.uncaughtExceptionConsumer = Optional.ofNullable(uncaughtExceptionConsumer);
 
         return this;
@@ -382,7 +390,7 @@ public class ThreadBuilder {
         final long localDelay = delay.orElse(Duration.ofMillis(0)).toMillis();
         
         if (uncaughtExceptionConsumer.isPresent() || afterExecuteConsumer.isPresent()) {
-            return localDelay >= MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + MINIMAL_REQUIRED_DELAY;
+            return localDelay >= ThreadBuilder.MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + ThreadBuilder.MINIMAL_REQUIRED_DELAY;
         } else {
             return localDelay;
         }
@@ -394,7 +402,7 @@ public class ThreadBuilder {
                 if (future.isDone()) future.get();
             } catch (final Exception e) {
                 if (isNotSilentOrIsExecutionException(e)) {
-                    uncaughtExceptionConsumer.ifPresent(consumer -> consumer.accept(e));
+                    uncaughtExceptionConsumer.orElseGet(() -> System.out::println).accept(e);
                 }
             }
         };

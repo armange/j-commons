@@ -17,6 +17,7 @@ package br.com.armange.commons.thread;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.function.Supplier;
 
 /**
  * Useful structure for handling the current thread.
@@ -61,5 +62,21 @@ public class ThreadUtil {
      */
     public static URL getCurrentThreadResource(final String relativePath) {
         return Thread.currentThread().getContextClassLoader().getResource(relativePath);
+    }
+    
+    public static void sleepUntil(final long millis, final Supplier<Boolean> condition) throws InterruptedException {
+        while(condition.get()) {
+            Thread.sleep(millis);
+        }
+    }
+    
+    public static void sleepUncheckedUntil(final long millis, final Supplier<Boolean> condition) {
+        while(condition.get()) {
+            try {
+                Thread.sleep(millis);
+            } catch (final InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
