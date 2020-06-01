@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
@@ -71,9 +72,10 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     protected Optional<CaughtExecutorThreadFactory> threadFactory = Optional.empty();
     protected Optional<Supplier<String>> threadNameSupplier = Optional.empty();
     protected Optional<IntSupplier> threadPrioritySupplier = Optional.empty();
+    protected Optional<Consumer<S>> threadResultConsumer = Optional.empty();
 
     protected ScheduledCaughtExecutorService executor;
-    protected ExecutorResult executorResult;
+    protected ExecutorResult<S> executorResult;
 
     protected T execution;
 
@@ -191,24 +193,32 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         return getSelf();
     }
 
+    protected U setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
+        this.threadResultConsumer = Optional.ofNullable(threadResultConsumer);
+
+        return getSelf();
+    }
+
     @SuppressWarnings("unchecked")
     protected U getSelf() {
         return (U) this;
     }
-    
+
     /**
      * Starts the thread.
+     * 
      * @return the executor's result after starting thread.
      * @see ExecutorResult
      */
-    public ExecutorResult start() {
+    public ExecutorResult<S> start() {
         createExecutorAndRunThread();
 
         return executorResult;
     }
-    
+
     /**
      * Starts the thread.
+     * 
      * @return the current thread builder to prepare another thread.
      */
     public U startAndBuildOther() {
@@ -226,11 +236,11 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
     }
-    
+
     protected void requireExecutionNonNull() {
         Objects.requireNonNull(execution, CommonMessages.REQUIRED_PARAMETER.format("execution"));
     }
-    
+
     protected ThreadFactory getThreadFactory() {
         final CaughtExecutorThreadFactory factory = threadFactory.orElse(new CaughtExecutorThreadFactory());
 
@@ -246,26 +256,26 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     protected void runThread() {
         final Future<S> future = submit();
-        
+
         executor.addAfterExecuteConsumer(handleException(future));
-        
+
         newExecutorResultIfNull();
-        
+
         executorResult.getFutures().add(future);
     }
 
-    @SuppressWarnings({ "unchecked"})
+    @SuppressWarnings({ "unchecked" })
     protected Future<S> submit() {
         final Future<S> future;
-        
+
         switch (executionType) {
         case CALLABLE:
             future = executor.submit((Callable<S>) execution);
-            
+
             break;
         case RUNNABLE:
             future = (Future<S>) executor.submit((Runnable) execution);
-            
+
             break;
         default:
             throw new IllegalStateException();
@@ -273,19 +283,19 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         }
         return future;
     }
-    
-    @SuppressWarnings({ "unchecked"})
+
+    @SuppressWarnings({ "unchecked" })
     protected ScheduledFuture<S> schedule(final long delay, final TimeUnit unit) {
         final ScheduledFuture<S> future;
-        
+
         switch (executionType) {
         case CALLABLE:
-            future = executor.schedule((Callable<S>)execution, delay, unit);
-            
+            future = executor.schedule((Callable<S>) execution, delay, unit);
+
             break;
         case RUNNABLE:
             future = (ScheduledFuture<S>) executor.schedule((Runnable) execution, delay, unit);
-            
+
             break;
         default:
             throw new IllegalStateException();
@@ -293,17 +303,17 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         }
         return future;
     }
-    
-    @SuppressWarnings({ "unchecked"})
+
+    @SuppressWarnings({ "unchecked" })
     protected ScheduledFuture<S> scheduleAtFixedRate(final long delay, final long period, final TimeUnit unit) {
         final ScheduledFuture<S> future;
-        
+
         switch (executionType) {
         case CALLABLE:
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(ExecutionType.CALLABLE.name());
         case RUNNABLE:
-            future = (ScheduledFuture<S>) executor.scheduleAtFixedRate((Runnable)execution, delay, period, unit);
-            
+            future = (ScheduledFuture<S>) executor.scheduleAtFixedRate((Runnable) execution, delay, period, unit);
+
             break;
         default:
             throw new IllegalStateException();
@@ -311,12 +321,14 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         }
         return future;
     }
-    
+
     protected BiConsumer<Runnable, Throwable> handleException(final Future<S> future) {
         return (runnable, throwable) -> {
             if (throwable == null) {
                 try {
-                    if (future.isDone()) future.get();
+                    if (future.isDone()) {
+                        consumesFuture(future);
+                    }
                 } catch (final Exception e) {
                     if (isNotSilentOrIsExecutionException(e)) {
                         uncaughtExceptionConsumer.orElseGet(() -> System.out::println).accept(e);
@@ -325,13 +337,34 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
             }
         };
     }
-    
+
+    protected void consumesFuture(final Future<S> future) throws InterruptedException, ExecutionException {
+        switch (executionType) {
+        case CALLABLE:
+            executorResult.setThreadResult(future.get());
+
+            threadResultConsumer.ifPresent(consumer -> consumer.accept(executorResult.getThreadResult()));
+
+            break;
+        case RECURSIVE_ACTION:
+            throw new UnsupportedOperationException(ExecutionType.RECURSIVE_ACTION.name());
+        case RECURSIVE_TASK:
+            throw new UnsupportedOperationException(ExecutionType.RECURSIVE_TASK.name());
+        case RUNNABLE:
+            future.get();
+
+            break;
+        default:
+            throw new UnsupportedOperationException(executionType.name());
+        }
+    }
+
     private boolean isNotSilentOrIsExecutionException(final Exception e) {
         return !silentInterruption || !(e instanceof CancellationException) && !(e instanceof InterruptedException);
     }
-    
+
     private void newExecutorResultIfNull() {
-        executorResult = executorResult == null ? new ExecutorResult(executor) : executorResult;
+        executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
     }
 
     protected boolean isRunnableClass() {

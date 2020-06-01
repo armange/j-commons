@@ -34,13 +34,13 @@ import java.util.concurrent.Future;
  * @see br.com.armange.commons.thread.AbstractThreadBuilder#start()
  * @see br.com.armange.commons.thread.AbstractThreadBuilder
  */
-public class ExecutorResult {
+public class ExecutorResult<T> {
 
     private final ExecutorService executorService;
     @SuppressWarnings("rawtypes")
     private final List<Future> futures = new LinkedList<>();
-    private final List<ExecutorResult> timeoutExecutorResults = new LinkedList<>();
-    private Object threadResult;
+    private final List<ExecutorResult<T>> timeoutExecutorResults = new LinkedList<>();
+    private T threadResult;
     
     public ExecutorResult(final ExecutorService executorService) {
         this.executorService = executorService;
@@ -65,15 +65,15 @@ public class ExecutorResult {
      * Whenever a thread times out, its respective ExecutorService and Future will be present in this list.
      * @return the timeout thread's {@link ExecutorResult}s
      */
-    public List<ExecutorResult> getTimeoutExecutorResults() {
+    public List<ExecutorResult<T>> getTimeoutExecutorResults() {
         return timeoutExecutorResults;
     }
     
-    public Object getThreadResult() {
+    public T getThreadResult() {
         return threadResult;
     }
     
-    void setThreadResult(final Object threadResult) {
+    void setThreadResult(final T threadResult) {
         this.threadResult = threadResult;
     }
 }

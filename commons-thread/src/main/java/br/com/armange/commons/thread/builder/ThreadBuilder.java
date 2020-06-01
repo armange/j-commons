@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.concurrent.Callable;
+
 public class ThreadBuilder {
 
     private final int corePoolSize;
@@ -37,6 +39,12 @@ public class ThreadBuilder {
     
     public TimingRunnableThreadBuilder<?> setExecution(final Runnable execution) {
         final TimingRunnableThreadBuilder<?> builder = new TimingRunnableThreadBuilder<>(corePoolSize);
+        
+        return builder.setExecution(execution);
+    }
+    
+    public <S> TimingCallableThreadBuilder<S> setExecution(final Callable<S> execution) {
+        final TimingCallableThreadBuilder<S> builder = new TimingCallableThreadBuilder<>(corePoolSize);
         
         return builder.setExecution(execution);
     }

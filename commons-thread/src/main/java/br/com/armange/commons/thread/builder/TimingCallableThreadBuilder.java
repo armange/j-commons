@@ -15,6 +15,26 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-public class TimingCallableThreadBuilder {
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
+@SuppressWarnings("rawtypes")
+public class TimingCallableThreadBuilder<S>
+        extends AbstractTimingThreadBuilder<S, Callable, TimingCallableThreadBuilder<S>> {
+
+    TimingCallableThreadBuilder() {}
+
+    TimingCallableThreadBuilder(final int corePoolSize) {
+        super(corePoolSize);
+    }
+    
+    @Override
+    public TimingCallableThreadBuilder setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
+        return super.setThreadResultConsumer(threadResultConsumer);
+    }
+
+    @Override
+    Class<Callable> getExceutionClass() {
+        return Callable.class;
+    }
 }

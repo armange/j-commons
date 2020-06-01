@@ -15,6 +15,10 @@
  * */
 package br.com.armange.commons.thread;
 
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
+import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -76,12 +80,31 @@ public class ThreadBuilderTest {
         }
     }
 
+    private static class LocalCallableString implements Callable<String> {
+        private static final String THIS_IS_A_CALLABLE_THREAD = "This is a callable thread.";
+
+        @Override
+        public String call() {
+            ThreadUtil.sleepUnchecked(1000);
+
+            return THIS_IS_A_CALLABLE_THREAD;
+        }
+    }
+
+    private static class ThreadResultStringConsumer implements Consumer<String> {
+        @Override
+        public void accept(final String value) {
+            System.out.println(value);
+        }
+
+    }
+
     private volatile Thread lastThread;
 
     @Test
     public void noSchedule() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).start();
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).start();
 
         ThreadUtil.sleepUnchecked(2000);
 
@@ -93,9 +116,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void noScheduleCaughtException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
                 .setSilentInterruption(true).setUncaughtExceptionConsumer(throwableConsumer).start();
 
         ThreadUtil.sleepUnchecked(2000);
@@ -109,8 +132,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void useDelay() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(2000).start();
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(2000).start();
 
         ThreadUtil.sleepUnchecked(1000);
 
@@ -126,10 +149,10 @@ public class ThreadBuilderTest {
 
     @Test
     public void useDelayCaughtException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException).setDelay(2000)
-                .setSilentInterruption(true).setUncaughtExceptionConsumer(throwableConsumer).start();
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+                .setDelay(2000).setSilentInterruption(true).setUncaughtExceptionConsumer(throwableConsumer).start();
 
         ThreadUtil.sleepUnchecked(1000);
 
@@ -146,8 +169,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void cancelByTimeout() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(() -> {
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(() -> {
             ThreadUtil.sleepUnchecked(2000);
             localRunnable.run();
         }).setTimeout(1000).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
@@ -171,8 +194,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void runBeforeTimeout() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(3000)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(3000)
                 .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(2000);
@@ -190,9 +213,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void runBeforeTimeoutCaughtException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
                 .setTimeout(3000).setMayInterruptIfRunning(true).setSilentInterruption(true)
                 .setUncaughtExceptionConsumer(throwableConsumer).start();
 
@@ -212,8 +235,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void useInterval() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setInterval(1000)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setInterval(1000)
                 .setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(500);
@@ -236,9 +259,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void useIntervalCaughtException() {
-        final LazyRunnableWithException lazyRunnableWithException = Mockito.spy(new LazyRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(lazyRunnableWithException)
+        final LazyRunnableWithException lazyRunnableWithException = spy(new LazyRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(lazyRunnableWithException)
                 .setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(1500);
@@ -261,8 +284,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void useIntervalAndDelay() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
                 .setInterval(1000).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(1500);
@@ -285,10 +308,11 @@ public class ThreadBuilderTest {
 
     @Test
     public void useIntervalAndDelayAndCaughtException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException).setDelay(1000)
-                .setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+                .setDelay(1000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
+                .setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(2500);
 
@@ -305,8 +329,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void useTimeoutAndInterval() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(3000)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(3000)
                 .setInterval(1000).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(500);
@@ -333,8 +357,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void cancelByTimeoutUsingInterval() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(() -> {
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(() -> {
             ThreadUtil.sleepUnchecked(4000);
             localRunnable.run();
         }).setTimeout(2000).setInterval(100).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
@@ -358,9 +382,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void useTimeoutAndIntervalCaughtException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
                 .setTimeout(3000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
                 .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
@@ -384,9 +408,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void useAllDelayAndTimeout() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
 
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
                 .setTimeout(2000).setMayInterruptIfRunning(true).start();
 
         ThreadUtil.sleepUnchecked(500);
@@ -412,10 +436,10 @@ public class ThreadBuilderTest {
 
     @Test
     public void useAllTimeControlsAndCaughtException() {
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException).setDelay(1000)
-                .setTimeout(4000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnableWithException)
+                .setDelay(1000).setTimeout(4000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
                 .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(2500);
@@ -438,9 +462,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void useAllTimeControls() {
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(1000)
                 .setTimeout(4000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
                 .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
@@ -468,9 +492,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void silentCancellationException() {
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder(2).setExecution(localRunnableWithException)
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder(2).setExecution(localRunnableWithException)
                 .setDelay(5000).setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
 
         result.getExecutorService().shutdownNow();
@@ -484,9 +508,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void throwingInterruptedException() {
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final LocalRunnableWithException localRunnableWithException = Mockito.spy(new LocalRunnableWithException());
-        final ExecutorResult result = ThreadBuilder.newBuilder(2).setExecution(() -> ThreadUtil.sleepUnchecked(5000))
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder(2).setExecution(() -> ThreadUtil.sleepUnchecked(5000))
                 .setUncaughtExceptionConsumer(throwableConsumer).start();
 
         ThreadUtil.sleepUnchecked(1100);
@@ -504,8 +528,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void throwingCancellationException() {
-        final ThrowableConsumer throwableConsumer = Mockito.spy(new ThrowableConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(() -> ThreadUtil.sleepUnchecked(5000))
+        final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(() -> ThreadUtil.sleepUnchecked(5000))
                 .setTimeout(1000).setUncaughtExceptionConsumer(throwableConsumer).start();
 
         ThreadUtil.sleepUnchecked(1500);
@@ -523,9 +547,9 @@ public class ThreadBuilderTest {
 
     @Test
     public void callingAfterExecutionConsumer() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final AfterExecuteConsumer afterExecuteConsumer = Mockito.spy(new AfterExecuteConsumer());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final AfterExecuteConsumer afterExecuteConsumer = spy(new AfterExecuteConsumer());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable)
                 .setAfterExecuteConsumer(afterExecuteConsumer).start();
 
         ThreadUtil.sleepUnchecked(1100);
@@ -545,8 +569,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void useIntervalForFiveTimes() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(500)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(500)
                 .setInterval(100).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
         ThreadUtil.sleepUnchecked(410);
@@ -568,8 +592,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void buildTwoThreadsUsingTheSameBuilder() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(1000)
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setTimeout(1000)
                 .startAndBuildOther().setTimeout(1000).setExecution(localRunnable).start();
 
         ThreadUtil.sleepUnchecked(1000);
@@ -587,8 +611,8 @@ public class ThreadBuilderTest {
 
     @Test
     public void cancelDelayBeforeExecution() {
-        final LocalRunnable localRunnable = Mockito.spy(new LocalRunnable());
-        final ExecutorResult result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(3000).start();
+        final LocalRunnable localRunnable = spy(new LocalRunnable());
+        final ExecutorResult<?> result = ThreadBuilder.newBuilder().setExecution(localRunnable).setDelay(3000).start();
 
         ThreadUtil.sleepUnchecked(1000);
 
@@ -624,5 +648,23 @@ public class ThreadBuilderTest {
         ThreadUtil.sleepUnchecked(1000);
 
         Assert.assertEquals(threadPriority, lastThread.getPriority());
+    }
+
+    @Test
+    public void singleCallableThread() {
+        final LocalCallableString localCallableString = new LocalCallableString();
+        final ThreadResultStringConsumer threadResultStringConsumer = spy(new ThreadResultStringConsumer());
+
+        // @formatter:off
+        ThreadBuilder
+            .newBuilder()
+            .setExecution(localCallableString)
+            .setThreadResultConsumer(threadResultStringConsumer)
+            .start();
+        // @formatter:on
+
+        ThreadUtil.sleepUnchecked(1500);
+        
+        verify(threadResultStringConsumer).accept(LocalCallableString.THIS_IS_A_CALLABLE_THREAD);
     }
 }
