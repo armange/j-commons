@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import br.com.armange.commons.thread.builder.AbstractThreadBuilder;
 import br.com.armange.commons.thread.builder.ThreadBuilder;
 
 public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<T>> {
