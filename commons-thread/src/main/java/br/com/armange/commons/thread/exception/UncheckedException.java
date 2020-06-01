@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.exception;
 
 /**
  * Unchecked exceptions may be thrown instead of the RuntimeException option to allow 

@@ -1,4 +1,4 @@
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.async;
 
 public class TryAsyncBuilder extends AbstractTryAsyncBuilder<TryAsyncBuilder>{
     private final Runnable attemptedExecution;

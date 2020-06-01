@@ -1,4 +1,4 @@
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.async;
 
 import java.io.Closeable;
 import java.io.IOException;

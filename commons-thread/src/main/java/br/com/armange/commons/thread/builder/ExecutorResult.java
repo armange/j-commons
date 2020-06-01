@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.builder;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -31,8 +31,8 @@ import java.util.concurrent.Future;
  * @author Diego Armange Costa
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @see ScheduledCaughtExecutorService
- * @see br.com.armange.commons.thread.ThreadBuilder#start()
- * @see br.com.armange.commons.thread.ThreadBuilder
+ * @see br.com.armange.commons.thread.AbstractThreadBuilder#start()
+ * @see br.com.armange.commons.thread.AbstractThreadBuilder
  */
 public class ExecutorResult {
 
@@ -40,6 +40,7 @@ public class ExecutorResult {
     @SuppressWarnings("rawtypes")
     private final List<Future> futures = new LinkedList<>();
     private final List<ExecutorResult> timeoutExecutorResults = new LinkedList<>();
+    private Object threadResult;
     
     public ExecutorResult(final ExecutorService executorService) {
         this.executorService = executorService;
@@ -66,5 +67,13 @@ public class ExecutorResult {
      */
     public List<ExecutorResult> getTimeoutExecutorResults() {
         return timeoutExecutorResults;
+    }
+    
+    public Object getThreadResult() {
+        return threadResult;
+    }
+    
+    void setThreadResult(final Object threadResult) {
+        this.threadResult = threadResult;
     }
 }

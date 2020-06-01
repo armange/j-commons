@@ -16,14 +16,14 @@
 /**
  * Utility package for thread creation.<br>
  * <ul>
- * <li><b>{@link br.com.armange.commons.thread.ThreadUtil}</b>
+ * <li><b>{@link br.com.armange.commons.thread.util.ThreadUtil}</b>
  * <p>Useful structure for handling the current thread.</p>
  * <pre>
  * ThreadUtil.sleepUnchecked(1000);
  * final URL url = ThreadUtil.getCurrentThreadResource("path");
  * final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream("path");
  * </pre></li>
- * <li><b>{@link br.com.armange.commons.thread.ThreadBuilder}</b>
+ * <li><b>{@link br.com.armange.commons.thread.AbstractThreadBuilder}</b>
  * <p>Useful structure for thread creation</p>
  * <pre>
  * final ExecutorService thread = ThreadBuilder

@@ -14,6 +14,8 @@
  * limitations under the License.
  * */
 dependencies {
+    compile projects.commons_message
+    
     testCompile (library.junit_junit){
         exclude group: 'org.hamcrest'
     }

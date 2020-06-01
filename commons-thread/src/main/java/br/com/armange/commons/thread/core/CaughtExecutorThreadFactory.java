@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.core;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Optional;
@@ -43,7 +43,7 @@ public class CaughtExecutorThreadFactory implements ThreadFactory {
      * <li>Uncaught exception handler</li>
      * </ul>
      * These thread parameters will be used if they are not null.
-     * @see br.com.armange.commons.thread.CaughtExecutorThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
+     * @see br.com.armange.commons.thread.core.CaughtExecutorThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
      * @see #setThreadName(String)
      * @see #setThreadPriority(Integer)
      * @see java.util.concurrent.ThreadFactory#newThread(Runnable)

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.util;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.util.function.Supplier;
+
+import br.com.armange.commons.thread.exception.UncheckedException;
 
 /**
  * Useful structure for handling the current thread.

@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.core;
 
-import java.util.ArrayDeque;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 /**
  * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
@@ -34,7 +31,7 @@ import java.util.stream.Collectors;
  * @see #addAfterExecuteConsumer(BiConsumer)
  */
 public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor {
-    private final ArrayDeque<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new ArrayDeque<>();
+    private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
     
     /**
      * @param corePoolSize the number of threads to keep in the pool, even 
@@ -60,7 +57,7 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
      * This method is invoked by the thread that executed the task. If
      * non-null, the Throwable is the uncaught {@link java.lang.RuntimeException}
      * or {@link java.lang.Error} that caused execution to terminate abruptly.
-     * This method will consume a queue of {@code java.util.function.BiConsumer} with a runnable and a throwable as 
+     * This method will consume a list of {@code java.util.function.BiConsumer} with a runnable and a throwable as 
      * arguments. See {@link #addAfterExecuteConsumer(BiConsumer)}
      * @param runnable the runnable that has completed
      * @param throwable the exception that caused termination, or null if execution completed normally
@@ -68,38 +65,14 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
     @Override
     public void afterExecute(final Runnable runnable, final Throwable throwable) {
         super.afterExecute(runnable, throwable);
-        
-        /*
-         * A lista estava correta:
-         * Uma thread agendada pode se repetir e a lista resolve essa repetição.
-         * 
-         * Uma single thread não se repete e faria sentido usar a fila, no entanto é necessário ver como
-         * a thread se comporta com exceções. Revisar a execução duplicada da trigger.
-         * tentar impedir a execução duplicada através do parâmetro que contem a exceção.
-         * Se o param estiver nulo, pode executar o handle senão não. 
-         * */
-        runTriggers(runnable, throwable);
-    }
-    
-    private void runTriggers(final Runnable runnable, final Throwable throwable) {
-        try {
-            final BiConsumer<Runnable, Throwable> trigger = afterExecuteConsumers.pop();
-            
-            Optional.ofNullable(trigger).ifPresent(t -> {
-                t.accept(runnable, throwable);
-                
-                runTriggers(runnable, throwable);
-            });
-        } catch (final NoSuchElementException e) {
-            //Do nothing here.
-        }
+        afterExecuteConsumers.forEach(consumer -> consumer.accept(runnable, throwable));
     }
 
     /**
      * @return the consumers list that will be performed after thread completed normally.
      */
     public List<BiConsumer<Runnable, Throwable>> getAfterExecuteConsumers() {
-        return afterExecuteConsumers.stream().collect(Collectors.toList());
+        return afterExecuteConsumers;
     }
 
     /**

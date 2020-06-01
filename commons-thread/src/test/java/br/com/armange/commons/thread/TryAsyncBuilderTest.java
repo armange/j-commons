@@ -1,17 +1,17 @@
 package br.com.armange.commons.thread;
 
-import static br.com.armange.commons.thread.ThreadUtil.sleepUnchecked;
-import static br.com.armange.commons.thread.TryAsyncBuilder.tryAsync;
+import static br.com.armange.commons.thread.async.TryAsyncBuilder.tryAsync;
+import static br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked;
 import static java.lang.System.out;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class TryAsyncBuilderTest {
     private static class RunnableWithDeay implements Runnable {
@@ -62,6 +62,13 @@ public class TryAsyncBuilderTest {
         }
     }
     
+    private static class ExceptionConsumerThrowingException implements Consumer<Throwable> {
+        @Override
+        public void accept(final Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
+    }
+    
 
     @Test
     public void tryWithoutExceptions() {
@@ -102,7 +109,7 @@ public class TryAsyncBuilderTest {
     }
     
     @Test
-    public void tryWithExceptionsAndFinalizer() {
+    public void tryCatchExceptionAndFinalizer() {
         final RunnableWithDeayAndException runnableWithDeayAndException = spy(new RunnableWithDeayAndException(500));
         final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
         final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
@@ -121,6 +128,52 @@ public class TryAsyncBuilderTest {
         
         verify(runnableWithDeayAndException).run();
         verify(exceptionConsumer).accept(any());
+        verify(simpleRunnable, times(2)).run();
+    }
+    
+    @Test
+    public void tryWithExceptionsAndFinalizerAndCatchThrowing() {
+        final RunnableWithDeayAndException runnableWithDeayAndException = spy(new RunnableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
+        
+        tryAsync(runnableWithDeayAndException)
+            .addCatcher(RuntimeException.class, exceptionConsumer)
+            .finallyAsync(simpleRunnable)
+            .execute();
+        
+        simpleRunnable.run();
+        
+        verify(runnableWithDeayAndException, times(0)).run();
+        verify(simpleRunnable).run();
+        
+        sleepUnchecked(3000);
+        
+        verify(runnableWithDeayAndException).run();
+        // Pass in exception consumer and thread uncaught exception method.
+        verify(exceptionConsumer, times(2)).accept(any());
+        verify(simpleRunnable, times(2)).run();
+    }
+    
+    @Test
+    public void tryWithExceptionsAndFinalizer() {
+        final RunnableWithDeayAndException runnableWithDeayAndException = spy(new RunnableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
+        
+        tryAsync(runnableWithDeayAndException)
+            .addCatcher(IOException.class, exceptionConsumer)
+            .finallyAsync(simpleRunnable)
+            .execute();
+        
+        simpleRunnable.run();
+        
+        verify(runnableWithDeayAndException, times(0)).run();
+        verify(simpleRunnable).run();
+        
+        sleepUnchecked(3000);
+        
+        verify(runnableWithDeayAndException).run();
         verify(simpleRunnable, times(2)).run();
     }
 }
