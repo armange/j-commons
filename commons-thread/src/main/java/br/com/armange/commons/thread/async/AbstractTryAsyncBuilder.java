@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -55,6 +56,16 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
             .setExecution(attemptedExecution)
             .setUncaughtExceptionConsumer(consumeExceptionOrThrowRuntimeException())
             .setAfterExecuteConsumer((runnable, throwable) -> finalizingExecutables.forEach(Runnable::run))
+            .start();
+    }
+    
+    protected <S> void execute(final Callable<S> attemptedExecution, final Consumer<S> resultConsumer) {
+        ThreadBuilder
+            .newBuilder()
+            .setExecution(attemptedExecution)
+            .setUncaughtExceptionConsumer(consumeExceptionOrThrowRuntimeException())
+            .setAfterExecuteConsumer((runnable, throwable) -> finalizingExecutables.forEach(Runnable::run))
+            .setThreadResultConsumer(resultConsumer)
             .start();
     }
     

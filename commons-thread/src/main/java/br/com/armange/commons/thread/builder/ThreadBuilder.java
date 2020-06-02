@@ -17,7 +17,7 @@ package br.com.armange.commons.thread.builder;
 
 import java.util.concurrent.Callable;
 
-public class ThreadBuilder {
+public final class ThreadBuilder {
 
     private final int corePoolSize;
     

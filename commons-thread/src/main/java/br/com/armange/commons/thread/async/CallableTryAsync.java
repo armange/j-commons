@@ -18,15 +18,21 @@ package br.com.armange.commons.thread.async;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
-public final class TryAsyncBuilder {
+public class CallableTryAsync <S> extends AbstractTryAsyncBuilder<CallableTryAsync<S>>{
+    private final Callable<S> attemptedExecution;
+    private final Consumer<S> resultConsumer;
     
-    private TryAsyncBuilder() {}
-    
-    public static RunnableTryAsync tryAsync(final Runnable runnable) {
-        return RunnableTryAsync.tryAsync(runnable);
+    private CallableTryAsync(final Callable<S> callable, final Consumer<S> resultConsumer) {
+        attemptedExecution = callable;
+        this.resultConsumer = resultConsumer;
     }
     
-    public static <T> CallableTryAsync<T> tryAsync(final Callable<T> callable, final Consumer<T> resultConsumer) {
-        return CallableTryAsync.tryAsync(callable, resultConsumer);
+    public static <S> CallableTryAsync<S> tryAsync(final Callable<S> callable, final Consumer<S> resultConsumer) {
+        return new CallableTryAsync<S>(callable, resultConsumer);
+    }
+    
+    @Override
+    public void execute() {
+        execute(attemptedExecution, resultConsumer);
     }
 }
