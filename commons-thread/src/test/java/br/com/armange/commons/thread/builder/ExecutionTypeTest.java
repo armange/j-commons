@@ -1,14 +1,20 @@
 package br.com.armange.commons.thread.builder;
 
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import br.com.armange.commons.thread.builder.AbstractThreadBuilder.ExecutionType;
 
 public class ExecutionTypeTest {
-    private static final String EMPTY = "";
-
-    @Test(expected = IllegalArgumentException.class)
+    @Test()
     public void shouldThrowExceptionForInvalidEnum() {
-        ExecutionType.valueOf(EMPTY);
+        try {
+            ExecutionType.valueOf(String.class);
+            
+            fail("IllegalArgumentException was expected");
+        } catch (final IllegalArgumentException e) {
+            e.printStackTrace();
+        }
     }
 }
