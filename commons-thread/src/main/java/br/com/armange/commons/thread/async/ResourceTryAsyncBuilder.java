@@ -19,14 +19,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public class TryAsyncWithResourceBuilder extends AbstractTryAsyncBuilder<TryAsyncWithResourceBuilder> {
+public class ResourceTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTryAsyncBuilder> {
     private final Closeable closeable;
     private final Consumer<Closeable> attemptedExecution;
 
-    private TryAsyncWithResourceBuilder(final Closeable closeable, final Consumer<Closeable> attemptedExecution) {
+    private ResourceTryAsyncBuilder(final Closeable closeable, final Consumer<Closeable> attemptedExecution) {
         this.closeable = closeable;
         this.attemptedExecution = attemptedExecution;
-        
+
         addFinalizer(() -> {
             try {
                 closeable.close();
@@ -35,7 +35,12 @@ public class TryAsyncWithResourceBuilder extends AbstractTryAsyncBuilder<TryAsyn
             }
         });
     }
-    
+
+    protected static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
+            final Consumer<Closeable> attemptedExecution) {
+        return new ResourceTryAsyncBuilder(closeable, attemptedExecution);
+    }
+
     @Override
     public void execute() {
         execute(() -> attemptedExecution.accept(closeable));

@@ -17,19 +17,20 @@ package br.com.armange.commons.thread.async;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
-public class TryAsyncWithResourcesBuilder extends AbstractTryAsyncBuilder<TryAsyncWithResourceBuilder> {
-    private final Closeable[] closeables;
-    private final Consumer<Closeable[]> attemptedExecution;
+public class MappedResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTryAsyncBuilder> {
+    private final Map<Object, Closeable> closeableMap;
+    private final Consumer<Map<Object, Closeable>> attemptedExecution;
 
-    private TryAsyncWithResourcesBuilder(final Consumer<Closeable[]> attemptedExecution, final Closeable... closeables) {
-        this.closeables = closeables;
+    private MappedResourcesTryAsyncBuilder(final Map<Object, Closeable> closeableMap,
+            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+        this.closeableMap = closeableMap;
         this.attemptedExecution = attemptedExecution;
-        
+
         addFinalizer(() -> {
-            Stream.of(closeables).forEach(closeable -> {
+            closeableMap.values().forEach(closeable -> {
                 try {
                     closeable.close();
                 } catch (final IOException e) {
@@ -38,10 +39,15 @@ public class TryAsyncWithResourcesBuilder extends AbstractTryAsyncBuilder<TryAsy
             });
         });
     }
-    
+
+    protected static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,
+            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+        return new MappedResourcesTryAsyncBuilder(closeableMap, attemptedExecution);
+    }
+
     @Override
     public void execute() {
-        execute(() -> attemptedExecution.accept(closeables));
+        execute(() -> attemptedExecution.accept(closeableMap));
     }
 
 }

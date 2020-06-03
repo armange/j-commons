@@ -21,8 +21,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.RecursiveAction;
-import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -53,10 +51,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
                 return CALLABLE;
             } else if (Runnable.class.equals(sourceClass)) {
                 return RUNNABLE;
+            /* Coming soon
             } else if (RecursiveTask.class.equals(sourceClass)) {
                 return RECURSIVE_TASK;
             } else if (RecursiveAction.class.equals(sourceClass)) {
                 return RECURSIVE_ACTION;
+            */
             } else {
                 throw new IllegalArgumentException(
                         ExceptionMessage.ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE.format(Optional.ofNullable(sourceClass)
@@ -84,11 +84,6 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     protected final ExecutionType executionType;
     protected final int corePoolSize;
-
-    protected AbstractThreadBuilder() {
-        corePoolSize = 1;
-        executionType = ExecutionType.valueOf(getExceutionClass());
-    }
 
     protected AbstractThreadBuilder(final int corePoolSize) {
         this.corePoolSize = corePoolSize;
@@ -346,10 +341,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
             threadResultConsumer.ifPresent(consumer -> consumer.accept(executorResult.getThreadResult()));
 
             break;
+        /* Coming soon
         case RECURSIVE_ACTION:
             throw new UnsupportedOperationException(ExecutionType.RECURSIVE_ACTION.name());
         case RECURSIVE_TASK:
             throw new UnsupportedOperationException(ExecutionType.RECURSIVE_TASK.name());
+        */
         case RUNNABLE:
             future.get();
 
@@ -365,14 +362,6 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     private void newExecutorResultIfNull() {
         executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
-    }
-
-    protected boolean isRunnableClass() {
-        return getExceutionClass().equals(Runnable.class);
-    }
-
-    protected boolean isCallableClass() {
-        return getExceutionClass().equals(Callable.class);
     }
 
     abstract Class<T> getExceutionClass();

@@ -18,10 +18,12 @@ package br.com.armange.commons.thread.builder;
 public class TimingRunnableThreadBuilder<S>
         extends AbstractTimingThreadBuilder<S, Runnable, TimingRunnableThreadBuilder<S>> {
 
-    TimingRunnableThreadBuilder() {}
-    
-    TimingRunnableThreadBuilder(final int corePoolSize) {
+    private TimingRunnableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
+    }
+    
+    protected static <T> TimingRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
+        return new TimingRunnableThreadBuilder<>(corePoolSize);
     }
     
     @Override

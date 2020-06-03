@@ -50,8 +50,8 @@ public class ThreadUtilTest {
         
         final long end = System.currentTimeMillis();
         
-        Assert.assertThat(new Long(end - start), Matchers.greaterThanOrEqualTo(1000L));
-        Assert.assertThat(new Long(end - start), Matchers.lessThanOrEqualTo(1200L));
+        Assert.assertThat((Long)(end - start), Matchers.greaterThanOrEqualTo(1000L));
+        Assert.assertThat((Long)(end - start), Matchers.lessThanOrEqualTo(1200L));
     }
     
     @Test(expected = RuntimeException.class)

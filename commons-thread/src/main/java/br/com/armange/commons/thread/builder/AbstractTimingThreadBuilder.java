@@ -27,9 +27,6 @@ import br.com.armange.commons.thread.message.ExceptionMessage;
 public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTimingThreadBuilder<S, T, U>>
         extends AbstractThreadBuilder<S, T, U> {
 
-    protected AbstractTimingThreadBuilder() {
-    }
-
     protected AbstractTimingThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
     }

@@ -15,18 +15,37 @@
  * */
 package br.com.armange.commons.thread.async;
 
+import java.io.Closeable;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 public final class TryAsyncBuilder {
-    
-    private TryAsyncBuilder() {}
-    
-    public static RunnableTryAsync tryAsync(final Runnable runnable) {
-        return RunnableTryAsync.tryAsync(runnable);
+
+    private TryAsyncBuilder() {
     }
-    
-    public static <T> CallableTryAsync<T> tryAsync(final Callable<T> callable, final Consumer<T> resultConsumer) {
-        return CallableTryAsync.tryAsync(callable, resultConsumer);
+
+    public static RunnableTryAsyncBuilder tryAsync(final Runnable runnable) {
+        return RunnableTryAsyncBuilder.tryAsync(runnable);
+    }
+
+    public static <T> CallableTryAsyncBuilder<T> tryAsync(final Callable<T> callable,
+            final Consumer<T> resultConsumer) {
+        return CallableTryAsyncBuilder.tryAsync(callable, resultConsumer);
+    }
+
+    public static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
+            final Consumer<Closeable> attemptedExecution) {
+        return ResourceTryAsyncBuilder.tryAsync(closeable, attemptedExecution);
+    }
+
+    public static ResourcesTryAsyncBuilder tryAsync(final Consumer<Closeable[]> attemptedExecution,
+            final Closeable... closeables) {
+        return ResourcesTryAsyncBuilder.tryAsync(attemptedExecution, closeables);
+    }
+
+    public static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,
+            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+        return MappedResourcesTryAsyncBuilder.tryAsync(closeableMap, attemptedExecution);
     }
 }

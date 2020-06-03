@@ -15,15 +15,15 @@
  * */
 package br.com.armange.commons.thread.async;
 
-public class RunnableTryAsync extends AbstractTryAsyncBuilder<RunnableTryAsync>{
+public class RunnableTryAsyncBuilder extends AbstractTryAsyncBuilder<RunnableTryAsyncBuilder>{
     private final Runnable attemptedExecution;
     
-    private RunnableTryAsync(final Runnable runnable) {
+    private RunnableTryAsyncBuilder(final Runnable runnable) {
         attemptedExecution = runnable;
     }
     
-    public static RunnableTryAsync tryAsync(final Runnable runnable) {
-        return new RunnableTryAsync(runnable);
+    protected static RunnableTryAsyncBuilder tryAsync(final Runnable runnable) {
+        return new RunnableTryAsyncBuilder(runnable);
     }
     
     @Override

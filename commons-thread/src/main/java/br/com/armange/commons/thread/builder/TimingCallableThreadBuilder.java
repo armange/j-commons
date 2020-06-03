@@ -22,10 +22,12 @@ import java.util.function.Consumer;
 public class TimingCallableThreadBuilder<S>
         extends AbstractTimingThreadBuilder<S, Callable, TimingCallableThreadBuilder<S>> {
 
-    TimingCallableThreadBuilder() {}
-
-    TimingCallableThreadBuilder(final int corePoolSize) {
+    private TimingCallableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
+    }
+    
+    protected static <T> TimingCallableThreadBuilder<T> newBuilder(final int corePoolSize) {
+        return new TimingCallableThreadBuilder<>(corePoolSize);
     }
     
     @Override
