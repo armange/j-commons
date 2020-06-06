@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.builder;
 
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -28,8 +28,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import br.com.armange.commons.thread.builder.ExecutorResult;
-import br.com.armange.commons.thread.builder.ThreadBuilder;
 import br.com.armange.commons.thread.core.ScheduledCaughtExecutorService;
 import br.com.armange.commons.thread.util.ThreadUtil;
 

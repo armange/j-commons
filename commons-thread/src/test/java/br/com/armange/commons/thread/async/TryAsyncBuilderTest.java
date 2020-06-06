@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread;
+package br.com.armange.commons.thread.async;
 
 import static br.com.armange.commons.thread.async.TryAsyncBuilder.tryAsync;
 import static br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked;
@@ -35,8 +35,6 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import br.com.armange.commons.thread.async.TryAsyncBuilder;
 
 public class TryAsyncBuilderTest {
     private static final String THIS_EXCEPTION_WAS_EXPECTED = " -> This Exception was expected.";
