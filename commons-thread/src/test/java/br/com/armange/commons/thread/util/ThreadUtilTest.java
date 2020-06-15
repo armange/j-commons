@@ -15,111 +15,108 @@
  * */
 package br.com.armange.commons.thread.util;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.io.InputStream;
-import java.net.URL;
-import java.util.function.Supplier;
-
+import br.com.armange.commons.thread.builder.ThreadBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
-import br.com.armange.commons.thread.builder.ThreadBuilder;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.function.BooleanSupplier;
+
+import static org.mockito.Mockito.*;
 
 public class ThreadUtilTest {
 
     private static final String TEST_FILE_RELATIVE_PATH = "TestFile.txt";
-    
-    private class SleepUntilSupplier implements Supplier<Boolean> {
+
+    private class SleepUntilSupplier implements BooleanSupplier {
         byte count = 3;
-        
+
         @Override
-        public Boolean get() {
+        public boolean getAsBoolean() {
             if (count <= 0) {
                 return false;
             }
-            
+
             count--;
-            
+
             return true;
         }
     }
-    
+
     @Test
     public void findResourceURL() {
         final URL url = ThreadUtil.getCurrentThreadResource(TEST_FILE_RELATIVE_PATH);
-        
+
         Assert.assertNotNull(url);
     }
-    
+
     @Test
     public void findResourceInputStream() {
         final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream(TEST_FILE_RELATIVE_PATH);
-        
+
         Assert.assertNotNull(is);
     }
-    
+
     @Test
     public void sleepUnchecked() {
         final long start = System.currentTimeMillis();
-        
+
         ThreadUtil.sleepUnchecked(1000);
-        
+
         final long end = System.currentTimeMillis();
-        
-        Assert.assertThat((Long)(end - start), Matchers.greaterThanOrEqualTo(1000L));
-        Assert.assertThat((Long)(end - start), Matchers.lessThanOrEqualTo(1200L));
+
+        Assert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
+        Assert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
     }
-    
+
     @Test(expected = RuntimeException.class)
     public void sleepUncheckedThrowRuntimeException() {
         ThreadUtil.sleepUnchecked(-1);
     }
-    
+
     @Test
     public void sleepUntil() throws InterruptedException {
         final SleepUntilSupplier sleepUntilSupplier = spy(new SleepUntilSupplier());
-        
+
         ThreadUtil.sleepUntil(1000, sleepUntilSupplier);
-        
+
         //Tree time for true and one for false.
-        verify(sleepUntilSupplier, times(4)).get();
-        
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
+
         ThreadUtil.sleepUnchecked(1000);
-        
-        verify(sleepUntilSupplier, times(4)).get();
+
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
     }
-    
+
     @Test
     public void sleepUncheckedUntil() {
         final SleepUntilSupplier sleepUntilSupplier = spy(new SleepUntilSupplier());
-        
+
         ThreadUtil.sleepUncheckedUntil(1000, sleepUntilSupplier);
-        
+
         //Tree time for true and one for false.
-        verify(sleepUntilSupplier, times(4)).get();
-        
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
+
         ThreadUtil.sleepUnchecked(1000);
-        
-        verify(sleepUntilSupplier, times(4)).get();
+
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
     }
-    
+
     @Test
     public void throwInSleepUncheckedUntil() {
         final SleepUntilSupplier sleepUntilSupplier = spy(new SleepUntilSupplier());
-        
+
         ThreadBuilder
-            .newBuilder()
-            .setExecution(() -> ThreadUtil.sleepUncheckedUntil(2000, sleepUntilSupplier))
-            .setTimeout(500)
-            .setMayInterruptIfRunning(true)
-            .start();
-        
+                .newBuilder()
+                .setScheduling(() -> ThreadUtil.sleepUncheckedUntil(2000, sleepUntilSupplier))
+                .setTimeout(500)
+                .setMayInterruptIfRunning(true)
+                .start();
+
         ThreadUtil.sleepUnchecked(1500);
-        
-        verify(sleepUntilSupplier).get();
+
+        verify(sleepUntilSupplier).getAsBoolean();
     }
 }

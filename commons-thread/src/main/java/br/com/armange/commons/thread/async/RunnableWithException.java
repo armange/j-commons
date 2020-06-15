@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-package br.com.armange.commons.thread.message;
+package br.com.armange.commons.thread.async;
 
-import br.com.armange.commons.message.MessageFormat;
+/**
+ * Represents an operation without arguments, without result and may throw an exception.
+ *
+ * @author Diego Armange Costa
+ * @since 2022-01-26 V1.1.0 (JDK 1.8)
+ * @see Runnable
+ */
+@FunctionalInterface
+public interface RunnableWithException {
 
-public enum ExceptionMessage implements MessageFormat {
-    ILLEGAL_STATE_THREAD_TIMER_CONFIG("Illegal timing-configuration state \"{0}\"."),
-    ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE("Illegal executor-type \"{0}\"."),
-    ;
-    
-    private String message;
-    
-    ExceptionMessage(final String message) {
-        this.message = message;
-    }
-    
-    @Override
-    public String getMessage() {
-        return message;
-    }
+    /**
+     * @see Runnable#run()
+     */
+    void run() throws Exception;
 }

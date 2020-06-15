@@ -16,14 +16,14 @@
 /**
  * Utility package for thread creation.<br>
  * <ul>
- * <li><b>{@link br.com.armange.commons.thread.util.ThreadUtil}</b>
+ * <li><b>{@link br.com.armange.commons.thread.ThreadUtil}</b>
  * <p>Useful structure for handling the current thread.</p>
  * <pre>
  * ThreadUtil.sleepUnchecked(1000);
- * final URL url = ThreadUtil.getCurrentThreadResource("path");
+ * final URL url = sleepUnchecked.getCurrentThreadResource("path");
  * final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream("path");
  * </pre></li>
- * <li><b>{@link br.com.armange.commons.thread.AbstractThreadBuilder}</b>
+ * <li><b>{@link br.com.armange.commons.thread.ThreadBuilder}</b>
  * <p>Useful structure for thread creation</p>
  * <pre>
  * final ExecutorService thread = ThreadBuilder
@@ -33,6 +33,12 @@
  *          .setUncaughtExceptionConsumer(throwableConsumer) //A consumer will be called after any exception thrown.
  *          .start();
  * </pre></li>
+ * <li><b>{@link br.com.armange.commons.thread.async.TryAsyncBuilder}</b>
+ * <p>Useful structure for try-async operation creation</p>
+ * </li>
+ * <li><b>{@link br.com.armange.commons.thread.builder.ThreadBuilder}</b>
+ * <p>Useful structure for thread creation</p>
+ * </li>
  * </ul>
- * */
+ */
 package br.com.armange.commons.thread;

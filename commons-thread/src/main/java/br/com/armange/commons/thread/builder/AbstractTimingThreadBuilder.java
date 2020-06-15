@@ -15,40 +15,42 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-import br.com.armange.commons.thread.core.ScheduledCaughtExecutorService;
-import br.com.armange.commons.thread.message.ExceptionMessage;
-
+/**
+ * Abstraction for building threads with the main timing configuration options: Delay, Interval, Timeout.
+ *
+ * @param <S> the type of the object resulting from the execution of the thread.
+ * @param <T> Execution type. {@link Runnable}, {@link Callable}.
+ * @param <U> Builder. The Builder extending {@link AbstractThreadBuilder}
+ * @author Diego Armange Costa
+ * @see AbstractThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTimingThreadBuilder<S, T, U>>
         extends AbstractThreadBuilder<S, T, U> {
 
-    protected AbstractTimingThreadBuilder(final int corePoolSize) {
-        super(corePoolSize);
-    }
-
-    protected static enum ThreadTimeConfig {
-        NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL, DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;
-    }
-
-    /**
-     * 1000 milliseconds as a minimal delay.
-     */
-    public static final long MINIMAL_REQUIRED_DELAY = 1000;
     protected Optional<Duration> timeout = Optional.empty();
     protected Optional<Duration> delay = Optional.empty();
     protected Optional<Duration> interval = Optional.empty();
     protected ThreadTimeConfig threadTimeConfig;
 
+    protected AbstractTimingThreadBuilder(final int corePoolSize) {
+        super(corePoolSize);
+    }
+
     /**
-     * Sets the timeout value.
-     * 
+     * Sets the timeout value.<br>
+     * The thread will have a timeout to complete its execution. After that time the thread will
+     * be canceled({@link Future#cancel(boolean)}).
+     *
      * @param milliseconds the timeout value in milliseconds.
      * @return the current thread builder.
+     * @see #setMayInterruptIfRunning(boolean)
      */
     public U setTimeout(final long milliseconds) {
         timeout = Optional.of(Duration.ofMillis(milliseconds));
@@ -59,8 +61,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * Sets the delay value.
-     * 
+     * Sets the delay value.<br>
+     * The thread will wait a predefined time before starting its execution.
+     *
      * @param milliseconds the delay value in milliseconds.
      * @return the current thread builder.
      */
@@ -73,8 +76,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * Sets the repeating interval value.
-     * 
+     * Sets the repeating interval value.<br>
+     * The thread will repeat its execution, waiting a predefined time before each new execution.
+     *
      * @param milliseconds the repeating interval value in milliseconds.
      * @return the current thread builder.
      */
@@ -86,17 +90,38 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         return getSelf();
     }
 
+    /**
+     * Sets the thread-interrupting-flag.<br>
+     * It is used during execution of cancellation by timeout feature.
+     * The timeout feature uses a dedicated and secondary thread to perform the cancellation
+     * of the primary thread. Note: the primary thread is the one that has been
+     * configured with the timeout feature.
+     *
+     * @param flag true if the thread executing this task should be interrupted;
+     *             otherwise, in-progress tasks are allowed to complete.
+     * @return the current thread builder.
+     * @see java.util.concurrent.Future#cancel(boolean)
+     */
+    public U setMayInterruptIfRunning(final boolean flag) {
+        mayInterruptIfRunning = flag;
+
+        return getSelf();
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
     @Override
     protected void createExecutorAndRunThread() {
         requireExecutionNonNull();
 
         readThreadTimeConfig();
 
-        executor = new ScheduledCaughtExecutorService(corePoolSize, getThreadFactory());
-
-        runThread();
+        newExecutorServiceIfNull();
 
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
+
+        runThread();
     }
 
     private void readThreadTimeConfig() {
@@ -142,110 +167,163 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         return delay.isPresent() && !timeout.isPresent() && interval.isPresent();
     }
 
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
     @Override
     protected void runThread() {
+        newExecutorResultIfNull();
+
         switch (threadTimeConfig) {
-        case DELAY:
-            runWithDelay();
-            break;
-        case DELAY_AND_INTERVAL:
-            runWithDelayAndInterval();
-            break;
-        case DELAY_AND_TIMEOUT:
-            runWithDelayAndTimeout();
-            break;
-        case INTERVAL:
-            runWithDelayAndInterval();
-            break;
-        case NO_SCHEDULE:
-            runWithNoSchedule();
-            break;
-        case TIMEOUT:
-            runWithDelayAndTimeout();
-            break;
-        case ALL_CONFIGURATION:
-            runWithAllTimesControls();
-            break;
-        default:
-            throw new IllegalStateException(
-                    ExceptionMessage.ILLEGAL_STATE_THREAD_TIMER_CONFIG.format(threadTimeConfig));
+            case DELAY:
+                runWithDelay();
+                break;
+            case DELAY_AND_INTERVAL:
+            case INTERVAL:
+                runWithDelayAndInterval();
+                break;
+            case DELAY_AND_TIMEOUT:
+            case TIMEOUT:
+                runWithDelayAndTimeout();
+                break;
+            case NO_SCHEDULE:
+                runWithNoSchedule();
+                break;
+            case ALL_CONFIGURATION:
+            default:
+                runWithAllTimesControls();
+                break;
         }
     }
 
     private void runWithNoSchedule() {
-        final Future<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(submit());
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithDelay() {
-        final ScheduledFuture<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithDelayAndTimeout() {
-        final ScheduledFuture<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
 
-        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(future);
+        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(futureHolder);
 
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
     }
 
     private void runWithDelayAndInterval() {
-        final ScheduledFuture<S> future = scheduleAtFixedRate(handleDelay(),
-                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(scheduleAtFixedRate(handleDelay(),
+                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
-    }
-
-    private void newExecutorResultIfNull() {
-        executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithAllTimesControls() {
-        final ScheduledFuture<S> future = scheduleAtFixedRate(handleDelay(),
-                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(scheduleAtFixedRate(handleDelay(),
+                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
 
-        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(future);
+        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(futureHolder);
 
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
     }
 
-    private long handleDelay() {
-        final long localDelay = delay.orElse(Duration.ofMillis(0)).toMillis();
+    /**
+     * It schedules the thread, configuring the delay parameter.
+     *
+     * @param delay the delay before thread execution.
+     * @param unit  the time unit of the delay.
+     * @return the scheduled-future-object of the thread.
+     * @see ScheduledThreadPoolExecutor#schedule(Callable, long, TimeUnit)
+     * @see ScheduledFuture
+     */
+    @SuppressWarnings({"unchecked"})
+    protected ScheduledFuture<S> schedule(final long delay, final TimeUnit unit) {
+        final ScheduledFuture<S> future;
 
-        if (uncaughtExceptionConsumer.isPresent() || afterExecuteConsumer.isPresent()) {
-            return localDelay >= MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + MINIMAL_REQUIRED_DELAY;
-        } else {
-            return localDelay;
+        switch (executionType) {
+            case CALLABLE:
+                future = executor.schedule((Callable<S>) execution, delay, unit);
+
+                break;
+            case RUNNABLE:
+            default:
+                future = (ScheduledFuture<S>) executor.schedule((Runnable) execution, delay, unit);
+
+                break;
         }
+
+        return future;
     }
 
-    private ExecutorResult<S> handleInterruption(final ScheduledFuture<S> future) {
-        final ScheduledCaughtExecutorService localExecutor = new ScheduledCaughtExecutorService(1);
+    /**
+     * It schedules the thread, configuring the delay and period parameters.
+     *
+     * @param delay  the delay before thread execution.
+     * @param period the interval between thread executions.
+     * @param unit   the time unit of the delay and period.
+     * @return the scheduled-future-object of the thread.
+     * @see ScheduledThreadPoolExecutor#scheduleAtFixedRate(Runnable, long, long, TimeUnit)
+     * @see ScheduledFuture
+     */
+    @SuppressWarnings({"unchecked"})
+    protected ScheduledFuture<S> scheduleAtFixedRate(final long delay,
+                                                     final long period, final TimeUnit unit) {
+        final ScheduledFuture<S> future;
 
-        localExecutor.addAfterExecuteConsumer(handleException(future));
-        localExecutor.schedule(cancelFuture(future), timeout.orElse(Duration.ofMillis(0)).toMillis(),
+        switch (executionType) {
+            case CALLABLE:
+                throw new UnsupportedOperationException(ExecutionType.CALLABLE.name());
+            case RUNNABLE:
+            default:
+                future = (ScheduledFuture<S>) executor
+                        .scheduleAtFixedRate((Runnable) execution, delay, period, unit);
+
+                break;
+        }
+
+        return future;
+    }
+
+    private long handleDelay() {
+        return delay.orElseGet(() -> Duration.ofMillis(0)).toMillis();
+    }
+
+    private ExecutorResult<S> handleInterruption(final Holder<ScheduledFuture<S>> futureHolder) {
+        final ScheduledFuture<S> scheduledFuture = futureHolder.get();
+        final ScheduledThreadBuilderExecutor localExec = new ScheduledThreadBuilderExecutor(1);
+
+        localExec.addAfterExecuteConsumer(handleException(futureHolder));
+        localExec.schedule(cancelFuture(scheduledFuture), timeout
+                        .orElse(Duration.ofMillis(0)).toMillis(),
                 TimeUnit.MILLISECONDS);
 
-        final ExecutorResult<S> timeoutExecutorResult = new ExecutorResult<>(localExecutor);
+        final ExecutorResult<S> timeoutExecutorResult = new ExecutorResult<>(localExec);
 
-        timeoutExecutorResult.getFutures().add(future);
+        timeoutExecutorResult.getFutures().add(scheduledFuture);
 
         return timeoutExecutorResult;
     }
@@ -256,4 +334,13 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
                 future.cancel(mayInterruptIfRunning);
         };
     }
+
+    /**
+     * Class that enumerates the types of thread configuration that are supported by this builder.
+     */
+    protected enum ThreadTimeConfig {
+        NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL,
+        DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;
+    }
+
 }

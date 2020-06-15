@@ -16,7 +16,7 @@
 rootProject.name = 'commons'
 include 'commons-thread',
         'commons-reflection',
-	'commons-object-api',
-	'commons-object-impl',
-	'commons-message',
-	'commons-spi'
+		'commons-object-api',
+		'commons-object-impl',
+		'commons-message',
+		'commons-spi'

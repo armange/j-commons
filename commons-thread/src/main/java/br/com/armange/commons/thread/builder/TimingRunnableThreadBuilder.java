@@ -15,20 +15,45 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+/**
+ * Class responsible for simplifying and speeding up the creation and configuration of threads.
+ *
+ * @author Diego Armange Costa
+ * @see java.util.concurrent.ScheduledThreadPoolExecutor
+ * @see br.com.armange.commons.thread.builder.ThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class TimingRunnableThreadBuilder<S>
         extends AbstractTimingThreadBuilder<S, Runnable, TimingRunnableThreadBuilder<S>> {
 
     private TimingRunnableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
-    
+
+    /**
+     * Creates a thread builder.
+     *
+     * @param corePoolSize the number of threads to keep in the pool,
+     *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
+     * @return the current thread builder.
+     */
     protected static <T> TimingRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
         return new TimingRunnableThreadBuilder<>(corePoolSize);
     }
-    
+
     @Override
-    Class<Runnable> getExceutionClass() {
+    Class<Runnable> getExecutionClass() {
         return Runnable.class;
+    }
+
+    /**
+     * Sets the thread task.
+     *
+     * @param execution the thread implementation.
+     * @return the current thread builder.
+     */
+    protected TimingRunnableThreadBuilder<S> setScheduling(final Runnable execution) {
+        return super.setExecution(execution);
     }
 
 }

@@ -18,6 +18,15 @@ package br.com.armange.commons.thread.builder;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
+/**
+ * Class responsible for simplifying and speeding up the creation and configuration of threads.
+ *
+ * @param <S> the result type of method call.
+ * @author Diego Armange Costa
+ * @see java.util.concurrent.ScheduledThreadPoolExecutor
+ * @see br.com.armange.commons.thread.builder.ThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 @SuppressWarnings("rawtypes")
 public class TimingCallableThreadBuilder<S>
         extends AbstractTimingThreadBuilder<S, Callable, TimingCallableThreadBuilder<S>> {
@@ -25,18 +34,45 @@ public class TimingCallableThreadBuilder<S>
     private TimingCallableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
-    
+
+    /**
+     * Creates a thread builder.
+     *
+     * @param corePoolSize the number of threads to keep in the pool,
+     *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
+     * @param <T>          the type of the object resulting from the execution of the thread.
+     * @return a new thread builder
+     */
     protected static <T> TimingCallableThreadBuilder<T> newBuilder(final int corePoolSize) {
         return new TimingCallableThreadBuilder<>(corePoolSize);
     }
-    
+
+    /**
+     * Sets a consumer for the thread's execution result.
+     *
+     * @param threadResultConsumer the consumer for the thread's execution result.
+     * @return the current thread builder.
+     */
     @Override
     public TimingCallableThreadBuilder setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
         return super.setThreadResultConsumer(threadResultConsumer);
     }
 
+    /**
+     * @return the type of the thread implementation.
+     */
     @Override
-    Class<Callable> getExceutionClass() {
+    Class<Callable> getExecutionClass() {
         return Callable.class;
+    }
+
+    /**
+     * Sets the thread task.
+     *
+     * @param execution a task that returns a result and may throw an exception.
+     * @return the current thread builder.
+     */
+    protected TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
+        return super.setExecution(execution);
     }
 }

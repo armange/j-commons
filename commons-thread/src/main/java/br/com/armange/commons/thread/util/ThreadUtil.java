@@ -17,23 +17,26 @@ package br.com.armange.commons.thread.util;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import br.com.armange.commons.thread.exception.UncheckedException;
 
 /**
- * Useful structure for handling the current thread.
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
  * @author Diego Armange Costa
- * @since 2019-11-26 V1.0.0
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
 public class ThreadUtil {
 
     private ThreadUtil() {}
     
     /**
-     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@link java.lang.RuntimeException#RuntimeException(Throwable)} 
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
      * if any exception is thrown.
-     * @param millis the time in milliseconds to sleep the current thread.
+     * @param millis the length of time to sleep in milliseconds
      * @see java.lang.Thread#sleep(long)
      */
     public static void sleepUnchecked(final long millis) {
@@ -65,19 +68,37 @@ public class ThreadUtil {
     public static URL getCurrentThreadResource(final String relativePath) {
         return Thread.currentThread().getContextClassLoader().getResource(relativePath);
     }
-    
-    public static void sleepUntil(final long millis, final Supplier<Boolean> condition) throws InterruptedException {
-        while(condition.get()) {
+
+    /**
+     * Keeps the thread in sleep state until the given condition is true.
+     * @param millis the length of time to sleep in milliseconds
+     * @param condition The condition for the current thread to continue sleeping.
+     *                  When it has the true value the thread will continue to sleep.
+     * @throws InterruptedException if any thread has interrupted the current thread. The
+     * <i>interrupted status</i> of the current thread is cleared when this exception is thrown.
+     * @see java.lang.Thread#sleep(long)
+     */
+    public static void sleepUntil(final long millis, final BooleanSupplier condition) throws InterruptedException {
+        while(condition.getAsBoolean()) {
             Thread.sleep(millis);
         }
     }
-    
-    public static void sleepUncheckedUntil(final long millis, final Supplier<Boolean> condition) {
-        while(condition.get()) {
+
+    /**
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
+     * if any exception is thrown. Keeps the thread in sleep state until the given condition is true.
+     * @param millis the length of time to sleep in milliseconds
+     * @param condition The condition for the current thread to continue sleeping.
+     *                  When it has the true value the thread will continue to sleep.
+     * @see ThreadUtil#sleepUnchecked(long)
+     */
+    public static void sleepUncheckedUntil(final long millis, final BooleanSupplier condition) {
+        while(condition.getAsBoolean()) {
             try {
                 Thread.sleep(millis);
-            } catch (final InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (final Exception e) {
+                throw new UncheckedException(e);
             }
         }
     }

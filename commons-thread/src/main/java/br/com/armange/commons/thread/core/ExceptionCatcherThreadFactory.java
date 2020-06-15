@@ -20,30 +20,26 @@ import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * A thread-factory that sets some thread parameters if non-null:
- * <ul>
- * <li>Name</li>
- * <li>Priority</li>
- * <li>Uncaught exception handler</li>
- * </ul>
+ * Thread factory for use by the {@link br.com.armange.commons.thread.builder.ThreadBuilder}.
+ * An implementation of {@link UncaughtExceptionHandler}, name and priority
+ * can be assigned to each new thread created.
+ *
  * @author Diego Armange Costa
- * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @see java.util.concurrent.ThreadFactory
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
-public class CaughtExecutorThreadFactory implements ThreadFactory {
+public class ExceptionCatcherThreadFactory implements ThreadFactory {
     private Optional<UncaughtExceptionHandler> uncaughtExceptionHandler = Optional.empty();
     private Optional<String> threadName = Optional.empty();
     private Optional<Integer> threadPriority = Optional.empty();
-    
+
     /**
-     * Sets some thread parameters before return a new thread:
-     * <ul>
-     * <li>Name</li>
-     * <li>Priority</li>
-     * <li>Uncaught exception handler</li>
-     * </ul>
-     * These thread parameters will be used if they are not null.
-     * @see br.com.armange.commons.thread.core.CaughtExecutorThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
+     * Creates a new thread according to the given parameter.
+     * An implementation of exception handling, name and priority
+     * can be assigned to each new thread created.
+     *
+     * @param runnable the thread implementation
+     * @see ExceptionCatcherThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
      * @see #setThreadName(String)
      * @see #setThreadPriority(Integer)
      * @see java.util.concurrent.ThreadFactory#newThread(Runnable)
@@ -51,35 +47,43 @@ public class CaughtExecutorThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(final Runnable runnable) {
         final Thread thread = new Thread(runnable);
-        
+
         uncaughtExceptionHandler.ifPresent(thread::setUncaughtExceptionHandler);
-        
+
         threadName.ifPresent(thread::setName);
-        
+
         threadPriority.ifPresent(thread::setPriority);
-        
+
         return thread;
     }
-    
+
     /**
-     * Sets the uncaught exception handler to be used in a new thread.
-     * @param uncaughtExceptionHandler the uncaught exception handler.
+     * Set the default handler invoked when a thread abruptly terminates
+     * due to an uncaught exception, and no other handler has been defined
+     * for that thread.
+     *
+     * @param uncaughtExceptionHandler the default handler.
+     * @see Thread#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)
      */
     public void setUncaughtExceptionHandler(final UncaughtExceptionHandler uncaughtExceptionHandler) {
         this.uncaughtExceptionHandler = Optional.ofNullable(uncaughtExceptionHandler);
     }
-    
+
     /**
-     * Sets the thread name to be used in a new thread.
+     * Changes the name of this thread to be equal to the argument {@code threadName}.
+     *
      * @param threadName the thread name.
+     * @see Thread#setName(java.lang.String)
      */
     public void setThreadName(final String threadName) {
         this.threadName = Optional.ofNullable(threadName);
     }
-    
+
     /**
-     * Sets the thread priority to be used in a new thread.
+     * Changes the priority of this thread.
+     *
      * @param threadPriority the thread priority
+     * @see java.lang.Thread#setPriority
      */
     public void setThreadPriority(final Integer threadPriority) {
         this.threadPriority = Optional.ofNullable(threadPriority);
