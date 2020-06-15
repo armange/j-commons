@@ -37,13 +37,25 @@ public final class ThreadBuilder {
         return new ThreadBuilder();
     }
     
-    public TimingRunnableThreadBuilder<?> setExecution(final Runnable execution) {
+    public SimpleRunnableThreadBuilder<?> setExecution(final Runnable execution) {
+        final SimpleRunnableThreadBuilder<?> builder = SimpleRunnableThreadBuilder.newBuilder(corePoolSize);
+
+        return builder.setExecution(execution);
+    }
+
+    public <S> SimpleCallableThreadBuilder<S> setExecution(final Callable<S> execution) {
+        final SimpleCallableThreadBuilder<S> builder = SimpleCallableThreadBuilder.newBuilder(corePoolSize);
+
+        return builder.setExecution(execution);
+    }
+    
+    public TimingRunnableThreadBuilder<?> setScheduling(final Runnable execution) {
         final TimingRunnableThreadBuilder<?> builder = TimingRunnableThreadBuilder.newBuilder(corePoolSize);
         
         return builder.setExecution(execution);
     }
     
-    public <S> TimingCallableThreadBuilder<S> setExecution(final Callable<S> execution) {
+    public <S> TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
         final TimingCallableThreadBuilder<S> builder = TimingCallableThreadBuilder.<S>newBuilder(corePoolSize);
         
         return builder.setExecution(execution);

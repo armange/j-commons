@@ -27,7 +27,7 @@ public class TimingRunnableThreadBuilder<S>
     }
     
     @Override
-    Class<Runnable> getExceutionClass() {
+    Class<Runnable> getExecutionClass() {
         return Runnable.class;
     }
 

@@ -30,7 +30,7 @@ import java.util.concurrent.Future;
  * {@link java.util.concurrent.Future} in their respective documentation.
  * @author Diego Armange Costa
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
- * @see ScheduledCaughtExecutorService
+ * @see ScheduledCaughtExceptionExecutorService
  * @see br.com.armange.commons.thread.AbstractThreadBuilder#start()
  * @see br.com.armange.commons.thread.AbstractThreadBuilder
  */

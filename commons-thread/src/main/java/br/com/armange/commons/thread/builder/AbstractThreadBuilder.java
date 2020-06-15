@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 
 import br.com.armange.commons.message.CommonMessages;
 import br.com.armange.commons.thread.core.CaughtExecutorThreadFactory;
-import br.com.armange.commons.thread.core.ScheduledCaughtExecutorService;
+import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
 import br.com.armange.commons.thread.message.ExceptionMessage;
 
 /**
@@ -59,10 +59,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
             */
             } else {
                 throw new IllegalArgumentException(
-                        ExceptionMessage.ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE.format(Optional.ofNullable(sourceClass)
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                        ExceptionMessage.ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE.format("null")))
-                                .getName()));
+                        ExceptionMessage.ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE.format(sourceClass.getName()));
             }
         }
     }
@@ -74,20 +71,23 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     protected Optional<IntSupplier> threadPrioritySupplier = Optional.empty();
     protected Optional<Consumer<S>> threadResultConsumer = Optional.empty();
 
-    protected ScheduledCaughtExecutorService executor;
+    protected ScheduledCaughtExceptionExecutorService executor;
     protected ExecutorResult<S> executorResult;
 
     protected T execution;
 
     protected boolean mayInterruptIfRunning;
     protected boolean silentInterruption;
+    protected boolean simpleThread;
 
     protected final ExecutionType executionType;
     protected final int corePoolSize;
 
-    protected AbstractThreadBuilder(final int corePoolSize) {
+    protected AbstractThreadBuilder(final int corePoolSize, final boolean simpleThread) {
         this.corePoolSize = corePoolSize;
-        executionType = ExecutionType.valueOf(getExceutionClass());
+        this.simpleThread = simpleThread;
+
+        executionType = ExecutionType.valueOf(getExecutionClass());
     }
 
     /**
@@ -95,7 +95,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      * 
      * @param afterExecuteConsumer the consumer to be called after thread execution.
      * @return the current thread builder.
-     * @see br.com.armange.commons.thread.core.ScheduledCaughtExecutorService#afterExecute(Runnable,
+     * @see br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService#afterExecute(Runnable,
      *      Throwable)
      */
     public U setAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteConsumer) {
@@ -193,7 +193,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
         return getSelf();
     }
-
+    
     @SuppressWarnings("unchecked")
     protected U getSelf() {
         return (U) this;
@@ -225,11 +225,16 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     protected void createExecutorAndRunThread() {
         requireExecutionNonNull();
 
-        executor = new ScheduledCaughtExecutorService(corePoolSize, getThreadFactory());
+        newExecutorServiceIfNull();
 
         runThread();
 
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
+    }
+
+    protected void newExecutorServiceIfNull() {
+        executor = executor == null 
+                ? new ScheduledCaughtExceptionExecutorService(corePoolSize, getThreadFactory()) : executor;
     }
 
     protected void requireExecutionNonNull() {
@@ -237,7 +242,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     protected ThreadFactory getThreadFactory() {
-        final CaughtExecutorThreadFactory factory = threadFactory.orElse(new CaughtExecutorThreadFactory());
+        final CaughtExecutorThreadFactory factory = threadFactory.orElseGet(CaughtExecutorThreadFactory::new);
 
         uncaughtExceptionConsumer
                 .ifPresent(uec -> factory.setUncaughtExceptionHandler((thread, throwable) -> uec.accept(throwable)));
@@ -269,13 +274,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
             break;
         case RUNNABLE:
+        default:
             future = (Future<S>) executor.submit((Runnable) execution);
 
             break;
-        default:
-            throw new IllegalStateException();
-
         }
+
         return future;
     }
 
@@ -289,13 +293,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
             break;
         case RUNNABLE:
+        default:
             future = (ScheduledFuture<S>) executor.schedule((Runnable) execution, delay, unit);
 
             break;
-        default:
-            throw new IllegalStateException();
-
         }
+
         return future;
     }
 
@@ -307,13 +310,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         case CALLABLE:
             throw new UnsupportedOperationException(ExecutionType.CALLABLE.name());
         case RUNNABLE:
+        default:
             future = (ScheduledFuture<S>) executor.scheduleAtFixedRate((Runnable) execution, delay, period, unit);
 
             break;
-        default:
-            throw new IllegalStateException();
-
         }
+        
         return future;
     }
 
@@ -326,7 +328,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
                     }
                 } catch (final Exception e) {
                     if (isNotSilentOrIsExecutionException(e)) {
-                        uncaughtExceptionConsumer.orElseGet(() -> System.out::println).accept(e);
+                        uncaughtExceptionConsumer.orElseGet(() -> ex -> ex.printStackTrace()).accept(e);
+                    } else {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -348,21 +352,20 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
             throw new UnsupportedOperationException(ExecutionType.RECURSIVE_TASK.name());
         */
         case RUNNABLE:
+        default:
             future.get();
 
             break;
-        default:
-            throw new UnsupportedOperationException(executionType.name());
         }
     }
 
     private boolean isNotSilentOrIsExecutionException(final Exception e) {
-        return !silentInterruption || !(e instanceof CancellationException) && !(e instanceof InterruptedException);
+        return !silentInterruption || !(e instanceof CancellationException);
     }
 
     private void newExecutorResultIfNull() {
         executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
     }
 
-    abstract Class<T> getExceutionClass();
+    abstract Class<T> getExecutionClass();
 }

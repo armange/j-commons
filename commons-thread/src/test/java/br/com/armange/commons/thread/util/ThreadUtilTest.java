@@ -113,7 +113,7 @@ public class ThreadUtilTest {
         
         ThreadBuilder
             .newBuilder()
-            .setExecution(() -> ThreadUtil.sleepUncheckedUntil(2000, sleepUntilSupplier))
+            .setScheduling(() -> ThreadUtil.sleepUncheckedUntil(2000, sleepUntilSupplier))
             .setTimeout(500)
             .setMayInterruptIfRunning(true)
             .start();

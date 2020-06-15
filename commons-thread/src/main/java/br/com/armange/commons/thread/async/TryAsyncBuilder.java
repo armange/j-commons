@@ -40,8 +40,8 @@ public final class TryAsyncBuilder {
     }
 
     public static ResourcesTryAsyncBuilder tryAsync(final Consumer<Closeable[]> attemptedExecution,
-            final Closeable... closeables) {
-        return ResourcesTryAsyncBuilder.tryAsync(attemptedExecution, closeables);
+            final Closeable... resources) {
+        return ResourcesTryAsyncBuilder.tryAsync(attemptedExecution, resources);
     }
 
     public static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,

@@ -36,7 +36,7 @@ public class TimingCallableThreadBuilder<S>
     }
 
     @Override
-    Class<Callable> getExceutionClass() {
+    Class<Callable> getExecutionClass() {
         return Callable.class;
     }
 }

@@ -21,14 +21,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import br.com.armange.commons.thread.core.ScheduledCaughtExecutorService;
-import br.com.armange.commons.thread.message.ExceptionMessage;
+import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
 
 public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTimingThreadBuilder<S, T, U>>
         extends AbstractThreadBuilder<S, T, U> {
 
     protected AbstractTimingThreadBuilder(final int corePoolSize) {
-        super(corePoolSize);
+        super(corePoolSize, false);
     }
 
     protected static enum ThreadTimeConfig {
@@ -92,7 +91,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
         readThreadTimeConfig();
 
-        executor = new ScheduledCaughtExecutorService(corePoolSize, getThreadFactory());
+        newExecutorServiceIfNull();
 
         runThread();
 
@@ -149,31 +148,25 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
             runWithDelay();
             break;
         case DELAY_AND_INTERVAL:
+        case INTERVAL:
             runWithDelayAndInterval();
             break;
         case DELAY_AND_TIMEOUT:
+        case TIMEOUT:
             runWithDelayAndTimeout();
-            break;
-        case INTERVAL:
-            runWithDelayAndInterval();
             break;
         case NO_SCHEDULE:
             runWithNoSchedule();
             break;
-        case TIMEOUT:
-            runWithDelayAndTimeout();
-            break;
         case ALL_CONFIGURATION:
+        default:
             runWithAllTimesControls();
             break;
-        default:
-            throw new IllegalStateException(
-                    ExceptionMessage.ILLEGAL_STATE_THREAD_TIMER_CONFIG.format(threadTimeConfig));
         }
     }
 
     private void runWithNoSchedule() {
-        final Future<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Future<S> future = submit();
 
         executor.addAfterExecuteConsumer(handleException(future));
         newExecutorResultIfNull();
@@ -237,7 +230,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     private ExecutorResult<S> handleInterruption(final ScheduledFuture<S> future) {
-        final ScheduledCaughtExecutorService localExecutor = new ScheduledCaughtExecutorService(1);
+        final ScheduledCaughtExceptionExecutorService localExecutor = new ScheduledCaughtExceptionExecutorService(1);
 
         localExecutor.addAfterExecuteConsumer(handleException(future));
         localExecutor.schedule(cancelFuture(future), timeout.orElse(Duration.ofMillis(0)).toMillis(),
