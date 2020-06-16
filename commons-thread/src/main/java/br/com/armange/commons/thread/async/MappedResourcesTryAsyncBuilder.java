@@ -25,7 +25,7 @@ public class MappedResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<Reso
     private final Consumer<Map<Object, Closeable>> attemptedExecution;
 
     private MappedResourcesTryAsyncBuilder(final Map<Object, Closeable> closeableMap,
-            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+                                           final Consumer<Map<Object, Closeable>> attemptedExecution) {
         this.closeableMap = closeableMap;
         this.attemptedExecution = attemptedExecution;
 
@@ -41,7 +41,7 @@ public class MappedResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<Reso
     }
 
     protected static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,
-            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+                                                             final Consumer<Map<Object, Closeable>> attemptedExecution) {
         return new MappedResourcesTryAsyncBuilder(closeableMap, attemptedExecution);
     }
 

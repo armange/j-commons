@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -39,46 +42,6 @@ import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorServic
 
 public class TimingRunnableThreadBuilderTest {
     private static final RuntimeException RUNTIME_EXCEPTION = new RuntimeException();
-
-    private static class LocalRunnable implements Runnable {
-        @Override
-        public void run() {
-        }
-    }
-
-    private static class LocalRunnableWithException implements Runnable {
-        @Override
-        public void run() {
-            throw RUNTIME_EXCEPTION;
-        }
-    }
-
-    private static class LazyRunnableWithException implements Runnable {
-        private boolean shouldFail;
-
-        @Override
-        public void run() {
-            if (!shouldFail) {
-                shouldFail = true;
-            } else {
-                throw RUNTIME_EXCEPTION;
-            }
-        }
-    }
-
-    private static class ThrowableConsumer implements Consumer<Throwable> {
-        @Override
-        public void accept(final Throwable t) {
-            System.out.println("Exception tested successfull: " + t);
-        }
-    }
-
-    private static class AfterExecuteConsumer implements BiConsumer<Runnable, Throwable> {
-        @Override
-        public void accept(final Runnable t, final Throwable u) {
-            System.out.println("After-Execute consumer tested successfull.");
-        }
-    }
 
     @Test
     public void noSchedule() {
@@ -598,5 +561,69 @@ public class TimingRunnableThreadBuilderTest {
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
         assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
+    }
+
+    @Test
+    public void scheduleRunnableMethod() {
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+
+        builder.setExecution(() -> {
+        }).createExecutorAndRunThread();
+
+        final Future<?> schedule = builder.schedule(0, TimeUnit.MILLISECONDS);
+
+        assertNotNull(schedule);
+    }
+
+    @Test
+    public void scheduleAtFixedRateRunnableMethod() {
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+
+        builder.setExecution(() -> {
+        }).createExecutorAndRunThread();
+
+        final Future<?> scheduleAtFixedRate = builder.scheduleAtFixedRate(0, 1, TimeUnit.MILLISECONDS);
+
+        assertNotNull(scheduleAtFixedRate);
+    }
+
+    private static class LocalRunnable implements Runnable {
+        @Override
+        public void run() {
+        }
+    }
+
+    private static class LocalRunnableWithException implements Runnable {
+        @Override
+        public void run() {
+            throw RUNTIME_EXCEPTION;
+        }
+    }
+
+    private static class LazyRunnableWithException implements Runnable {
+        private boolean shouldFail;
+
+        @Override
+        public void run() {
+            if (!shouldFail) {
+                shouldFail = true;
+            } else {
+                throw RUNTIME_EXCEPTION;
+            }
+        }
+    }
+
+    private static class ThrowableConsumer implements Consumer<Throwable> {
+        @Override
+        public void accept(final Throwable t) {
+            System.out.println("Exception tested successfull: " + t);
+        }
+    }
+
+    private static class AfterExecuteConsumer implements BiConsumer<Runnable, Throwable> {
+        @Override
+        public void accept(final Runnable t, final Throwable u) {
+            System.out.println("After-Execute consumer tested successfull.");
+        }
     }
 }

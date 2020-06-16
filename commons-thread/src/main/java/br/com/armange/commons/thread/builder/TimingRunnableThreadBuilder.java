@@ -21,14 +21,19 @@ public class TimingRunnableThreadBuilder<S>
     private TimingRunnableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
-    
+
     protected static <T> TimingRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
         return new TimingRunnableThreadBuilder<>(corePoolSize);
     }
-    
+
     @Override
     Class<Runnable> getExecutionClass() {
         return Runnable.class;
+    }
+
+    protected TimingRunnableThreadBuilder<S> setScheduling(final Runnable execution) {
+        // TODO Auto-generated method stub
+        return super.setExecution(execution);
     }
 
 }

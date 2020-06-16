@@ -21,16 +21,16 @@ import java.util.function.Consumer;
 public class CallableTryAsyncBuilder <S> extends AbstractTryAsyncBuilder<CallableTryAsyncBuilder<S>>{
     private final Callable<S> attemptedExecution;
     private final Consumer<S> resultConsumer;
-    
+
     private CallableTryAsyncBuilder(final Callable<S> callable, final Consumer<S> resultConsumer) {
         attemptedExecution = callable;
         this.resultConsumer = resultConsumer;
     }
-    
+
     protected static <S> CallableTryAsyncBuilder<S> tryAsync(final Callable<S> callable, final Consumer<S> resultConsumer) {
         return new CallableTryAsyncBuilder<S>(callable, resultConsumer);
     }
-    
+
     @Override
     public void execute() {
         execute(attemptedExecution, resultConsumer);

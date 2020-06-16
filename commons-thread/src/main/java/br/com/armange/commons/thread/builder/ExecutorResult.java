@@ -41,18 +41,18 @@ public class ExecutorResult<T> {
     private final List<Future> futures = new LinkedList<>();
     private final List<ExecutorResult<T>> timeoutExecutorResults = new LinkedList<>();
     private T threadResult;
-    
+
     public ExecutorResult(final ExecutorService executorService) {
         this.executorService = executorService;
     }
-    
+
     /**
      * @return the {@link java.util.concurrent.ExecutorService}
      */
     public ExecutorService getExecutorService() {
         return executorService;
     }
-    
+
     /**
      * @return the {@link Future}s list.
      */
@@ -60,7 +60,7 @@ public class ExecutorResult<T> {
     public List<Future> getFutures() {
         return futures;
     }
-    
+
     /**
      * Whenever a thread times out, its respective ExecutorService and Future will be present in this list.
      * @return the timeout thread's {@link ExecutorResult}s
@@ -68,11 +68,11 @@ public class ExecutorResult<T> {
     public List<ExecutorResult<T>> getTimeoutExecutorResults() {
         return timeoutExecutorResults;
     }
-    
+
     public T getThreadResult() {
         return threadResult;
     }
-    
+
     void setThreadResult(final T threadResult) {
         this.threadResult = threadResult;
     }

@@ -26,7 +26,7 @@ public class ExecutionTypeTest {
     public void shouldThrowExceptionForInvalidEnum() {
         try {
             ExecutionType.valueOf(String.class);
-            
+
             fail("IllegalArgumentException was expected");
         } catch (final IllegalArgumentException e) {
             e.printStackTrace();

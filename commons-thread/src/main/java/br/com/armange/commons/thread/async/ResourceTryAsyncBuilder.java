@@ -37,7 +37,7 @@ public class ResourceTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTry
     }
 
     protected static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
-            final Consumer<Closeable> attemptedExecution) {
+                                                      final Consumer<Closeable> attemptedExecution) {
         return new ResourceTryAsyncBuilder(closeable, attemptedExecution);
     }
 

@@ -20,23 +20,23 @@ import java.util.concurrent.Callable;
 public final class ThreadBuilder {
 
     private final int corePoolSize;
-    
+
     private ThreadBuilder() {
         corePoolSize = 1;
     }
-    
+
     private ThreadBuilder(final int corePoolSize) {
         this.corePoolSize = corePoolSize;
     }
-    
+
     public static ThreadBuilder newBuilder(final int corePoolSize) {
         return new ThreadBuilder(corePoolSize);
     }
-    
+
     public static ThreadBuilder newBuilder() {
         return new ThreadBuilder();
     }
-    
+
     public SimpleRunnableThreadBuilder<?> setExecution(final Runnable execution) {
         final SimpleRunnableThreadBuilder<?> builder = SimpleRunnableThreadBuilder.newBuilder(corePoolSize);
 
@@ -48,16 +48,16 @@ public final class ThreadBuilder {
 
         return builder.setExecution(execution);
     }
-    
+
     public TimingRunnableThreadBuilder<?> setScheduling(final Runnable execution) {
         final TimingRunnableThreadBuilder<?> builder = TimingRunnableThreadBuilder.newBuilder(corePoolSize);
-        
-        return builder.setExecution(execution);
+
+        return builder.setScheduling(execution);
     }
-    
+
     public <S> TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
         final TimingCallableThreadBuilder<S> builder = TimingCallableThreadBuilder.<S>newBuilder(corePoolSize);
-        
-        return builder.setExecution(execution);
+
+        return builder.setScheduling(execution);
     }
 }

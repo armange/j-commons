@@ -25,11 +25,11 @@ public class TimingCallableThreadBuilder<S>
     private TimingCallableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
-    
+
     protected static <T> TimingCallableThreadBuilder<T> newBuilder(final int corePoolSize) {
         return new TimingCallableThreadBuilder<>(corePoolSize);
     }
-    
+
     @Override
     public TimingCallableThreadBuilder setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
         return super.setThreadResultConsumer(threadResultConsumer);
@@ -38,5 +38,9 @@ public class TimingCallableThreadBuilder<S>
     @Override
     Class<Callable> getExecutionClass() {
         return Callable.class;
+    }
+
+    protected TimingCallableThreadBuilder<S> setScheduling(final Callable execution) {
+        return super.setExecution(execution);
     }
 }

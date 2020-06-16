@@ -40,6 +40,373 @@ import org.junit.Test;
 public class TryAsyncBuilderTest {
     private static final String THIS_EXCEPTION_WAS_EXPECTED = " -> This Exception was expected.";
 
+    @Test
+    public void tryRunnableWithoutExceptions() {
+        final RunnableWithDeay runnableWithDeay = spy(new RunnableWithDeay(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+
+        tryAsync(runnableWithDeay).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDeay).run();
+    }
+
+    @Test
+    public void tryRunnableWithExceptions() {
+        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
+
+        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDelayAndException).run();
+        verify(exceptionConsumer).accept(any());
+    }
+
+    @Test
+    public void tryRunnableCatchExceptionAndFinalizer() {
+        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
+
+        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer)
+                .finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDelayAndException).run();
+        verify(exceptionConsumer).accept(any());
+        verify(simpleRunnable, times(2)).run();
+    }
+
+    @Test
+    public void tryRunnableWithExceptionsAndFinalizerAndCatchThrowing() {
+        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
+
+        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer)
+                .finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDelayAndException).run();
+        // Pass in exception consumer and thread uncaught exception method.
+        // Because of this, the consumer must be verified two times.
+        verify(exceptionConsumer, times(2)).accept(any());
+        verify(simpleRunnable, times(3)).run();
+    }
+
+    @Test
+    public void tryRunnableWithExceptionsAndFinalizer() {
+        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
+
+        tryAsync(runnableWithDelayAndException).addCatcher(IOException.class, exceptionConsumer)
+                .finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDelayAndException).run();
+        verify(simpleRunnable, times(2)).run();
+    }
+
+    @Test
+    public void tryRunnableAndThrowExceptionWithoutCatch() {
+        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+
+        tryAsync(runnableWithDelayAndException).finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(runnableWithDelayAndException).run();
+        verify(simpleRunnable, times(2)).run();
+    }
+
+    /*
+     * * * * * * * * Callable tests. * * * * * * * *
+     */
+
+    @Test
+    public void tryCallableWithoutExceptions() {
+        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
+        final CallableWithDeay callableWithDeayAndException = spy(new CallableWithDeay(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+
+        tryAsync(callableWithDeayAndException, callableResultConsumer).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(callableWithDeayAndException).call();
+        assertNotNull(callableResultConsumer.result);
+    }
+
+    @Test
+    public void tryCallableWithExceptions() {
+        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
+        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
+
+        tryAsync(callableWithDeayAndException, callableResultConsumer)
+                .addCatcher(RuntimeException.class, exceptionConsumer).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(callableWithDeayAndException).call();
+        verify(callableResultConsumer, times(0)).accept(any());
+        verify(exceptionConsumer).accept(any());
+        assertNull(callableResultConsumer.result);
+    }
+
+    @Test
+    public void tryCallableWithExceptionsAndFinalizerAndCatchThrowing() {
+        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
+        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
+
+        tryAsync(callableWithDeayAndException, callableResultConsumer)
+                .addCatcher(RuntimeException.class, exceptionConsumer).finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(callableWithDeayAndException).call();
+        verify(callableResultConsumer, times(0)).accept(any());
+        // Pass in exception consumer and thread uncaught exception method.
+        // Because of this, the consumer must be verified two times.
+        verify(exceptionConsumer, times(2)).accept(any());
+        verify(simpleRunnable, times(3)).run();
+        assertNull(callableResultConsumer.result);
+    }
+
+    @Test
+    public void tryCallableCatchExceptionAndFinalizer() {
+        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
+        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
+
+        tryAsync(callableWithDeayAndException, callableResultConsumer)
+                .addCatcher(RuntimeException.class, exceptionConsumer).finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(callableWithDeayAndException).call();
+        verify(callableResultConsumer, times(0)).accept(any());
+        verify(exceptionConsumer).accept(any());
+        verify(simpleRunnable, times(2)).run();
+        assertNull(callableResultConsumer.result);
+    }
+
+    @Test
+    public void tryCallableAndThrowExceptionWithoutCatch() {
+        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
+        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
+        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
+
+        tryAsync(callableWithDeayAndException, callableResultConsumer).finallyAsync(simpleRunnable).execute();
+
+        simpleRunnable.run();
+
+        verify(simpleRunnable).run();
+
+        sleepUnchecked(2000);
+
+        verify(callableWithDeayAndException).call();
+        verify(callableResultConsumer, times(0)).accept(any());
+        verify(simpleRunnable, times(2)).run();
+        assertNull(callableResultConsumer.result);
+    }
+
+    /*
+     * * * * * * * * Resources tests. * * * * * * * *
+     */
+
+    @Test
+    public void tryWithResource() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final CloseableConsumer closeableConsumer = spy(new CloseableConsumer());
+
+        TryAsyncBuilder.tryAsync(inputStream, closeableConsumer).execute();
+
+        sleepUnchecked(1500);
+
+        verify(closeableConsumer).accept(inputStream);
+        verify(inputStream).close();
+    }
+
+    @Test
+    public void tryWithResources() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final InputStream inputStream2 = mock(InputStream.class);
+        final CloseablesConsumer closeablesConsumer = spy(new CloseablesConsumer());
+
+        TryAsyncBuilder.tryAsync(closeablesConsumer, inputStream, inputStream2).execute();
+
+        sleepUnchecked(1500);
+
+        verify(closeablesConsumer).accept(new Closeable[] { inputStream, inputStream2 });
+        verify(inputStream).close();
+        verify(inputStream2).close();
+    }
+
+    @Test
+    public void tryWithMappedResource() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final InputStream inputStream2 = mock(InputStream.class);
+        final MappedCloseableConsumer mappedCloseableConsumer = spy(new MappedCloseableConsumer());
+        final Map<Object, Closeable> map = new HashMap<>();
+
+        map.put(0, inputStream);
+        map.put(2, inputStream2);
+
+        TryAsyncBuilder.tryAsync(map, mappedCloseableConsumer).execute();
+
+        sleepUnchecked(1500);
+
+        verify(mappedCloseableConsumer).accept(map);
+        verify(inputStream).close();
+        verify(inputStream2).close();
+    }
+
+    @Test
+    public void tryWithResourceWithException() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final CloseableConsumerWithException closeableConsumerWithException = spy(new CloseableConsumerWithException());
+
+        TryAsyncBuilder.tryAsync(inputStream, closeableConsumerWithException).execute();
+
+        sleepUnchecked(1500);
+
+        verify(closeableConsumerWithException).accept(inputStream);
+        verify(inputStream).close();
+    }
+
+    @Test
+    public void tryWithResourcesWithException() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final InputStream inputStream2 = mock(InputStream.class);
+        final CloseablesConsumerWithException closeablesConsumerWithException = spy(
+                new CloseablesConsumerWithException());
+
+        TryAsyncBuilder.tryAsync(closeablesConsumerWithException, inputStream, inputStream2).execute();
+
+        sleepUnchecked(1500);
+
+        verify(closeablesConsumerWithException).accept(new Closeable[] { inputStream, inputStream2 });
+        verify(inputStream).close();
+        verify(inputStream2).close();
+    }
+
+    @Test
+    public void tryWithMappedResourceWithException() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+        final InputStream inputStream2 = mock(InputStream.class);
+        final MappedCloseableConsumerWithException mappedCloseableConsumerWithException = spy(
+                new MappedCloseableConsumerWithException());
+        final Map<Object, Closeable> map = new HashMap<>();
+
+        map.put(0, inputStream);
+        map.put(2, inputStream2);
+
+        TryAsyncBuilder.tryAsync(map, mappedCloseableConsumerWithException).execute();
+
+        sleepUnchecked(1500);
+
+        verify(mappedCloseableConsumerWithException).accept(map);
+        verify(inputStream).close();
+        verify(inputStream2).close();
+    }
+
+    @Test
+    public void throwExceptionWhenClosingOneResource() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+
+        doThrow(IOException.class).when(inputStream).close();
+
+        TryAsyncBuilder.tryAsync(inputStream, e -> {}).execute();
+
+        sleepUnchecked(1500);
+
+        verify(inputStream, times(2)).close();
+    }
+
+    @Test
+    public void throwExceptionWhenClosingOneResourceFromArray() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+
+        doThrow(IOException.class).when(inputStream).close();
+
+        TryAsyncBuilder.tryAsync(e -> {}, inputStream).execute();
+
+        sleepUnchecked(1500);
+
+        verify(inputStream, times(2)).close();
+    }
+
+    @Test
+    public void throwExceptionWhenClosingOneResourceFromMap() throws IOException {
+        final InputStream inputStream = mock(InputStream.class);
+
+        doThrow(IOException.class).when(inputStream).close();
+
+        final Map<Object, Closeable> map = new HashMap<>();
+
+        map.put(0, inputStream);
+
+        TryAsyncBuilder.tryAsync(map, e -> {}).execute();
+
+        sleepUnchecked(1500);
+
+        verify(inputStream, times(2)).close();
+    }
+
     private static class RunnableWithDeay implements Runnable {
         private final long delay;
 
@@ -180,383 +547,5 @@ public class TryAsyncBuilderTest {
         public void accept(final Map<Object, Closeable> closeables) {
             throw new RuntimeException(THIS_EXCEPTION_WAS_EXPECTED);
         }
-    }
-    
-    @Test
-    public void tryRunnableWithoutExceptions() {
-        final RunnableWithDeay runnableWithDeay = spy(new RunnableWithDeay(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-
-        tryAsync(runnableWithDeay).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDeay, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDeay).run();
-    }
-
-    @Test
-    public void tryRunnableWithExceptions() {
-        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
-
-        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDelayAndException, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDelayAndException).run();
-        verify(exceptionConsumer).accept(any());
-    }
-
-    @Test
-    public void tryRunnableCatchExceptionAndFinalizer() {
-        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
-
-        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer)
-                .finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDelayAndException, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDelayAndException).run();
-        verify(exceptionConsumer).accept(any());
-        verify(simpleRunnable, times(2)).run();
-    }
-
-    @Test
-    public void tryRunnableWithExceptionsAndFinalizerAndCatchThrowing() {
-        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
-
-        tryAsync(runnableWithDelayAndException).addCatcher(RuntimeException.class, exceptionConsumer)
-                .finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDelayAndException, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDelayAndException).run();
-        // Pass in exception consumer and thread uncaught exception method.
-        // Because of this, the consumer must be verified two times.
-        verify(exceptionConsumer, times(2)).accept(any());
-        verify(simpleRunnable, times(2)).run();
-    }
-
-    @Test
-    public void tryRunnableWithExceptionsAndFinalizer() {
-        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
-
-        tryAsync(runnableWithDelayAndException).addCatcher(IOException.class, exceptionConsumer)
-                .finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDelayAndException, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDelayAndException).run();
-        verify(simpleRunnable, times(2)).run();
-    }
-
-    @Test
-    public void tryRunnableAndThrowExceptionWithoutCatch() {
-        final RunnableWithDelayAndException runnableWithDelayAndException = spy(new RunnableWithDelayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-
-        tryAsync(runnableWithDelayAndException).finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(runnableWithDelayAndException, times(0)).run();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(runnableWithDelayAndException).run();
-        verify(simpleRunnable, times(2)).run();
-    }
-
-    /*
-     * * * * * * * * Callable tests. * * * * * * * *
-     */
-
-    @Test
-    public void tryCallableWithoutExceptions() {
-        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
-        final CallableWithDeay callableWithDeayAndException = spy(new CallableWithDeay(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-
-        tryAsync(callableWithDeayAndException, callableResultConsumer).execute();
-
-        simpleRunnable.run();
-
-        //verify(callableWithDeayAndException, times(0)).call();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(callableWithDeayAndException).call();
-        assertNotNull(callableResultConsumer.result);
-    }
-
-    @Test
-    public void tryCallableWithExceptions() {
-        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
-        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
-
-        tryAsync(callableWithDeayAndException, callableResultConsumer)
-                .addCatcher(RuntimeException.class, exceptionConsumer).execute();
-
-        simpleRunnable.run();
-
-        //verify(callableWithDeayAndException, times(0)).call();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(callableWithDeayAndException).call();
-        verify(callableResultConsumer, times(0)).accept(any());
-        verify(exceptionConsumer).accept(any());
-        assertNull(callableResultConsumer.result);
-    }
-
-    @Test
-    public void tryCallableWithExceptionsAndFinalizerAndCatchThrowing() {
-        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
-        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumerThrowingException exceptionConsumer = spy(new ExceptionConsumerThrowingException());
-
-        tryAsync(callableWithDeayAndException, callableResultConsumer)
-                .addCatcher(RuntimeException.class, exceptionConsumer).finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(callableWithDeayAndException, times(0)).call();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(callableWithDeayAndException).call();
-        verify(callableResultConsumer, times(0)).accept(any());
-        // Pass in exception consumer and thread uncaught exception method.
-        // Because of this, the consumer must be verified two times.
-        verify(exceptionConsumer, times(2)).accept(any());
-        verify(simpleRunnable, times(2)).run();
-        assertNull(callableResultConsumer.result);
-    }
-
-    @Test
-    public void tryCallableCatchExceptionAndFinalizer() {
-        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
-        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-        final ExceptionConsumer exceptionConsumer = spy(new ExceptionConsumer());
-
-        tryAsync(callableWithDeayAndException, callableResultConsumer)
-                .addCatcher(RuntimeException.class, exceptionConsumer).finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(callableWithDeayAndException, times(0)).call();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(callableWithDeayAndException).call();
-        verify(callableResultConsumer, times(0)).accept(any());
-        verify(exceptionConsumer).accept(any());
-        verify(simpleRunnable, times(2)).run();
-        assertNull(callableResultConsumer.result);
-    }
-
-    @Test
-    public void tryCallableAndThrowExceptionWithoutCatch() {
-        final CallableResultConsumer callableResultConsumer = spy(new CallableResultConsumer(null));
-        final CallableWithDeayAndException callableWithDeayAndException = spy(new CallableWithDeayAndException(500));
-        final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
-
-        tryAsync(callableWithDeayAndException, callableResultConsumer).finallyAsync(simpleRunnable).execute();
-
-        simpleRunnable.run();
-
-        //verify(callableWithDeayAndException, times(0)).call();
-        verify(simpleRunnable).run();
-
-        sleepUnchecked(2000);
-
-        verify(callableWithDeayAndException).call();
-        verify(callableResultConsumer, times(0)).accept(any());
-        verify(simpleRunnable, times(2)).run();
-        assertNull(callableResultConsumer.result);
-    }
-
-    /*
-     * * * * * * * * Resources tests. * * * * * * * *
-     */
-
-    @Test
-    public void tryWithResource() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final CloseableConsumer closeableConsumer = spy(new CloseableConsumer());
-
-        TryAsyncBuilder.tryAsync(inputStream, closeableConsumer).execute();
-
-        sleepUnchecked(1500);
-
-        verify(closeableConsumer).accept(inputStream);
-        verify(inputStream).close();
-    }
-
-    @Test
-    public void tryWithResources() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final InputStream inputStream2 = mock(InputStream.class);
-        final CloseablesConsumer closeablesConsumer = spy(new CloseablesConsumer());
-
-        TryAsyncBuilder.tryAsync(closeablesConsumer, inputStream, inputStream2).execute();
-
-        sleepUnchecked(1500);
-
-        verify(closeablesConsumer).accept(new Closeable[] { inputStream, inputStream2 });
-        verify(inputStream).close();
-        verify(inputStream2).close();
-    }
-
-    @Test
-    public void tryWithMappedResource() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final InputStream inputStream2 = mock(InputStream.class);
-        final MappedCloseableConsumer mappedCloseableConsumer = spy(new MappedCloseableConsumer());
-        final Map<Object, Closeable> map = new HashMap<>();
-
-        map.put(0, inputStream);
-        map.put(2, inputStream2);
-
-        TryAsyncBuilder.tryAsync(map, mappedCloseableConsumer).execute();
-
-        sleepUnchecked(1500);
-
-        verify(mappedCloseableConsumer).accept(map);
-        verify(inputStream).close();
-        verify(inputStream2).close();
-    }
-
-    @Test
-    public void tryWithResourceWithException() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final CloseableConsumerWithException closeableConsumerWithException = spy(new CloseableConsumerWithException());
-
-        TryAsyncBuilder.tryAsync(inputStream, closeableConsumerWithException).execute();
-
-        sleepUnchecked(1500);
-
-        verify(closeableConsumerWithException).accept(inputStream);
-        verify(inputStream).close();
-    }
-
-    @Test
-    public void tryWithResourcesWithException() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final InputStream inputStream2 = mock(InputStream.class);
-        final CloseablesConsumerWithException closeablesConsumerWithException = spy(
-                new CloseablesConsumerWithException());
-
-        TryAsyncBuilder.tryAsync(closeablesConsumerWithException, inputStream, inputStream2).execute();
-
-        sleepUnchecked(1500);
-
-        verify(closeablesConsumerWithException).accept(new Closeable[] { inputStream, inputStream2 });
-        verify(inputStream).close();
-        verify(inputStream2).close();
-    }
-
-    @Test
-    public void tryWithMappedResourceWithException() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        final InputStream inputStream2 = mock(InputStream.class);
-        final MappedCloseableConsumerWithException mappedCloseableConsumerWithException = spy(
-                new MappedCloseableConsumerWithException());
-        final Map<Object, Closeable> map = new HashMap<>();
-
-        map.put(0, inputStream);
-        map.put(2, inputStream2);
-
-        TryAsyncBuilder.tryAsync(map, mappedCloseableConsumerWithException).execute();
-
-        sleepUnchecked(1500);
-
-        verify(mappedCloseableConsumerWithException).accept(map);
-        verify(inputStream).close();
-        verify(inputStream2).close();
-    }
-    
-    @Test
-    public void aaaaa() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        
-        doThrow(IOException.class).when(inputStream).close();
-
-        TryAsyncBuilder.tryAsync(inputStream, e -> {}).execute();
-
-        sleepUnchecked(1500);
-
-        verify(inputStream, times(2)).close();
-    }
-    
-    @Test
-    public void bbbbb() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        
-        doThrow(IOException.class).when(inputStream).close();
-        
-        TryAsyncBuilder.tryAsync(e -> {}, inputStream).execute();
-
-        sleepUnchecked(1500);
-
-        verify(inputStream, times(2)).close();
-    }
-    
-    @Test
-    public void ccccc() throws IOException {
-        final InputStream inputStream = mock(InputStream.class);
-        
-        doThrow(IOException.class).when(inputStream).close();
-        
-        final Map<Object, Closeable> map = new HashMap<>();
-
-        map.put(0, inputStream);
-
-        TryAsyncBuilder.tryAsync(map, e -> {}).execute();
-
-        sleepUnchecked(1500);
-
-        verify(inputStream, times(2)).close();
     }
 }

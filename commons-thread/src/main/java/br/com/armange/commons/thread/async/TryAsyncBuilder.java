@@ -30,22 +30,22 @@ public final class TryAsyncBuilder {
     }
 
     public static <T> CallableTryAsyncBuilder<T> tryAsync(final Callable<T> callable,
-            final Consumer<T> resultConsumer) {
+                                                          final Consumer<T> resultConsumer) {
         return CallableTryAsyncBuilder.tryAsync(callable, resultConsumer);
     }
 
     public static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
-            final Consumer<Closeable> attemptedExecution) {
+                                                   final Consumer<Closeable> attemptedExecution) {
         return ResourceTryAsyncBuilder.tryAsync(closeable, attemptedExecution);
     }
 
     public static ResourcesTryAsyncBuilder tryAsync(final Consumer<Closeable[]> attemptedExecution,
-            final Closeable... resources) {
+                                                    final Closeable... resources) {
         return ResourcesTryAsyncBuilder.tryAsync(attemptedExecution, resources);
     }
 
     public static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,
-            final Consumer<Map<Object, Closeable>> attemptedExecution) {
+                                                          final Consumer<Map<Object, Closeable>> attemptedExecution) {
         return MappedResourcesTryAsyncBuilder.tryAsync(closeableMap, attemptedExecution);
     }
 }

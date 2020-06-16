@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 public class SimpleCallableThreadBuilder<S> extends AbstractThreadBuilder<S, Callable, SimpleCallableThreadBuilder<S>>{
 
     protected SimpleCallableThreadBuilder(final int corePoolSize) {
-        super(corePoolSize, true);
+        super(corePoolSize);
     }
 
     protected static <T> SimpleCallableThreadBuilder<T> newBuilder(final int corePoolSize) {
@@ -15,12 +15,17 @@ public class SimpleCallableThreadBuilder<S> extends AbstractThreadBuilder<S, Cal
     }
 
     @Override
-    public SimpleCallableThreadBuilder<S> setThreadResultConsumer(Consumer<S> threadResultConsumer) {
+    public SimpleCallableThreadBuilder<S> setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
         return super.setThreadResultConsumer(threadResultConsumer);
     }
 
     @Override
     Class<Callable> getExecutionClass() {
         return Callable.class;
+    }
+
+    @Override
+    public SimpleCallableThreadBuilder<S> setExecution(final Callable execution) {
+        return super.setExecution(execution);
     }
 }

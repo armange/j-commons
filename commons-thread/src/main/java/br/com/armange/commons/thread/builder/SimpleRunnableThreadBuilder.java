@@ -3,7 +3,7 @@ package br.com.armange.commons.thread.builder;
 public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Runnable, SimpleRunnableThreadBuilder<S>>{
 
     protected SimpleRunnableThreadBuilder(final int corePoolSize) {
-        super(corePoolSize, true);
+        super(corePoolSize);
     }
 
     protected static <T> SimpleRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
@@ -15,4 +15,8 @@ public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Run
         return Runnable.class;
     }
 
+    @Override
+    public SimpleRunnableThreadBuilder<S> setExecution(final Runnable execution) {
+        return super.setExecution(execution);
+    }
 }

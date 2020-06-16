@@ -27,7 +27,7 @@ public class ResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTr
     private ResourcesTryAsyncBuilder(final Consumer<Closeable[]> attemptedExecution, final Closeable... closeables) {
         this.closeables = closeables;
         this.attemptedExecution = attemptedExecution;
-        
+
         addFinalizer(() -> {
             Stream.of(closeables).forEach(closeable -> {
                 try {
@@ -38,11 +38,11 @@ public class ResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTr
             });
         });
     }
-    
+
     protected static ResourcesTryAsyncBuilder tryAsync(final Consumer<Closeable[]> attemptedExecution, final Closeable... closeables) {
         return new ResourcesTryAsyncBuilder(attemptedExecution, closeables);
     }
-    
+
     @Override
     public void execute() {
         execute(() -> attemptedExecution.accept(closeables));

@@ -17,6 +17,7 @@ package br.com.armange.commons.thread.builder;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +28,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         extends AbstractThreadBuilder<S, T, U> {
 
     protected AbstractTimingThreadBuilder(final int corePoolSize) {
-        super(corePoolSize, false);
+        super(corePoolSize);
     }
 
     protected static enum ThreadTimeConfig {
@@ -45,7 +46,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
     /**
      * Sets the timeout value.
-     * 
+     *
      * @param milliseconds the timeout value in milliseconds.
      * @return the current thread builder.
      */
@@ -59,7 +60,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
     /**
      * Sets the delay value.
-     * 
+     *
      * @param milliseconds the delay value in milliseconds.
      * @return the current thread builder.
      */
@@ -73,7 +74,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
     /**
      * Sets the repeating interval value.
-     * 
+     *
      * @param milliseconds the repeating interval value in milliseconds.
      * @return the current thread builder.
      */
@@ -93,9 +94,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
         newExecutorServiceIfNull();
 
-        runThread();
-
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
+
+        runThread();
     }
 
     private void readThreadTimeConfig() {
@@ -143,25 +144,27 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
     @Override
     protected void runThread() {
+        newExecutorResultIfNull();
+
         switch (threadTimeConfig) {
-        case DELAY:
-            runWithDelay();
-            break;
-        case DELAY_AND_INTERVAL:
-        case INTERVAL:
-            runWithDelayAndInterval();
-            break;
-        case DELAY_AND_TIMEOUT:
-        case TIMEOUT:
-            runWithDelayAndTimeout();
-            break;
-        case NO_SCHEDULE:
-            runWithNoSchedule();
-            break;
-        case ALL_CONFIGURATION:
-        default:
-            runWithAllTimesControls();
-            break;
+            case DELAY:
+                runWithDelay();
+                break;
+            case DELAY_AND_INTERVAL:
+            case INTERVAL:
+                runWithDelayAndInterval();
+                break;
+            case DELAY_AND_TIMEOUT:
+            case TIMEOUT:
+                runWithDelayAndTimeout();
+                break;
+            case NO_SCHEDULE:
+                runWithNoSchedule();
+                break;
+            case ALL_CONFIGURATION:
+            default:
+                runWithAllTimesControls();
+                break;
         }
     }
 
@@ -202,10 +205,6 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         executorResult.getFutures().add(future);
     }
 
-    private void newExecutorResultIfNull() {
-        executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
-    }
-
     private void runWithAllTimesControls() {
         final ScheduledFuture<S> future = scheduleAtFixedRate(handleDelay(),
                 interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
@@ -217,6 +216,42 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         newExecutorResultIfNull();
         executorResult.getFutures().add(future);
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    protected ScheduledFuture<S> schedule(final long delay, final TimeUnit unit) {
+        final ScheduledFuture<S> future;
+
+        switch (executionType) {
+            case CALLABLE:
+                future = executor.schedule((Callable<S>) execution, delay, unit);
+
+                break;
+            case RUNNABLE:
+            default:
+                future = (ScheduledFuture<S>) executor.schedule((Runnable) execution, delay, unit);
+
+                break;
+        }
+
+        return future;
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    protected ScheduledFuture<S> scheduleAtFixedRate(final long delay, final long period, final TimeUnit unit) {
+        final ScheduledFuture<S> future;
+
+        switch (executionType) {
+            case CALLABLE:
+                throw new UnsupportedOperationException(ExecutionType.CALLABLE.name());
+            case RUNNABLE:
+            default:
+                future = (ScheduledFuture<S>) executor.scheduleAtFixedRate((Runnable) execution, delay, period, unit);
+
+                break;
+        }
+
+        return future;
     }
 
     private long handleDelay() {

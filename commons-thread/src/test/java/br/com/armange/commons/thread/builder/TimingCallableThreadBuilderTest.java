@@ -15,17 +15,49 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.junit.Test;
 
 import br.com.armange.commons.thread.util.ThreadUtil;
 
-public class TimingCallableThreadBuilderTestArtifactTest {
+public class TimingCallableThreadBuilderTest {
+
+    @Test
+    public void singleCallableThread() {
+        final LocalCallableString localCallableString = new LocalCallableString();
+        final ThreadResultStringConsumer threadResultStringConsumer = spy(new ThreadResultStringConsumer());
+
+        // @formatter:off
+        TimingCallableThreadBuilder
+                .<String>newBuilder(1)
+                .setExecution(localCallableString)
+                .setThreadResultConsumer(threadResultStringConsumer)
+                .start();
+        // @formatter:on
+
+        ThreadUtil.sleepUnchecked(1500);
+
+        verify(threadResultStringConsumer).accept(LocalCallableString.THIS_IS_A_CALLABLE_THREAD);
+    }
+
+    @Test
+    public void scheduleCallableMethod() {
+        final TimingCallableThreadBuilderTestArtifact<?> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
+
+        builder.setExecution(() -> null).createExecutorAndRunThread();
+
+        final Future<?> schedule = builder.schedule(0, TimeUnit.MILLISECONDS);
+
+        assertNotNull(schedule);
+    }
 
     private static class LocalCallableString implements Callable<String> {
         private static final String THIS_IS_A_CALLABLE_THREAD = "This is a callable thread.";
@@ -44,22 +76,5 @@ public class TimingCallableThreadBuilderTestArtifactTest {
             System.out.println(value);
         }
 
-    }
-    @Test
-    public void singleCallableThread() {
-        final LocalCallableString localCallableString = new LocalCallableString();
-        final ThreadResultStringConsumer threadResultStringConsumer = spy(new ThreadResultStringConsumer());
-
-        // @formatter:off
-        TimingCallableThreadBuilder
-            .<String>newBuilder(1)
-            .setExecution(localCallableString)
-            .setThreadResultConsumer(threadResultStringConsumer)
-            .start();
-        // @formatter:on
-
-        ThreadUtil.sleepUnchecked(1500);
-        
-        verify(threadResultStringConsumer).accept(LocalCallableString.THIS_IS_A_CALLABLE_THREAD);
     }
 }

@@ -36,7 +36,7 @@ public class AbstractThreadBuilderUnitTest {
 
     @Test
     public void AbstractThreadBuilderConstructor() {
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
         assertNotNull(builder.executionType);
         assertEquals(ExecutionType.RUNNABLE, builder.executionType);
@@ -46,8 +46,8 @@ public class AbstractThreadBuilderUnitTest {
     public void setAfterExecuteConsumerMethod() {
         final BiConsumer<Runnable, Throwable> afterExecuteConsumer = (a, b) -> {
         };
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setAfterExecuteConsumer(afterExecuteConsumer);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setAfterExecuteConsumer(afterExecuteConsumer);
 
         assertNotNull(builder.afterExecuteConsumer);
         assertTrue(builder.afterExecuteConsumer.isPresent());
@@ -60,8 +60,8 @@ public class AbstractThreadBuilderUnitTest {
     public void setUncaughtExceptionConsumerMethod() {
         final Consumer<? super Throwable> uncaughtExceptionConsumer = a -> {
         };
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setUncaughtExceptionConsumer(uncaughtExceptionConsumer);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setUncaughtExceptionConsumer(uncaughtExceptionConsumer);
 
         assertNotNull(builder.uncaughtExceptionConsumer);
         assertTrue(builder.uncaughtExceptionConsumer.isPresent());
@@ -73,8 +73,8 @@ public class AbstractThreadBuilderUnitTest {
     @Test
     public void setThreadNameSupplierMethod() {
         final Supplier<String> threadNameSupplier = () -> EMPTY;
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setThreadNameSupplier(threadNameSupplier);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setThreadNameSupplier(threadNameSupplier);
 
         assertNotNull(builder.threadNameSupplier);
         assertTrue(builder.threadNameSupplier.isPresent());
@@ -87,8 +87,8 @@ public class AbstractThreadBuilderUnitTest {
     public void setThreadPrioritySupplierMethod() {
         final int threadPriority = 1;
         final IntSupplier threadPrioritySupplier = () -> threadPriority;
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setThreadPrioritySupplier(threadPrioritySupplier);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setThreadPrioritySupplier(threadPrioritySupplier);
 
         assertNotNull(builder.threadPrioritySupplier);
         assertTrue(builder.threadPrioritySupplier.isPresent());
@@ -101,8 +101,8 @@ public class AbstractThreadBuilderUnitTest {
     public void setExecutionMethod() {
         final Runnable execution = () -> {
         };
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setExecution(execution);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setExecution(execution);
 
         assertNotNull(builder.execution);
         verify(builder).requireExecutionNonNull();
@@ -113,8 +113,8 @@ public class AbstractThreadBuilderUnitTest {
     @Test
     public void setMayInterruptIfRunningMethod() {
         final boolean flag = false;
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setMayInterruptIfRunning(flag);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setMayInterruptIfRunning(flag);
 
         assertFalse(builder.mayInterruptIfRunning);
         assertEquals(builder, result);
@@ -124,8 +124,8 @@ public class AbstractThreadBuilderUnitTest {
     @Test
     public void setSilentInterruptionMethod() {
         final boolean flag = false;
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setSilentInterruption(flag);
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setSilentInterruption(flag);
 
         assertFalse(builder.silentInterruption);
         assertEquals(builder, result);
@@ -136,8 +136,8 @@ public class AbstractThreadBuilderUnitTest {
     public void setThreadResultConsumerMethod() {
         final Consumer<String> threadResultConsumer = a -> {
         };
-        final CallableThreadBuilderTestArtifact<String> builder = spy(CallableThreadBuilderTestArtifact.newBuilder());
-        final CallableThreadBuilderTestArtifact<String> result = builder.setThreadResultConsumer(threadResultConsumer);
+        final TimingCallableThreadBuilderTestArtifact<String> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
+        final TimingCallableThreadBuilderTestArtifact<String> result = builder.setThreadResultConsumer(threadResultConsumer);
 
         assertNotNull(builder.threadResultConsumer);
         assertTrue(builder.threadResultConsumer.isPresent());
@@ -148,15 +148,15 @@ public class AbstractThreadBuilderUnitTest {
 
     @Test
     public void getSelfMethod() {
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
-        final RunnableThreadBuilderTestArtifact<?> result = builder.getSelf();
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.getSelf();
 
         assertEquals(builder, result);
     }
 
     @Test
     public void startMethod() {
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
         final ExecutorResult<?> executorResult = builder.setExecution(() -> {
         }).start();
@@ -168,9 +168,9 @@ public class AbstractThreadBuilderUnitTest {
 
     @Test
     public void startAndBuildOtherMethod() {
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
-        final RunnableThreadBuilderTestArtifact<?> result = builder.setExecution(() -> {
+        final TimingRunnableThreadBuilderTestArtifact<?> result = builder.setExecution(() -> {
         }).startAndBuildOther();
 
         assertEquals(builder, result);
@@ -180,7 +180,7 @@ public class AbstractThreadBuilderUnitTest {
 
     @Test
     public void createExecutorAndRunThreadMethod() {
-        final RunnableThreadBuilderTestArtifact<?> builder = spy(RunnableThreadBuilderTestArtifact.newBuilder());
+        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setAfterExecuteConsumer((a, b) -> {
         }).setExecution(() -> {
@@ -197,7 +197,7 @@ public class AbstractThreadBuilderUnitTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void scheduleAtFixedRateCallableMethod() {
-        final CallableThreadBuilderTestArtifact<?> builder = spy(CallableThreadBuilderTestArtifact.newBuilder());
+        final TimingCallableThreadBuilderTestArtifact<?> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> null).createExecutorAndRunThread();
 
