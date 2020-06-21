@@ -38,7 +38,7 @@ import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Test;
 
-import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 
 public class TimingRunnableThreadBuilderTest {
     private static final RuntimeException RUNTIME_EXCEPTION = new RuntimeException();
@@ -207,7 +207,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setExecution(lazyRunnableWithException).setInterval(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
 
-        sleepUnchecked(1500);
+        sleepUnchecked(500);
 
         verify(lazyRunnableWithException, times(1)).run();
 
@@ -496,9 +496,9 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(1)).run();
         verify(afterExecuteConsumer, times(1)).accept(any(), any());
         assertThat(result, hasProperty("executorService", Matchers.allOf(notNullValue(),
-                IsInstanceOf.instanceOf(ScheduledCaughtExceptionExecutorService.class))));
+                IsInstanceOf.instanceOf(ScheduledThreadBuilderExecutor.class))));
 
-        assertThat(ScheduledCaughtExceptionExecutorService.class.cast(result.getExecutorService()).getAfterExecuteConsumers(),
+        assertThat(ScheduledThreadBuilderExecutor.class.cast(result.getExecutorService()).getAfterExecuteConsumers(),
                 notNullValue());
 
         assertThat(result, hasProperty("futures", hasSize(1)));

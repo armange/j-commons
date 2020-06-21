@@ -28,8 +28,8 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import br.com.armange.commons.message.CommonMessages;
-import br.com.armange.commons.thread.core.CaughtExecutorThreadFactory;
-import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
+import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 import br.com.armange.commons.thread.message.ExceptionMessage;
 
 /**
@@ -43,12 +43,12 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     protected Optional<BiConsumer<Runnable, Throwable>> afterExecuteConsumer = Optional.empty();
     protected Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = Optional.empty();
-    protected Optional<CaughtExecutorThreadFactory> threadFactory = Optional.empty();
+    protected Optional<ExceptionCatcherThreadFactory> threadFactory = Optional.empty();
     protected Optional<Supplier<String>> threadNameSupplier = Optional.empty();
     protected Optional<IntSupplier> threadPrioritySupplier = Optional.empty();
     protected Optional<Consumer<S>> threadResultConsumer = Optional.empty();
 
-    protected ScheduledCaughtExceptionExecutorService executor;
+    protected ScheduledThreadBuilderExecutor executor;
     protected ExecutorResult<S> executorResult;
 
     protected T execution;
@@ -70,7 +70,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      *
      * @param afterExecuteConsumer the consumer to be called after thread execution.
      * @return the current thread builder.
-     * @see br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService#afterExecute(Runnable,
+     * @see ScheduledThreadBuilderExecutor#afterExecute(Runnable,
      *      Throwable)
      */
     public U setAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteConsumer) {
@@ -209,7 +209,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     protected void newExecutorServiceIfNull() {
         executor = executor == null
-                ? new ScheduledCaughtExceptionExecutorService(corePoolSize, getThreadFactory()) : executor;
+                ? new ScheduledThreadBuilderExecutor(corePoolSize, getThreadFactory()) : executor;
     }
 
     protected void requireExecutionNonNull() {
@@ -217,7 +217,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     protected ThreadFactory getThreadFactory() {
-        final CaughtExecutorThreadFactory factory = threadFactory.orElseGet(CaughtExecutorThreadFactory::new);
+        final ExceptionCatcherThreadFactory factory = threadFactory.orElseGet(ExceptionCatcherThreadFactory::new);
 
         uncaughtExceptionConsumer
                 .ifPresent(uec -> factory.setUncaughtExceptionHandler((thread, throwable) -> uec.accept(throwable)));
@@ -230,13 +230,15 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     protected void runThread() {
-        final Future<S> future = submit();
+        final Holder<Future<S>> futureHolder = Holder.<Future<S>>empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+
+        futureHolder.set(submit());
 
         newExecutorResultIfNull();
 
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -258,8 +260,10 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
         return future;
     }
 
-    protected BiConsumer<Runnable, Throwable> handleException(final Future<S> future) {
+    protected <F extends Future<S>> BiConsumer<Runnable, Throwable> handleException(final Holder<F> futureHolder) {
         return (runnable, throwable) -> {
+            final Future<S> future = futureHolder.get();
+
             if (throwable == null) {
                 try {
                     if (future.isDone()) {

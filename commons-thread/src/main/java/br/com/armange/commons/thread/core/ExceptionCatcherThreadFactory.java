@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadFactory;
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @see java.util.concurrent.ThreadFactory
  */
-public class CaughtExecutorThreadFactory implements ThreadFactory {
+public class ExceptionCatcherThreadFactory implements ThreadFactory {
     private Optional<UncaughtExceptionHandler> uncaughtExceptionHandler = Optional.empty();
     private Optional<String> threadName = Optional.empty();
     private Optional<Integer> threadPriority = Optional.empty();
@@ -43,7 +43,7 @@ public class CaughtExecutorThreadFactory implements ThreadFactory {
      * <li>Uncaught exception handler</li>
      * </ul>
      * These thread parameters will be used if they are not null.
-     * @see br.com.armange.commons.thread.core.CaughtExecutorThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
+     * @see ExceptionCatcherThreadFactory#setUncaughtExceptionHandler(UncaughtExceptionHandler)
      * @see #setThreadName(String)
      * @see #setThreadPriority(Integer)
      * @see java.util.concurrent.ThreadFactory#newThread(Runnable)

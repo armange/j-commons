@@ -15,14 +15,10 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Runnable, SimpleRunnableThreadBuilder<S>>{
+public class SimpleRunnableThreadBuilderTestArtifact extends AbstractThreadBuilder<Void, Runnable, SimpleRunnableThreadBuilderTestArtifact>{
 
-    protected SimpleRunnableThreadBuilder(final int corePoolSize) {
+    protected SimpleRunnableThreadBuilderTestArtifact(int corePoolSize) {
         super(corePoolSize);
-    }
-
-    protected static <T> SimpleRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
-        return new SimpleRunnableThreadBuilder<>(corePoolSize);
     }
 
     @Override
@@ -30,8 +26,7 @@ public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Run
         return Runnable.class;
     }
 
-    @Override
-    public SimpleRunnableThreadBuilder<S> setExecution(final Runnable execution) {
-        return super.setExecution(execution);
+    static <T> SimpleRunnableThreadBuilderTestArtifact newBuilder() {
+        return new SimpleRunnableThreadBuilderTestArtifact(1);
     }
 }

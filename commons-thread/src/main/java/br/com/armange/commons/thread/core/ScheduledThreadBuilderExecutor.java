@@ -32,7 +32,7 @@ import java.util.function.BiConsumer;
  * @see #afterExecute(Runnable, Throwable)
  * @see #addAfterExecuteConsumer(BiConsumer)
  */
-public class ScheduledCaughtExceptionExecutorService extends ScheduledThreadPoolExecutor {
+public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor {
     private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
 
     /**
@@ -40,7 +40,7 @@ public class ScheduledCaughtExceptionExecutorService extends ScheduledThreadPool
      *                     are idle, unless {@code allowCoreThreadTimeOut} is set
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int)
      */
-    public ScheduledCaughtExceptionExecutorService(final int corePoolSize) {
+    public ScheduledThreadBuilderExecutor(final int corePoolSize) {
         super(corePoolSize);
     }
 
@@ -52,7 +52,7 @@ public class ScheduledCaughtExceptionExecutorService extends ScheduledThreadPool
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int,
      *      ThreadFactory)
      */
-    public ScheduledCaughtExceptionExecutorService(final int corePoolSize, final ThreadFactory threadFactory) {
+    public ScheduledThreadBuilderExecutor(final int corePoolSize, final ThreadFactory threadFactory) {
         super(corePoolSize, threadFactory);
     }
 

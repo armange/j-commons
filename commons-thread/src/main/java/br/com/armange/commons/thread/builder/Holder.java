@@ -15,23 +15,21 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Runnable, SimpleRunnableThreadBuilder<S>>{
+class Holder<T> {
+    private T value;
 
-    protected SimpleRunnableThreadBuilder(final int corePoolSize) {
-        super(corePoolSize);
+    private Holder() {
     }
 
-    protected static <T> SimpleRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
-        return new SimpleRunnableThreadBuilder<>(corePoolSize);
+    public static <U> Holder<U> empty() {
+        return new Holder();
     }
 
-    @Override
-    Class<Runnable> getExecutionClass() {
-        return Runnable.class;
+    public T get() {
+        return value;
     }
 
-    @Override
-    public SimpleRunnableThreadBuilder<S> setExecution(final Runnable execution) {
-        return super.setExecution(execution);
+    public void set(T value) {
+        this.value = value;
     }
 }

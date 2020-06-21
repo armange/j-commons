@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
-import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 import br.com.armange.commons.thread.util.ThreadUtil;
 
 /**
@@ -67,9 +67,9 @@ public class ThreadBuilderTest {
                 .startAndBuildOther()
                 .start();
 
-        assertThat(result.getExecutorService(), instanceOf(ScheduledCaughtExceptionExecutorService.class));
+        assertThat(result.getExecutorService(), instanceOf(ScheduledThreadBuilderExecutor.class));
 
-        final ScheduledCaughtExceptionExecutorService executor = (ScheduledCaughtExceptionExecutorService) result
+        final ScheduledThreadBuilderExecutor executor = (ScheduledThreadBuilderExecutor) result
                 .getExecutorService();
 
         assertEquals(corePoolSize, executor.getActiveCount());
@@ -96,9 +96,9 @@ public class ThreadBuilderTest {
                 .setScheduling(() -> ThreadUtil.sleepUnchecked(10000))
                 .start();
 
-        assertThat(result.getExecutorService(), instanceOf(ScheduledCaughtExceptionExecutorService.class));
+        assertThat(result.getExecutorService(), instanceOf(ScheduledThreadBuilderExecutor.class));
 
-        final ScheduledCaughtExceptionExecutorService executor = (ScheduledCaughtExceptionExecutorService) result
+        final ScheduledThreadBuilderExecutor executor = (ScheduledThreadBuilderExecutor) result
                 .getExecutorService();
 
         assertEquals(corePoolSize, executor.getActiveCount());

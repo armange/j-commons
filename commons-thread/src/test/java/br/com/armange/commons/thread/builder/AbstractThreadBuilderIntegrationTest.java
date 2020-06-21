@@ -1,3 +1,18 @@
+/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
 package br.com.armange.commons.thread.builder;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,12 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.io.PrintStream;
 import java.util.List;
@@ -39,7 +49,7 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void getThreadFactoryMethod() throws InterruptedException {
-        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
         final int threadPriority = 1;
         final Consumer<? super Throwable> uncaughtExceptionConsumer = spy(new EmptyUncaughtExceptionConsumer());
         final Supplier<String> threadNameSupplier = () -> EMPTY;
@@ -73,7 +83,7 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void runThreadMethod() {
-        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> {
         }).createExecutorAndRunThread();
@@ -90,7 +100,7 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void submitRunnableMethod() {
-        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> {
         }).createExecutorAndRunThread();
@@ -113,7 +123,7 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void handleExceptionMethodAndConsumesExceptionPrintingStacktrace() throws ExecutionException, InterruptedException {
-        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
         final PrintStream spiedPrintStream = spy(System.err);
 
         System.setErr(spiedPrintStream);
@@ -138,7 +148,7 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void handleExceptionMethodAndDoNotConsumesException() throws ExecutionException, InterruptedException {
-        final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
         final PrintStream spiedPrintStream = spy(System.err);
 
         System.setErr(spiedPrintStream);
@@ -166,7 +176,7 @@ public class AbstractThreadBuilderIntegrationTest {
     public void consumeFutureMethodWithRunnable() throws ExecutionException, InterruptedException {
         final Future<Void> future = mock(Future.class);
 
-        final TimingRunnableThreadBuilderTestArtifact<Void> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
+        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.consumesFuture(future);
 
@@ -226,13 +236,38 @@ public class AbstractThreadBuilderIntegrationTest {
 
     @Test
     public void theExecutorResultIsNotReplaced() {
-        final TimingRunnableThreadBuilderTestArtifact<Void> builder = TimingRunnableThreadBuilderTestArtifact.newBuilder();
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
         final ExecutorResult<Void> executorResult = new ExecutorResult<>(builder.executor);
 
         builder.executorResult = executorResult;
         builder.setExecution(() -> {}).start();
 
         assertThat(executorResult, is(builder.executorResult));
+    }
+
+    @Test
+    public void theThreadRunsBeforeRegisteringAfterExecutionConsumer() {
+        final EmptyUncaughtExceptionConsumer exceptionConsumer = spy(new EmptyUncaughtExceptionConsumer());
+        final RuntimeException runtimeException = new RuntimeException();
+
+        SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact
+                .newBuilder());
+
+        doAnswer(invocation -> {
+            invocation.callRealMethod();
+
+            ThreadUtil.sleepUnchecked(1000);
+
+            return null;
+        }).when(builder).submit();
+
+        builder
+                .setExecution(() -> {
+                    throw runtimeException;
+                }).setUncaughtExceptionConsumer(exceptionConsumer)
+                .start();
+
+        verify(exceptionConsumer).accept(any());
     }
 
     private static class EmptyUncaughtExceptionConsumer implements Consumer<Throwable> {

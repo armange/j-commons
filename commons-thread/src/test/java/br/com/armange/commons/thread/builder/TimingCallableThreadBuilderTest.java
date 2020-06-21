@@ -59,6 +59,15 @@ public class TimingCallableThreadBuilderTest {
         assertNotNull(schedule);
     }
 
+    @Test(expected = UnsupportedOperationException.class)
+    public void scheduleAtFixedRateCallableMethod() {
+        final TimingCallableThreadBuilderTestArtifact<?> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
+
+        builder.setExecution(() -> null).createExecutorAndRunThread();
+
+        builder.scheduleAtFixedRate(0, 1, TimeUnit.MILLISECONDS);
+    }
+
     private static class LocalCallableString implements Callable<String> {
         private static final String THIS_IS_A_CALLABLE_THREAD = "This is a callable thread.";
 

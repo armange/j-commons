@@ -42,10 +42,10 @@ public class TryAsyncBuilderTest {
 
     @Test
     public void tryRunnableWithoutExceptions() {
-        final RunnableWithDeay runnableWithDeay = spy(new RunnableWithDeay(500));
+        final RunnableWithDelay runnableWithDelay = spy(new RunnableWithDelay(500));
         final SimpleRunnable simpleRunnable = spy(new SimpleRunnable());
 
-        tryAsync(runnableWithDeay).execute();
+        tryAsync(runnableWithDelay).execute();
 
         simpleRunnable.run();
 
@@ -53,7 +53,7 @@ public class TryAsyncBuilderTest {
 
         sleepUnchecked(2000);
 
-        verify(runnableWithDeay).run();
+        verify(runnableWithDelay).run();
     }
 
     @Test
@@ -285,13 +285,13 @@ public class TryAsyncBuilderTest {
     public void tryWithResources() throws IOException {
         final InputStream inputStream = mock(InputStream.class);
         final InputStream inputStream2 = mock(InputStream.class);
-        final CloseablesConsumer closeablesConsumer = spy(new CloseablesConsumer());
+        final CloseableArrayConsumer closeableArrayConsumer = spy(new CloseableArrayConsumer());
 
-        TryAsyncBuilder.tryAsync(closeablesConsumer, inputStream, inputStream2).execute();
+        TryAsyncBuilder.tryAsync(closeableArrayConsumer, inputStream, inputStream2).execute();
 
         sleepUnchecked(1500);
 
-        verify(closeablesConsumer).accept(new Closeable[] { inputStream, inputStream2 });
+        verify(closeableArrayConsumer).accept(new Closeable[] { inputStream, inputStream2 });
         verify(inputStream).close();
         verify(inputStream2).close();
     }
@@ -332,14 +332,14 @@ public class TryAsyncBuilderTest {
     public void tryWithResourcesWithException() throws IOException {
         final InputStream inputStream = mock(InputStream.class);
         final InputStream inputStream2 = mock(InputStream.class);
-        final CloseablesConsumerWithException closeablesConsumerWithException = spy(
-                new CloseablesConsumerWithException());
+        final CloseableArrayConsumerWithException closeableArrayConsumerWithException = spy(
+                new CloseableArrayConsumerWithException());
 
-        TryAsyncBuilder.tryAsync(closeablesConsumerWithException, inputStream, inputStream2).execute();
+        TryAsyncBuilder.tryAsync(closeableArrayConsumerWithException, inputStream, inputStream2).execute();
 
         sleepUnchecked(1500);
 
-        verify(closeablesConsumerWithException).accept(new Closeable[] { inputStream, inputStream2 });
+        verify(closeableArrayConsumerWithException).accept(new Closeable[] { inputStream, inputStream2 });
         verify(inputStream).close();
         verify(inputStream2).close();
     }
@@ -407,10 +407,10 @@ public class TryAsyncBuilderTest {
         verify(inputStream, times(2)).close();
     }
 
-    private static class RunnableWithDeay implements Runnable {
+    private static class RunnableWithDelay implements Runnable {
         private final long delay;
 
-        private RunnableWithDeay(final long delay) {
+        private RunnableWithDelay(final long delay) {
             this.delay = delay;
         }
 
@@ -514,16 +514,16 @@ public class TryAsyncBuilderTest {
         }
     }
 
-    private static class CloseablesConsumer implements Consumer<Closeable[]> {
+    private static class CloseableArrayConsumer implements Consumer<Closeable[]> {
         @Override
-        public void accept(final Closeable[] closeables) {
-            System.out.println("Closeables consumer fired successfully.");
+        public void accept(final Closeable[] closeableArray) {
+            System.out.println("Closeable array consumer fired successfully.");
         }
     }
 
     private static class MappedCloseableConsumer implements Consumer<Map<Object, Closeable>> {
         @Override
-        public void accept(final Map<Object, Closeable> closeables) {
+        public void accept(final Map<Object, Closeable> closeableMap) {
             System.out.println("Mapped closeable consumer fired successfully.");
         }
     }
@@ -535,16 +535,16 @@ public class TryAsyncBuilderTest {
         }
     }
 
-    private static class CloseablesConsumerWithException implements Consumer<Closeable[]> {
+    private static class CloseableArrayConsumerWithException implements Consumer<Closeable[]> {
         @Override
-        public void accept(final Closeable[] closeables) {
+        public void accept(final Closeable[] closeableArray) {
             throw new RuntimeException(THIS_EXCEPTION_WAS_EXPECTED);
         }
     }
 
     private static class MappedCloseableConsumerWithException implements Consumer<Map<Object, Closeable>> {
         @Override
-        public void accept(final Map<Object, Closeable> closeables) {
+        public void accept(final Map<Object, Closeable> closeableMap) {
             throw new RuntimeException(THIS_EXCEPTION_WAS_EXPECTED);
         }
     }

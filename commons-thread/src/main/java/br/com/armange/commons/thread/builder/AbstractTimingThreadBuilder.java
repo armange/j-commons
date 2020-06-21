@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -22,27 +24,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import br.com.armange.commons.thread.core.ScheduledCaughtExceptionExecutorService;
-
 public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTimingThreadBuilder<S, T, U>>
         extends AbstractThreadBuilder<S, T, U> {
 
-    protected AbstractTimingThreadBuilder(final int corePoolSize) {
-        super(corePoolSize);
-    }
-
-    protected static enum ThreadTimeConfig {
-        NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL, DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;
-    }
-
-    /**
-     * 1000 milliseconds as a minimal delay.
-     */
-    public static final long MINIMAL_REQUIRED_DELAY = 1000;
     protected Optional<Duration> timeout = Optional.empty();
     protected Optional<Duration> delay = Optional.empty();
     protected Optional<Duration> interval = Optional.empty();
     protected ThreadTimeConfig threadTimeConfig;
+
+    protected AbstractTimingThreadBuilder(final int corePoolSize) {
+        super(corePoolSize);
+    }
 
     /**
      * Sets the timeout value.
@@ -169,56 +161,61 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     private void runWithNoSchedule() {
-        final Future<S> future = submit();
+        final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(submit());
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithDelay() {
-        final ScheduledFuture<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithDelayAndTimeout() {
-        final ScheduledFuture<S> future = schedule(handleDelay(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
 
-        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(future);
+        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(futureHolder);
 
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
     }
 
     private void runWithDelayAndInterval() {
-        final ScheduledFuture<S> future = scheduleAtFixedRate(handleDelay(),
-                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(scheduleAtFixedRate(handleDelay(),
+                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
     }
 
     private void runWithAllTimesControls() {
-        final ScheduledFuture<S> future = scheduleAtFixedRate(handleDelay(),
-                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
+        final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(future));
+        executor.addAfterExecuteConsumer(handleException(futureHolder));
+        futureHolder.set(scheduleAtFixedRate(handleDelay(),
+                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
 
-        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(future);
+        final ExecutorResult<S> timeoutExecutorResult = handleInterruption(futureHolder);
 
         newExecutorResultIfNull();
-        executorResult.getFutures().add(future);
+        executorResult.getFutures().add(futureHolder.get());
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected ScheduledFuture<S> schedule(final long delay, final TimeUnit unit) {
         final ScheduledFuture<S> future;
 
@@ -237,7 +234,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         return future;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     protected ScheduledFuture<S> scheduleAtFixedRate(final long delay, final long period, final TimeUnit unit) {
         final ScheduledFuture<S> future;
 
@@ -255,25 +252,20 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     private long handleDelay() {
-        final long localDelay = delay.orElse(Duration.ofMillis(0)).toMillis();
-
-        if (uncaughtExceptionConsumer.isPresent() || afterExecuteConsumer.isPresent()) {
-            return localDelay >= MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + MINIMAL_REQUIRED_DELAY;
-        } else {
-            return localDelay;
-        }
+        return delay.orElse(Duration.ofMillis(0)).toMillis();
     }
 
-    private ExecutorResult<S> handleInterruption(final ScheduledFuture<S> future) {
-        final ScheduledCaughtExceptionExecutorService localExecutor = new ScheduledCaughtExceptionExecutorService(1);
+    private ExecutorResult<S> handleInterruption(final Holder<ScheduledFuture<S>> futureHolder) {
+        final ScheduledFuture<S> scheduledFuture = futureHolder.get();
+        final ScheduledThreadBuilderExecutor localExecutor = new ScheduledThreadBuilderExecutor(1);
 
-        localExecutor.addAfterExecuteConsumer(handleException(future));
-        localExecutor.schedule(cancelFuture(future), timeout.orElse(Duration.ofMillis(0)).toMillis(),
+        localExecutor.addAfterExecuteConsumer(handleException(futureHolder));
+        localExecutor.schedule(cancelFuture(scheduledFuture), timeout.orElse(Duration.ofMillis(0)).toMillis(),
                 TimeUnit.MILLISECONDS);
 
         final ExecutorResult<S> timeoutExecutorResult = new ExecutorResult<>(localExecutor);
 
-        timeoutExecutorResult.getFutures().add(future);
+        timeoutExecutorResult.getFutures().add(scheduledFuture);
 
         return timeoutExecutorResult;
     }
@@ -284,4 +276,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
                 future.cancel(mayInterruptIfRunning);
         };
     }
+
+    protected static enum ThreadTimeConfig {
+        NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL, DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;
+    }
+
 }
