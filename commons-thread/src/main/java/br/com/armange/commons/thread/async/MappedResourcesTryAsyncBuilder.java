@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.async;
 
+import br.com.armange.commons.thread.exception.UncheckedException;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
@@ -29,15 +31,15 @@ public class MappedResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<Reso
         this.closeableMap = closeableMap;
         this.attemptedExecution = attemptedExecution;
 
-        addFinalizer(() -> {
+        addFinalizer(() ->
             closeableMap.values().forEach(closeable -> {
                 try {
                     closeable.close();
                 } catch (final IOException e) {
-                    throw new RuntimeException(e);
+                    throw new UncheckedException(e);
                 }
-            });
-        });
+            })
+        );
     }
 
     protected static MappedResourcesTryAsyncBuilder tryAsync(final Map<Object, Closeable> closeableMap,

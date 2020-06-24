@@ -70,6 +70,7 @@ import java.util.function.Supplier;
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService
  */
+@Deprecated
 public class ThreadBuilder {
     /**
      * 1000 milliseconds as a minimal delay.

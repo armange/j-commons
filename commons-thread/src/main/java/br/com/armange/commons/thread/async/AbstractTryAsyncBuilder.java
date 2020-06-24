@@ -70,30 +70,27 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     protected Consumer<Throwable> consumeExceptionOrThrowRuntimeException() {
-        return throwable -> {
+        return throwable ->
             exceptionConsumers
                     .keySet()
                     .stream()
                     .filter(isMatchingException(throwable))
                     .findFirst()
                     .ifPresent(catchException(throwable));
-        };
     }
 
     private Predicate<? super Class<Throwable>> isMatchingException(final Throwable throwable) {
-        return expectedException -> {
-            return throwable.getClass().equals(expectedException)
+        return expectedException ->
+            throwable.getClass().equals(expectedException)
                     || throwable.getCause().getClass().equals(expectedException)
                     && throwable.getClass().equals(ExecutionException.class);
-        };
     }
 
     private Consumer<? super Class<Throwable>> catchException(final Throwable throwable) {
-        return exceptionClass -> {
+        return exceptionClass ->
             exceptionConsumers
                     .get(exceptionClass)
                     .accept(throwable);
-        };
     }
 
     public abstract void execute();

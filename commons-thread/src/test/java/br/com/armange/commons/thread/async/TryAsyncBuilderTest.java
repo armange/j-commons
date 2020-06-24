@@ -39,6 +39,7 @@ import org.junit.Test;
 
 public class TryAsyncBuilderTest {
     private static final String THIS_EXCEPTION_WAS_EXPECTED = " -> This Exception was expected.";
+    private static final int JDK_BEHAVIOR = 1; // One for JDK8 or two for JDK11;
 
     @Test
     public void tryRunnableWithoutExceptions() {
@@ -113,7 +114,7 @@ public class TryAsyncBuilderTest {
         // Pass in exception consumer and thread uncaught exception method.
         // Because of this, the consumer must be verified two times.
         verify(exceptionConsumer, times(2)).accept(any());
-        verify(simpleRunnable, times(3)).run();
+        verify(simpleRunnable, times(JDK_BEHAVIOR+1)).run();
     }
 
     @Test
@@ -217,7 +218,7 @@ public class TryAsyncBuilderTest {
         // Pass in exception consumer and thread uncaught exception method.
         // Because of this, the consumer must be verified two times.
         verify(exceptionConsumer, times(2)).accept(any());
-        verify(simpleRunnable, times(3)).run();
+        verify(simpleRunnable, times(JDK_BEHAVIOR+1)).run();
         assertNull(callableResultConsumer.result);
     }
 
@@ -374,7 +375,7 @@ public class TryAsyncBuilderTest {
 
         sleepUnchecked(1500);
 
-        verify(inputStream, times(2)).close();
+        verify(inputStream, times(JDK_BEHAVIOR)).close();
     }
 
     @Test
@@ -387,7 +388,7 @@ public class TryAsyncBuilderTest {
 
         sleepUnchecked(1500);
 
-        verify(inputStream, times(2)).close();
+        verify(inputStream, times(JDK_BEHAVIOR)).close();
     }
 
     @Test
@@ -404,7 +405,7 @@ public class TryAsyncBuilderTest {
 
         sleepUnchecked(1500);
 
-        verify(inputStream, times(2)).close();
+        verify(inputStream, times(JDK_BEHAVIOR)).close();
     }
 
     private static class RunnableWithDelay implements Runnable {

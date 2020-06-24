@@ -38,7 +38,7 @@ public class ExecutorResult<T> {
 
     private final ExecutorService executorService;
     @SuppressWarnings("rawtypes")
-    private final List<Future> futures = new LinkedList<>();
+    private final List<Future<T>> futures = new LinkedList<>();
     private final List<ExecutorResult<T>> timeoutExecutorResults = new LinkedList<>();
     private T threadResult;
 
@@ -57,7 +57,7 @@ public class ExecutorResult<T> {
      * @return the {@link Future}s list.
      */
     @SuppressWarnings("rawtypes")
-    public List<Future> getFutures() {
+    public List<Future<T>> getFutures() {
         return futures;
     }
 

@@ -14,8 +14,9 @@
  * limitations under the License.
  * */
 dependencies {
-    compile projects.commons_message
-    
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+
     testCompile (library.junit_junit){
         exclude group: 'org.hamcrest'
     }

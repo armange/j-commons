@@ -40,7 +40,7 @@ public class TimingCallableThreadBuilder<S>
         return Callable.class;
     }
 
-    protected TimingCallableThreadBuilder<S> setScheduling(final Callable execution) {
+    protected TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
         return super.setExecution(execution);
     }
 }

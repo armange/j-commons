@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.hamcrest.Matchers;
@@ -33,11 +34,11 @@ public class ThreadUtilTest {
 
     private static final String TEST_FILE_RELATIVE_PATH = "TestFile.txt";
 
-    private class SleepUntilSupplier implements Supplier<Boolean> {
+    private class SleepUntilSupplier implements BooleanSupplier {
         byte count = 3;
 
         @Override
-        public Boolean get() {
+        public boolean getAsBoolean() {
             if (count <= 0) {
                 return false;
             }
@@ -86,11 +87,11 @@ public class ThreadUtilTest {
         ThreadUtil.sleepUntil(1000, sleepUntilSupplier);
 
         //Tree time for true and one for false.
-        verify(sleepUntilSupplier, times(4)).get();
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
 
         ThreadUtil.sleepUnchecked(1000);
 
-        verify(sleepUntilSupplier, times(4)).get();
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
     }
 
     @Test
@@ -100,11 +101,11 @@ public class ThreadUtilTest {
         ThreadUtil.sleepUncheckedUntil(1000, sleepUntilSupplier);
 
         //Tree time for true and one for false.
-        verify(sleepUntilSupplier, times(4)).get();
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
 
         ThreadUtil.sleepUnchecked(1000);
 
-        verify(sleepUntilSupplier, times(4)).get();
+        verify(sleepUntilSupplier, times(4)).getAsBoolean();
     }
 
     @Test
@@ -120,6 +121,6 @@ public class ThreadUtilTest {
 
         ThreadUtil.sleepUnchecked(1500);
 
-        verify(sleepUntilSupplier).get();
+        verify(sleepUntilSupplier).getAsBoolean();
     }
 }

@@ -27,10 +27,10 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import br.com.armange.commons.message.CommonMessages;
 import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
 import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
-import br.com.armange.commons.thread.message.ExceptionMessage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @param <S> Result type
@@ -40,6 +40,9 @@ import br.com.armange.commons.thread.message.ExceptionMessage;
  * @since 2020-05-31 V1.1.0 (JDK 1.8)
  */
 public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilder<S, T, U>> {
+
+    private static final String ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE = "Illegal executor-type \"{0}\".";
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected Optional<BiConsumer<Runnable, Throwable>> afterExecuteConsumer = Optional.empty();
     protected Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = Optional.empty();
@@ -213,7 +216,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     protected void requireExecutionNonNull() {
-        Objects.requireNonNull(execution, CommonMessages.REQUIRED_PARAMETER.format("execution"));
+        Objects.requireNonNull(execution);
     }
 
     protected ThreadFactory getThreadFactory() {
@@ -271,9 +274,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
                     }
                 } catch (final Exception e) {
                     if (isNotSilentOrIsExecutionException(e)) {
-                        uncaughtExceptionConsumer.orElseGet(() -> ex -> ex.printStackTrace()).accept(e);
+                        uncaughtExceptionConsumer.orElseGet(() -> LOGGER::error).accept(e);
                     } else {
-                        e.printStackTrace();
+                        LOGGER.error(e);
                     }
                 }
             }
@@ -288,12 +291,6 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
                 threadResultConsumer.ifPresent(consumer -> consumer.accept(executorResult.getThreadResult()));
 
                 break;
-        /* Coming soon
-        case RECURSIVE_ACTION:
-            throw new UnsupportedOperationException(ExecutionType.RECURSIVE_ACTION.name());
-        case RECURSIVE_TASK:
-            throw new UnsupportedOperationException(ExecutionType.RECURSIVE_TASK.name());
-        */
             case RUNNABLE:
             default:
                 future.get();
@@ -312,7 +309,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     abstract Class<T> getExecutionClass();
 
-    protected static enum ExecutionType {
+    protected enum ExecutionType {
         CALLABLE, RUNNABLE, RECURSIVE_TASK, RECURSIVE_ACTION;
 
         static ExecutionType valueOf(final Class<?> sourceClass) {
@@ -320,15 +317,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
                 return CALLABLE;
             } else if (Runnable.class.equals(sourceClass)) {
                 return RUNNABLE;
-            /* Coming soon
-            } else if (RecursiveTask.class.equals(sourceClass)) {
-                return RECURSIVE_TASK;
-            } else if (RecursiveAction.class.equals(sourceClass)) {
-                return RECURSIVE_ACTION;
-            */
             } else {
                 throw new IllegalArgumentException(
-                        ExceptionMessage.ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE.format(sourceClass.getName()));
+                        String.format(ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE, sourceClass.getName()));
             }
         }
     }

@@ -28,7 +28,7 @@ public class CallableTryAsyncBuilder <S> extends AbstractTryAsyncBuilder<Callabl
     }
 
     protected static <S> CallableTryAsyncBuilder<S> tryAsync(final Callable<S> callable, final Consumer<S> resultConsumer) {
-        return new CallableTryAsyncBuilder<S>(callable, resultConsumer);
+        return new CallableTryAsyncBuilder<>(callable, resultConsumer);
     }
 
     @Override

@@ -17,7 +17,7 @@ package br.com.armange.commons.thread.util;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import br.com.armange.commons.thread.exception.UncheckedException;
 
@@ -66,18 +66,18 @@ public class ThreadUtil {
         return Thread.currentThread().getContextClassLoader().getResource(relativePath);
     }
     
-    public static void sleepUntil(final long millis, final Supplier<Boolean> condition) throws InterruptedException {
-        while(condition.get()) {
+    public static void sleepUntil(final long millis, final BooleanSupplier condition) throws InterruptedException {
+        while(condition.getAsBoolean()) {
             Thread.sleep(millis);
         }
     }
     
-    public static void sleepUncheckedUntil(final long millis, final Supplier<Boolean> condition) {
-        while(condition.get()) {
+    public static void sleepUncheckedUntil(final long millis, final BooleanSupplier condition) {
+        while(condition.getAsBoolean()) {
             try {
                 Thread.sleep(millis);
-            } catch (final InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (final Exception e) {
+                throw new UncheckedException(e);
             }
         }
     }

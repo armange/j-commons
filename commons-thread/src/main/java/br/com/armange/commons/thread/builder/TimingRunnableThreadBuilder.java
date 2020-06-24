@@ -32,7 +32,6 @@ public class TimingRunnableThreadBuilder<S>
     }
 
     protected TimingRunnableThreadBuilder<S> setScheduling(final Runnable execution) {
-        // TODO Auto-generated method stub
         return super.setExecution(execution);
     }
 

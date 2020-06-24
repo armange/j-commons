@@ -277,7 +277,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         };
     }
 
-    protected static enum ThreadTimeConfig {
+    protected enum ThreadTimeConfig {
         NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL, DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;
     }
 

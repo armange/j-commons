@@ -22,7 +22,7 @@ class Holder<T> {
     }
 
     public static <U> Holder<U> empty() {
-        return new Holder();
+        return new Holder<>();
     }
 
     public T get() {
