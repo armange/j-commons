@@ -26,10 +26,23 @@ import java.util.function.Predicate;
 
 import br.com.armange.commons.thread.builder.ThreadBuilder;
 
+/**
+ * Minimal abstraction for implementing a try-async operations builder.
+ * These operations are just simple try-catch statements (or try-with-resources) executed on a new thread.
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<T>> {
     protected final Map<Class<Throwable>, Consumer<Throwable>> exceptionConsumers = new HashMap<>();
     protected final List<Runnable> finalizingExecutables = new LinkedList<>();
 
+    /**
+     * Adds a treatment for a particular exception, if it is thrown during the
+     * implementation contained in the "try" block.
+     * @param exceptionClass the exception class that can be thrown and will be handled.
+     * @param exceptionConsumer the implementation of the exception handling launched in the "try" block;
+     * @return the current builder.
+     */
     @SuppressWarnings("unchecked")
     public T addCatcher(
             final Class<? extends Throwable> exceptionClass,
@@ -39,10 +52,20 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
         return (T) this;
     }
 
+    /**
+     * Adds an implementation that will be executed inside the "finally" block.
+     * @param runnable the implementation that will be executed inside the "finally" block.
+     * @return the current builder.
+     */
     public T finallyAsync(final Runnable runnable) {
         return addFinalizer(runnable);
     }
 
+    /**
+     * Adds an implementation that will be executed inside the "finally" block.
+     * @param runnable the implementation that will be executed inside the "finally" block.
+     * @return the current builder.
+     */
     @SuppressWarnings("unchecked")
     protected T addFinalizer(final Runnable runnable) {
         finalizingExecutables.add(runnable);
@@ -50,6 +73,10 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
         return (T) this;
     }
 
+    /**
+     *
+     * @param attemptedExecution
+     */
     protected void execute(final Runnable attemptedExecution) {
         ThreadBuilder
                 .newBuilder()
@@ -59,6 +86,12 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
                 .start();
     }
 
+    /**
+     *
+     * @param attemptedExecution
+     * @param resultConsumer
+     * @param <S>
+     */
     protected <S> void execute(final Callable<S> attemptedExecution, final Consumer<S> resultConsumer) {
         ThreadBuilder
                 .newBuilder()
@@ -69,6 +102,10 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
                 .start();
     }
 
+    /**
+     *
+     * @return
+     */
     protected Consumer<Throwable> consumeExceptionOrThrowRuntimeException() {
         return throwable ->
             exceptionConsumers

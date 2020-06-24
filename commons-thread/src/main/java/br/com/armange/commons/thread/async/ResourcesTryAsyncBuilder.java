@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class ResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTryAsyncBuilder> {
     private final Closeable[] closeables;
     private final Consumer<Closeable[]> attemptedExecution;

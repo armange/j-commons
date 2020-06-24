@@ -15,6 +15,10 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class SimpleRunnableThreadBuilder<S> extends AbstractThreadBuilder<S, Runnable, SimpleRunnableThreadBuilder<S>>{
 
     protected SimpleRunnableThreadBuilder(final int corePoolSize) {

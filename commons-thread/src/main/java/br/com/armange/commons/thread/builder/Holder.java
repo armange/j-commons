@@ -15,21 +15,40 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+/**
+ * Class of support for lambda implementations that require final variables
+ * when shared between different contexts. (Or for other appropriate uses)
+ * @param <T> The referenced value type
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 class Holder<T> {
     private T value;
 
     private Holder() {
     }
 
+    /**
+     * Constructs an empty holder for later injection of value.
+     * @param <U> The referenced value type
+     * @return an empty holder for later injection of value.
+     */
     public static <U> Holder<U> empty() {
         return new Holder<>();
     }
 
+    /**
+     * @return the referenced value
+     */
     public T get() {
         return value;
     }
 
-    public void set(T value) {
+    /**
+     * @param value the referenced value
+     * @see Holder
+     */
+    public void set(final T value) {
         this.value = value;
     }
 }

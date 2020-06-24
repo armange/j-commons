@@ -15,6 +15,10 @@
  * */
 package br.com.armange.commons.thread.async;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class RunnableTryAsyncBuilder extends AbstractTryAsyncBuilder<RunnableTryAsyncBuilder>{
     private final Runnable attemptedExecution;
 

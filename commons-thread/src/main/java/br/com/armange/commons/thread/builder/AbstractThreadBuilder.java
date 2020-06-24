@@ -37,7 +37,7 @@ import org.apache.logging.log4j.Logger;
  * @param <T> Execution type
  * @param <U> Builder
  * @author Diego Armange Costa
- * @since 2020-05-31 V1.1.0 (JDK 1.8)
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
 public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilder<S, T, U>> {
 

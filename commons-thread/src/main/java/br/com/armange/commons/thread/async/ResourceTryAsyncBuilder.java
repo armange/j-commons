@@ -21,6 +21,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class ResourceTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTryAsyncBuilder> {
     private final Closeable closeable;
     private final Consumer<Closeable> attemptedExecution;

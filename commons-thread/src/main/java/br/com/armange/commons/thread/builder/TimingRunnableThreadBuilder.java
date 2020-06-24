@@ -15,6 +15,10 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class TimingRunnableThreadBuilder<S>
         extends AbstractTimingThreadBuilder<S, Runnable, TimingRunnableThreadBuilder<S>> {
 

@@ -20,7 +20,9 @@ import java.net.URL;
 
 /**
  * @deprecated Consider to use {@link br.com.armange.commons.thread.util.ThreadUtil}
- * Useful structure for handling the current thread.
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
  * @author Diego Armange Costa
  * @since 2019-11-26 V1.0.0
  */
@@ -30,7 +32,8 @@ public class ThreadUtil {
     private ThreadUtil() {}
 
     /**
-     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@link java.lang.RuntimeException#RuntimeException(Throwable)}
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
      * if any exception is thrown.
      * @param millis the time in milliseconds to sleep the current thread.
      * @see java.lang.Thread#sleep(long)

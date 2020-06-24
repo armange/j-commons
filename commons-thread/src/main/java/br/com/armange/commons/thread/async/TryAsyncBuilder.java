@@ -20,6 +20,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public final class TryAsyncBuilder {
 
     private TryAsyncBuilder() {

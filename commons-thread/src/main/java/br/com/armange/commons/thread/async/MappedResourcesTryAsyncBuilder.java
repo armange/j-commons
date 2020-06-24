@@ -22,6 +22,10 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public class MappedResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTryAsyncBuilder> {
     private final Map<Object, Closeable> closeableMap;
     private final Consumer<Map<Object, Closeable>> attemptedExecution;

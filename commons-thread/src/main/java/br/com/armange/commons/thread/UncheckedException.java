@@ -17,8 +17,8 @@ package br.com.armange.commons.thread;
 
 /**
  * @deprecated Consider to use {@link br.com.armange.commons.thread.exception.UncheckedException}
- * Unchecked exceptions may be thrown instead of the RuntimeException option to allow 
- * differentiation between an unmapped fault and a controlled fault.
+ * Unchecked exceptions can be thrown instead of the RuntimeException option to
+ * release the handling of exceptions when they do not need to be handled.
  * @author Diego Armange Costa
  * @since 2019-12-08 V1.1.0
  * @see java.lang.RuntimeException
@@ -28,7 +28,7 @@ package br.com.armange.commons.thread;
 public class UncheckedException extends RuntimeException {
 
     /**
-     * The builder will exclusively call SUPER ({@code RuntimeException#RuntimeException(Throwable)})
+     * The constructor will only call SUPER method ({@code RuntimeException#RuntimeException(Throwable)})
      * @param cause the cause
      * @see RuntimeException#RuntimeException(Throwable)
      */

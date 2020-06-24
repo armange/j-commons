@@ -17,6 +17,10 @@ package br.com.armange.commons.thread.builder;
 
 import java.util.concurrent.Callable;
 
+/**
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
 public final class ThreadBuilder {
 
     private final int corePoolSize;

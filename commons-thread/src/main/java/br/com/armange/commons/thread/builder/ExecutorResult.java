@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -29,10 +31,8 @@ import java.util.concurrent.Future;
  * {@link java.util.concurrent.ExecutorService} and 
  * {@link java.util.concurrent.Future} in their respective documentation.
  * @author Diego Armange Costa
- * @since 2019-11-26 V1.0.0 (JDK 1.8)
- * @see ScheduledCaughtExceptionExecutorService
- * @see br.com.armange.commons.thread.AbstractThreadBuilder#start()
- * @see br.com.armange.commons.thread.AbstractThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ * @see ScheduledThreadBuilderExecutor
  */
 public class ExecutorResult<T> {
 
