@@ -28,7 +28,7 @@ import br.com.armange.commons.thread.builder.ThreadBuilder;
 
 /**
  * Minimal abstraction for implementing a try-async operations builder.
- * These operations are just simple try-catch statements (or try-with-resources) executed on a new thread.
+ * These operations are just simple try-catch-finally statements executed on a new thread.
  * @author Diego Armange Costa
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
@@ -38,9 +38,9 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
 
     /**
      * Adds a treatment for a particular exception, if it is thrown during the
-     * implementation contained in the "try" block.
+     * implementation contained in the "try-block".
      * @param exceptionClass the exception class that can be thrown and will be handled.
-     * @param exceptionConsumer the implementation of the exception handling launched in the "try" block;
+     * @param exceptionConsumer the implementation of the exception handling launched in the "try-block";
      * @return the current builder.
      */
     @SuppressWarnings("unchecked")
@@ -53,8 +53,8 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * Adds an implementation that will be executed inside the "finally" block.
-     * @param runnable the implementation that will be executed inside the "finally" block.
+     * Adds an implementation that will be executed inside the "finally-block".
+     * @param runnable the implementation that will be executed inside the "finally-block".
      * @return the current builder.
      */
     public T finallyAsync(final Runnable runnable) {
@@ -62,8 +62,8 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * Adds an implementation that will be executed inside the "finally" block.
-     * @param runnable the implementation that will be executed inside the "finally" block.
+     * Adds an implementation that will be executed inside the finally-block.
+     * @param runnable the implementation that will be executed inside the "finally-block".
      * @return the current builder.
      */
     @SuppressWarnings("unchecked")
@@ -74,39 +74,52 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     *
-     * @param attemptedExecution
+     * Performs a thread according to the given implementation, which represents the try-block,
+     * configured with an exception catcher and a finalizer. As with a try-catch block implementation,
+     * only the main implementation is mandatory.
+     * @param attemptedExecution the thread implementation, which represents the try-block
+     * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher
+     * @see AbstractTryAsyncBuilder#finallyAsync(java.lang.Runnable)
      */
     protected void execute(final Runnable attemptedExecution) {
         ThreadBuilder
                 .newBuilder()
                 .setExecution(attemptedExecution)
-                .setUncaughtExceptionConsumer(consumeExceptionOrThrowRuntimeException())
+                .setUncaughtExceptionConsumer(consumeExceptionIfExists())
                 .setAfterExecuteConsumer((runnable, throwable) -> finalizingExecutables.forEach(Runnable::run))
                 .start();
     }
 
     /**
-     *
-     * @param attemptedExecution
-     * @param resultConsumer
-     * @param <S>
+     * Performs a thread according to the given implementation, which represents the try-block,
+     * configured with an exception catcher and a finalizer. As with a try-catch block implementation,
+     * only the main implementation is mandatory. After the execution, if no exceptions is thrown,
+     * another implementation according the given consumer will be performed to handle the result
+     * value obtained by the first implementation.
+     * @param attemptedExecution the thread implementation, which represents the try-block
+     * @param resultConsumer the thread result consumer implementation.
+     * @param <S> the thread result type
+     * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher
+     * @see AbstractTryAsyncBuilder#finallyAsync(java.lang.Runnable)
      */
     protected <S> void execute(final Callable<S> attemptedExecution, final Consumer<S> resultConsumer) {
         ThreadBuilder
                 .newBuilder()
                 .setExecution(attemptedExecution)
-                .setUncaughtExceptionConsumer(consumeExceptionOrThrowRuntimeException())
+                .setUncaughtExceptionConsumer(consumeExceptionIfExists())
                 .setAfterExecuteConsumer((runnable, throwable) -> finalizingExecutables.forEach(Runnable::run))
                 .setThreadResultConsumer(resultConsumer)
                 .start();
     }
 
     /**
-     *
-     * @return
+     * Consumes an exception according the given consumers added by
+     * {@link br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher}.
+     * If no consumers is present, no action will be performed.
+     * Only consumers compatible with the exception will be triggered.
+     * @return the exception consumer implementation.
      */
-    protected Consumer<Throwable> consumeExceptionOrThrowRuntimeException() {
+    protected Consumer<Throwable> consumeExceptionIfExists() {
         return throwable ->
             exceptionConsumers
                     .keySet()
@@ -130,5 +143,11 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
                     .accept(throwable);
     }
 
+    /**
+     * As a try-block implementation, performs the thread configured with the exception catcher and finalizer.
+     * If the thread generate a result value and no exceptions is thrown, a result consumer will be triggered.
+     * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#execute(java.lang.Runnable)
+     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     */
     public abstract void execute();
 }

@@ -23,7 +23,6 @@ import java.util.concurrent.ThreadFactory;
  * Thread factory for use by the {@link br.com.armange.commons.thread.builder.ThreadBuilder}.
  * An implementation of {@link UncaughtExceptionHandler}, name and priority
  * can be assigned to each new thread created.
- *
  * @author Diego Armange Costa
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  * @see java.util.concurrent.ThreadFactory

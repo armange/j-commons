@@ -19,10 +19,13 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
+ * Builds a new thread representing a try-catch-finally implementation that generate a
+ * result value. The thread can contain one(or more) exception catcher, like a "catch" block. Also can contain a
+ * finalizer implementation, like a "finally" block.
  * @author Diego Armange Costa
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
-public class CallableTryAsyncBuilder <S> extends AbstractTryAsyncBuilder<CallableTryAsyncBuilder<S>>{
+public class CallableTryAsyncBuilder<S> extends AbstractTryAsyncBuilder<CallableTryAsyncBuilder<S>>{
     private final Callable<S> attemptedExecution;
     private final Consumer<S> resultConsumer;
 
@@ -31,10 +34,26 @@ public class CallableTryAsyncBuilder <S> extends AbstractTryAsyncBuilder<Callabl
         this.resultConsumer = resultConsumer;
     }
 
+    /**
+     * Generates a new thread builder to configure the operations representing a try-catch-finally
+     * or try-with-resource implementation.
+     * @param callable the thread implementation representing the try-block.
+     * @param resultConsumer the implementation that will consumes the thread result value.
+     * @param <S> the thread result type
+     * @return a new thread builder
+     */
     protected static <S> CallableTryAsyncBuilder<S> tryAsync(final Callable<S> callable, final Consumer<S> resultConsumer) {
         return new CallableTryAsyncBuilder<>(callable, resultConsumer);
     }
 
+    /**
+     * Performs a thread according to the given implementation, which represents the try-block,
+     * configured with an exception catcher and a finalizer. As with a try-catch block implementation,
+     * only the main implementation is mandatory. After the execution, if no exceptions is thrown,
+     * another implementation according the given consumer will be performed to handle the result
+     * value obtained by the first implementation.
+     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     */
     @Override
     public void execute() {
         execute(attemptedExecution, resultConsumer);
