@@ -31,7 +31,8 @@ public interface ResourcesMapConsumer {
     /**
      * Performs this operation on the given arguments and may throw an exception.
      *
-     * @param closeableMap the input argument
+     * @param closeableMap the input argument.
+     * @throws Exception if the implementation fails.
      */
     void accept(Map<Object, Closeable> closeableMap) throws Exception;
 }

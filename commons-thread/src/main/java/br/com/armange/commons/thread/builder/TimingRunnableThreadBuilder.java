@@ -23,8 +23,8 @@ package br.com.armange.commons.thread.builder;
  * @see br.com.armange.commons.thread.builder.ThreadBuilder
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
-public class TimingRunnableThreadBuilder<S>
-        extends AbstractTimingThreadBuilder<S, Runnable, TimingRunnableThreadBuilder<S>> {
+public class TimingRunnableThreadBuilder
+        extends AbstractTimingThreadBuilder<Void, Runnable, TimingRunnableThreadBuilder> {
 
     private TimingRunnableThreadBuilder(final int corePoolSize) {
         super(corePoolSize);
@@ -37,8 +37,8 @@ public class TimingRunnableThreadBuilder<S>
      *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
      * @return the current thread builder.
      */
-    protected static <T> TimingRunnableThreadBuilder<T> newBuilder(final int corePoolSize) {
-        return new TimingRunnableThreadBuilder<>(corePoolSize);
+    protected static TimingRunnableThreadBuilder newBuilder(final int corePoolSize) {
+        return new TimingRunnableThreadBuilder(corePoolSize);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class TimingRunnableThreadBuilder<S>
      * @param execution the thread implementation.
      * @return the current thread builder.
      */
-    protected TimingRunnableThreadBuilder<S> setScheduling(final Runnable execution) {
+    protected TimingRunnableThreadBuilder setScheduling(final Runnable execution) {
         return super.setExecution(execution);
     }
 

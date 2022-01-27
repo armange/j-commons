@@ -19,13 +19,14 @@ package br.com.armange.commons.thread.async;
  * Represents an operation without arguments, without result and may throw an exception.
  *
  * @author Diego Armange Costa
- * @since 2022-01-26 V1.1.0 (JDK 1.8)
  * @see Runnable
+ * @since 2022-01-26 V1.1.0 (JDK 1.8)
  */
 @FunctionalInterface
 public interface RunnableWithException {
 
     /**
+     * @throws Exception if the implementation fails.
      * @see Runnable#run()
      */
     void run() throws Exception;

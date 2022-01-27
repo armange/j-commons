@@ -115,8 +115,8 @@ public final class ThreadBuilder {
      *                  define a method of no arguments called run.
      * @return a thread builder with scheduling settings options.
      */
-    public TimingRunnableThreadBuilder<Void> setScheduling(final Runnable execution) {
-        final TimingRunnableThreadBuilder<Void> builder = TimingRunnableThreadBuilder
+    public TimingRunnableThreadBuilder setScheduling(final Runnable execution) {
+        final TimingRunnableThreadBuilder builder = TimingRunnableThreadBuilder
                 .newBuilder(corePoolSize);
 
         return builder.setScheduling(execution);

@@ -30,7 +30,8 @@ public interface ResourcesConsumer {
     /**
      * Performs this operation on the given arguments and may throw an exception.
      *
-     * @param closeables the input argument
+     * @param closeables the input argument.
+     * @throws Exception if the implementation fails.
      */
     void accept(Closeable... closeables) throws Exception;
 }

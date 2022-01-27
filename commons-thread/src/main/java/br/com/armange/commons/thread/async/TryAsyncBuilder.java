@@ -29,7 +29,7 @@ import java.util.function.Consumer;
  *     &#064;Test
  *     public void shouldSayHello() throws InterruptedException {
  *         final StringBuilder message = new StringBuilder();
- *         final RunnableWithException sayHello = () -> {
+ *         final RunnableWithException sayHello = () -&gt; {
  *             message.append("Hello ");
  *             throw new Exception("Just a test");
  *         };
@@ -43,9 +43,9 @@ import java.util.function.Consumer;
  *         //     message.append("!");
  *         // }
  *         tryAsync(sayHello)
- *                 .addCatcher(Exception.class,exception ->
+ *                 .addCatcher(Exception.class,exception -&gt;
  *                         message.append("world"))
- *                 .addFinalizer(() -> message.append("!"))
+ *                 .addFinalizer(() -&gt; message.append("!"))
  *                 .execute();
  *
  *         Thread.sleep(1000);
@@ -68,7 +68,7 @@ import java.util.function.Consumer;
  *         // } catch (final Exception e) {
  *         //     ...
  *         // }
- *         tryAsync(fileWriter, f -> {
+ *         tryAsync(fileWriter, f -&gt; {
  *             fileWriter.write(fileContent);
  *             fileWriter.flush();
  *         }).execute();
