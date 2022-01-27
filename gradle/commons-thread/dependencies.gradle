@@ -14,10 +14,15 @@
  * limitations under the License.
  * */
 dependencies {
-    testCompile (library.junit_junit){
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+
+    testImplementation (library.junit_junit){
         exclude group: 'org.hamcrest'
     }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+    testImplementation library.org_assertj_assertj_core
+    testImplementation library.org_mockito_mockito_core
+    testImplementation library.org_hamcrest_hamcrest
+    testFixturesApi library.net_bytebuddy_byte_buddy
+    testFixturesApi library.net_bytebuddy_byte_buddy_agent
 }

@@ -28,6 +28,7 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
     apply plugin: 'maven'
+    apply plugin: 'java-test-fixtures'
     
     group = 'br.com.armange'
     sourceCompatibility = 1.8
@@ -36,6 +37,7 @@ allprojects {
     apply from: "$rootDir/gradle/repositories.gradle"
     apply from: "$rootDir/gradle/projects.gradle"
     apply from: "$rootDir/gradle/configurations.gradle"
+    //apply from: "$rootDir/gradle/license.gradle"
 }
 
 subprojects {

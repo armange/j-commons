@@ -19,17 +19,24 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- * Useful structure for handling the current thread.
  * @author Diego Armange Costa
  * @since 2019-11-26 V1.0.0
+ * @deprecated Consider to use {@link br.com.armange.commons.thread.util.ThreadUtil}
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
  */
+@Deprecated
 public class ThreadUtil {
 
-    private ThreadUtil() {}
-    
+    private ThreadUtil() {
+    }
+
     /**
-     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@link java.lang.RuntimeException#RuntimeException(Throwable)} 
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
      * if any exception is thrown.
+     *
      * @param millis the time in milliseconds to sleep the current thread.
      * @see java.lang.Thread#sleep(long)
      */
@@ -40,7 +47,7 @@ public class ThreadUtil {
             throw new UncheckedException(e);
         }
     }
-    
+
     /**
      * @param relativePath the resource relative path.
      * @return The input stream found or null if not found.
@@ -51,7 +58,7 @@ public class ThreadUtil {
     public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(relativePath);
     }
-    
+
     /**
      * @param relativePath the resource relative path.
      * @return The URL found or null if not found.

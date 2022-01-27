@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread;
 
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -22,29 +24,31 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 
 /**
- * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
- * Consider seeing <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
  * @author Diego Armange Costa
- * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @see java.util.concurrent.ScheduledThreadPoolExecutor
  * @see #afterExecute(Runnable, Throwable)
  * @see #addAfterExecuteConsumer(BiConsumer)
+ * @since 2019-11-26 V1.0.0 (JDK 1.8)
+ * @deprecated Consider to use {@link ScheduledThreadBuilderExecutor}
+ * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
+ * Consider seeing <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
  */
+@Deprecated
 public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor {
     private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
-    
+
     /**
-     * @param corePoolSize the number of threads to keep in the pool, even 
-     * if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param corePoolSize the number of threads to keep in the pool, even
+     *                     if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int)
      */
     public ScheduledCaughtExecutorService(final int corePoolSize) {
         super(corePoolSize);
     }
-    
+
     /**
-     * @param corePoolSize the number of threads to keep in the pool, even 
-     * if they are idle, unless {@code allowCoreThreadTimeOut} is set
+     * @param corePoolSize  the number of threads to keep in the pool, even
+     *                      if they are idle, unless {@code allowCoreThreadTimeOut} is set
      * @param threadFactory the factory to use when the executor creates a new thread
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)
      */
@@ -57,9 +61,10 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
      * This method is invoked by the thread that executed the task. If
      * non-null, the Throwable is the uncaught {@link java.lang.RuntimeException}
      * or {@link java.lang.Error} that caused execution to terminate abruptly.
-     * This method will consume a list of {@code java.util.function.BiConsumer} with a runnable and a throwable as 
+     * This method will consume a list of {@code java.util.function.BiConsumer} with a runnable and a throwable as
      * arguments. See {@link #addAfterExecuteConsumer(BiConsumer)}
-     * @param runnable the runnable that has completed
+     *
+     * @param runnable  the runnable that has completed
      * @param throwable the exception that caused termination, or null if execution completed normally
      */
     @Override
