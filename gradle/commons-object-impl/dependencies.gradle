@@ -14,15 +14,15 @@
  * limitations under the License.
  * */
 dependencies {
-    compile projects.commons_object_api
-    compile projects.commons_message
-    compile projects.commons_reflection
-    compile projects.commons_spi
+    implementation projects.commons_object_api
+    implementation projects.commons_message
+    implementation projects.commons_reflection
+    implementation projects.commons_spi
 
-    testCompile (library.junit_junit){
+    testImplementation (library.junit_junit){
         exclude group: 'org.hamcrest'
     }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+    testImplementation library.org_assertj_assertj_core
+    testImplementation library.org_mockito_mockito_core
+    testImplementation library.org_hamcrest_hamcrest
 }

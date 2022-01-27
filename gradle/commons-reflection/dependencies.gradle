@@ -14,10 +14,10 @@
  * limitations under the License.
  * */
 dependencies {
-    testCompile (library.junit_junit){
+    testImplementation (library.junit_junit){
         exclude group: 'org.hamcrest'
     }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+    testImplementation library.org_assertj_assertj_core
+    testImplementation library.org_mockito_mockito_core
+    testImplementation library.org_hamcrest_hamcrest
 }
