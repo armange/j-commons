@@ -20,6 +20,11 @@ buildscript {
     }
 }
 
+plugins {
+    id "io.freefair.lombok" version "6.0.0-m2"
+    id 'idea'
+}
+
 version = '2.0.0-SNAPSHOT'
 
 apply from: "$projectDir/gradle/env.gradle"
@@ -29,15 +34,18 @@ allprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven'
     apply plugin: 'java-test-fixtures'
-    
+    apply plugin: 'io.freefair.lombok'
+
     group = 'br.com.armange'
     sourceCompatibility = 11
-    
+
     apply from: "$rootDir/gradle/library.gradle"
     apply from: "$rootDir/gradle/repositories.gradle"
     apply from: "$rootDir/gradle/projects.gradle"
     apply from: "$rootDir/gradle/configurations.gradle"
+    apply from: "$rootDir/gradle/idea.gradle"
     //apply from: "$rootDir/gradle/license.gradle"
+    apply from: "$rootDir/gradle/sharedDependencies.gradle"
 }
 
 subprojects {
