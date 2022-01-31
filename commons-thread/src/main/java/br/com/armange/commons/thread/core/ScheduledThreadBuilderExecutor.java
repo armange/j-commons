@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.core;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -34,6 +36,7 @@ import java.util.function.BiConsumer;
  * @see #addAfterExecuteConsumer(BiConsumer)
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
+@Slf4j
 public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor {
     private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
 
@@ -85,7 +88,7 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
             try {
                 consumer.accept(runnable, throwable);
             } catch (final Exception e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         });
     }

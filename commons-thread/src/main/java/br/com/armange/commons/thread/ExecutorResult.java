@@ -35,7 +35,7 @@ import java.util.concurrent.Future;
  * {@link java.util.concurrent.ExecutorService} and
  * {@link java.util.concurrent.Future} in their respective documentation.
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ExecutorResult {
 
     private final ExecutorService executorService;

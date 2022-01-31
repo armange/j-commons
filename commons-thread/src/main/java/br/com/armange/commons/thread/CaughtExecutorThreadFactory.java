@@ -33,7 +33,7 @@ import java.util.concurrent.ThreadFactory;
  * <li>Uncaught exception handler</li>
  * </ul>
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class CaughtExecutorThreadFactory implements ThreadFactory {
     private Optional<UncaughtExceptionHandler> uncaughtExceptionHandler = Optional.empty();
     private Optional<String> threadName = Optional.empty();

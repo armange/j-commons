@@ -26,7 +26,7 @@ import java.net.URL;
  * Some methods that require handling a checked exception
  * are rewritten in this class, however, throwing an unchecked exception.
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ThreadUtil {
 
     private ThreadUtil() {
@@ -41,11 +41,7 @@ public class ThreadUtil {
      * @see java.lang.Thread#sleep(long)
      */
     public static void sleepUnchecked(final long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (final Exception e) {
-            throw new UncheckedException(e);
-        }
+        br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked(millis);
     }
 
     /**
@@ -56,7 +52,8 @@ public class ThreadUtil {
      * @see java.lang.Thread#currentThread()
      */
     public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(relativePath);
+        return br.com.armange.commons.thread.util.ThreadUtil
+                .getCurrentThreadResourceAsStream(relativePath);
     }
 
     /**
@@ -67,6 +64,6 @@ public class ThreadUtil {
      * @see java.lang.Thread#currentThread()
      */
     public static URL getCurrentThreadResource(final String relativePath) {
-        return Thread.currentThread().getContextClassLoader().getResource(relativePath);
+        return br.com.armange.commons.thread.util.ThreadUtil.getCurrentThreadResource(relativePath);
     }
 }

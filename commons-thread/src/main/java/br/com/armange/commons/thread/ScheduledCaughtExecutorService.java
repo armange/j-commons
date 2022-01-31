@@ -33,7 +33,7 @@ import java.util.function.BiConsumer;
  * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
  * Consider seeing <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor {
     private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
 
