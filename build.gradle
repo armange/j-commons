@@ -20,7 +20,7 @@ buildscript {
     }
 }
 
-version = '1.0.0-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 
 apply from: "$projectDir/gradle/env.gradle"
 
@@ -31,7 +31,7 @@ allprojects {
     apply plugin: 'java-test-fixtures'
     
     group = 'br.com.armange'
-    sourceCompatibility = 1.8
+    sourceCompatibility = 11
     
     apply from: "$rootDir/gradle/library.gradle"
     apply from: "$rootDir/gradle/repositories.gradle"

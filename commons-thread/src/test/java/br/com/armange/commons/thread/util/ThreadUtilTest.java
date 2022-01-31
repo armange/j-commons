@@ -21,6 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.function.BooleanSupplier;
 
@@ -118,5 +119,11 @@ public class ThreadUtilTest {
         ThreadUtil.sleepUnchecked(1500);
 
         verify(sleepUntilSupplier).getAsBoolean();
+    }
+
+    @Test
+    public void shouldHaveAPrivateDefaultConstructor() throws InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        ClassTestUtil.assertPrivateDefaultConstructor(ThreadUtil.class);
     }
 }

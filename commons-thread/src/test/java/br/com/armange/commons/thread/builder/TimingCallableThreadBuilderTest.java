@@ -37,7 +37,7 @@ public class TimingCallableThreadBuilderTest {
         // @formatter:off
         TimingCallableThreadBuilder
                 .<String>newBuilder(1)
-                .setExecution(localCallableString)
+                .setScheduling(localCallableString)
                 .setThreadResultConsumer(threadResultStringConsumer)
                 .start();
         // @formatter:on

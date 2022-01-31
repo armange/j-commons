@@ -23,6 +23,11 @@ dependencies {
     testImplementation library.org_assertj_assertj_core
     testImplementation library.org_mockito_mockito_core
     testImplementation library.org_hamcrest_hamcrest
+
     testFixturesApi library.net_bytebuddy_byte_buddy
     testFixturesApi library.net_bytebuddy_byte_buddy_agent
+    testFixturesImplementation library.org_hamcrest_hamcrest
+    testFixturesImplementation (library.junit_junit){
+        exclude group: 'org.hamcrest'
+    }
 }

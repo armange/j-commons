@@ -26,8 +26,7 @@ import static java.lang.System.out;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Diego Armange Costa
@@ -90,7 +89,7 @@ public class ThreadBuilderTest {
 
         final ExecutorResult<?> result = ThreadBuilder
                 .newBuilder(corePoolSize)
-                .setScheduling(() -> ThreadUtil.sleepUnchecked(10000))
+                .setExecution(() -> ThreadUtil.sleepUnchecked(10000))
                 .start();
 
         assertThat(result.getExecutorService(), instanceOf(ScheduledThreadBuilderExecutor.class));
@@ -118,13 +117,33 @@ public class ThreadBuilderTest {
         // @formatter:off
         ThreadBuilder
                 .newBuilder()
-                .setScheduling(localCallableString)
+                .setExecution(localCallableString)
                 .setThreadResultConsumer(threadResultStringConsumer)
                 .start();
         // @formatter:on
 
         ThreadUtil.sleepUnchecked(1500);
 
+        verify(threadResultStringConsumer).accept(LocalCallableString.THIS_IS_A_CALLABLE_THREAD);
+    }
+
+    @Test
+    public void timingCallableThread() {
+        final LocalCallableString localCallableString = new LocalCallableString();
+        final ThreadResultStringConsumer threadResultStringConsumer = spy(new ThreadResultStringConsumer());
+
+        // @formatter:off
+        ThreadBuilder
+                .newBuilder()
+                .setScheduling(localCallableString)
+                .setDelay(500)
+                .setThreadResultConsumer(threadResultStringConsumer)
+                .start();
+        // @formatter:on
+        ThreadUtil.sleepUnchecked(400);
+        verifyNoInteractions(threadResultStringConsumer);
+
+        ThreadUtil.sleepUnchecked(1500);
         verify(threadResultStringConsumer).accept(LocalCallableString.THIS_IS_A_CALLABLE_THREAD);
     }
 
