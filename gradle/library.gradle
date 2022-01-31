@@ -15,7 +15,8 @@
  * */
 def
         NET_BYTE_BUDDY = '1.10.21',
-        ORG_SLF4J = '1.7.32'
+        ORG_SLF4J = '1.7.32',
+        ORG_LOG4J = '2.17.1'
 ext.library = [
     // Eclipse Public License 1.0
     junit_junit: "junit:junit:4.12",
@@ -30,4 +31,5 @@ ext.library = [
 
     org_slf4j_slf4j_api: "org.slf4j:slf4j-api:${ORG_SLF4J}",
     org_slf4j_slf4j_simple: "org.slf4j:slf4j-simple:${ORG_SLF4J}",
+    org_apache_logging_log4j_log4j_core: "org.apache.logging.log4j:log4j-core:${ORG_LOG4J}"
 ]

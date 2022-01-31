@@ -27,6 +27,7 @@ import java.net.URL;
  * are rewritten in this class, however, throwing an unchecked exception.
  */
 @Deprecated(since = "2.0.0", forRemoval = true)
+@SuppressWarnings("SameNameButDifferent")
 public class ThreadUtil {
 
     private ThreadUtil() {

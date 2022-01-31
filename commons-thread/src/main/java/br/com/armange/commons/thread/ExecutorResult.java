@@ -48,14 +48,18 @@ public class ExecutorResult {
     }
 
     /**
-     * @return the {@link java.util.concurrent.ExecutorService}
+     * Returns the {@link java.util.concurrent.ExecutorService} used to
+     * start and control the thread.
+     * @return the {@link java.util.concurrent.ExecutorService} used to
+     * start and control the thread.
      */
     public ExecutorService getExecutorService() {
         return executorService;
     }
 
     /**
-     * @return the {@link Future}s list.
+     * Returns the list of {@link Future} objects.
+     * @return the list of {@link Future} objects.
      */
     @SuppressWarnings("rawtypes")
     public List<Future> getFutures() {
