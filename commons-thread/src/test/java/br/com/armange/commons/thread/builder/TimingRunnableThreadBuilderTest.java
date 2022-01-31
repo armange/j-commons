@@ -76,7 +76,7 @@ public class TimingRunnableThreadBuilderTest {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
         final ExecutorResult<?> result = TimingRunnableThreadBuilder
                 .newBuilder(1)
-                .setExecution(localRunnable)
+                .setScheduling(localRunnable)
                 .setDelay(1000)
                 .start();
 

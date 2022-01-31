@@ -15,12 +15,16 @@
  * */
 package br.com.armange.commons.thread;
 
+import br.com.armange.commons.thread.util.ClassTestUtil;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+
+import static org.junit.Assert.assertNotNull;
 
 public class ThreadUtilTest {
 
@@ -30,14 +34,14 @@ public class ThreadUtilTest {
     public void findResourceURL() {
         final URL url = ThreadUtil.getCurrentThreadResource(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(url);
+        assertNotNull(url);
     }
 
     @Test
     public void findResourceInputStream() {
         final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(is);
+        assertNotNull(is);
     }
 
     @Test
@@ -55,5 +59,11 @@ public class ThreadUtilTest {
     @Test(expected = RuntimeException.class)
     public void sleepUncheckedThrowRuntimeException() {
         ThreadUtil.sleepUnchecked(-1);
+    }
+
+    @Test
+    public void shouldHaveAPrivateDefaultConstructor() throws InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        ClassTestUtil.assertPrivateDefaultConstructor(ThreadUtil.class);
     }
 }
