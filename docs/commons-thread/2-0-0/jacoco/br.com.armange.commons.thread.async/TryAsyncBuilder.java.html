@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TryAsyncBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.async</a> &gt; <span class="el_source">TryAsyncBuilder.java</span></div><h1>TryAsyncBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.async;
+
+import java.io.Closeable;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+
+/**
+ * It is a thread builder that assists in creating structured threads to simulate a set of
+ * try-catch-finally or try-with-resources blocks.&lt;br&gt;&lt;br&gt;
+ *
+ * &lt;h3&gt;Example without resources&lt;/h3&gt;
+ * &lt;pre&gt;
+ *     &amp;#064;Test
+ *     public void shouldSayHello() throws InterruptedException {
+ *         final StringBuilder message = new StringBuilder();
+ *         final RunnableWithException sayHello = () -&amp;gt; {
+ *             message.append(&quot;Hello &quot;);
+ *             throw new Exception(&quot;Just a test&quot;);
+ *         };
+ *
+ *         // try {
+ *         //     message.append(&quot;Hello &quot;);
+ *         //     throw new Exception(&quot;Just a test&quot;);
+ *         // } catch (final Exception e) {
+ *         //     message.append(&quot;world&quot;);
+ *         // } finally {
+ *         //     message.append(&quot;!&quot;);
+ *         // }
+ *         tryAsync(sayHello)
+ *                 .addCatcher(Exception.class,exception -&amp;gt;
+ *                         message.append(&quot;world&quot;))
+ *                 .addFinalizer(() -&amp;gt; message.append(&quot;!&quot;))
+ *                 .execute();
+ *
+ *         Thread.sleep(1000);
+ *         Assert.assertEquals(&quot;Hello world!&quot;,message.toString());
+ *     }
+ * &lt;/pre&gt;
+ *
+ * &lt;h3&gt;Example with I/O&lt;/h3&gt;
+ * &lt;pre&gt;
+ *     &amp;#064;Test
+ *     public void shouldWriteHello() throws IOException {
+ *         final Path tempPath = Files.createTempFile(&quot;hello&quot;, &quot;.txt&quot;);
+ *         final File tempFile = new File(tempPath.toString());
+ *         final FileWriter fileWriter = new FileWriter(tempFile);
+ *         final String fileContent = &quot;Hello world!&quot;;
+ *
+ *         // try (final FileWriter fileWriter = new FileWriter(tempFile)) {
+ *         //     fileWriter.write(fileContent);
+ *         //     fileWriter.flush();
+ *         // } catch (final Exception e) {
+ *         //     ...
+ *         // }
+ *         tryAsync(fileWriter, f -&amp;gt; {
+ *             fileWriter.write(fileContent);
+ *             fileWriter.flush();
+ *         }).execute();
+ *
+ *         final String content = Files.readAllLines(tempPath).get(0);
+ *
+ *         Assert.assertEquals(fileContent, content);
+ *     }
+ * &lt;/pre&gt;
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public final class TryAsyncBuilder {
+
+    private TryAsyncBuilder() {
+    }
+
+    /**
+     * It creates a new thread builder that supports creating threads that are structured
+     * to simulate a try-catch block code.
+     *
+     * @param execution The Runnable interface should be implemented by any class whose
+     *                  instances are intended to be executed by a thread. The class must
+     *                  define a method of no arguments called run.
+     * @return A thread constructor with a defined thread implementation.
+     */
+    public static RunnableTryAsyncBuilder tryAsync(final RunnableWithException execution) {
+<span class="fc" id="L99">        return RunnableTryAsyncBuilder.tryAsync(execution);</span>
+    }
+
+    /**
+     * This creates a new thread builder that supports creating threads that are structured
+     * to simulate a try-catch block code.
+     *
+     * @param callable       A task that returns a result and may throw an exception.
+     * @param resultConsumer The consumer for the thread's execution result.
+     * @param &lt;T&gt;            The type of the object resulting from the execution of the thread.
+     * @return A thread constructor with a defined thread implementation and an implementation
+     * of a consumer for the object resulting from the thread's execution.
+     */
+    public static &lt;T&gt; CallableTryAsyncBuilder&lt;T&gt; tryAsync(final Callable&lt;T&gt; callable,
+                                                          final Consumer&lt;T&gt; resultConsumer) {
+<span class="fc" id="L114">        return CallableTryAsyncBuilder.tryAsync(callable, resultConsumer);</span>
+    }
+
+    /**
+     * It creates a new thread builder that supports creating threads that are structured
+     * to simulate a try-with-resources block code.&lt;br&gt;
+     * The try-with-resources block will be simulated through a thread that will execute a
+     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
+     * will be the only implementation executed within the thread, so this implementation
+     * represents the try block of a set of try-with-resources blocks. After the thread runs
+     * the closeable object will be closed. Any exception (which extends the
+     * {@code Exception} class) that occurs within the execution (implementation)
+     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     *
+     * @param closeable          A Closeable is a source or destination of data that can be closed.
+     *                           The close method is invoked to release resources that the object
+     *                           is holding (such as open files). This parameter corresponds to the
+     *                           declaration of one or more items within the
+     *                           try-with-resources block, which will later be automatically closed.
+     * @param attemptedExecution The implementation of a consumer that will consume
+     *                           an implementation of a Closeable.
+     * @return A thread constructor with a defined thread implementation.
+     */
+    public static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
+                                                   final ResourceConsumer attemptedExecution) {
+<span class="fc" id="L139">        return ResourceTryAsyncBuilder.tryAsync(closeable, attemptedExecution);</span>
+    }
+
+    /**
+     * It creates a new thread builder that supports creating threads that are structured
+     * to simulate a try-with-resources block code.&lt;br&gt;
+     * The try-with-resources block will be simulated through a thread that will execute a
+     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
+     * will be the only implementation executed within the thread, so this implementation
+     * represents the try block of a set of try-with-resources blocks. After the thread runs
+     * the closeable object will be closed. Any exception (which extends the
+     * {@code Exception} class) that occurs within the execution (implementation)
+     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     *
+     * @param attemptedExecution The implementation of a consumer that will consume
+     *                           implementations of a Closeable.
+     * @param resources          A Closeable is a source or destination of data that can be closed.
+     *                           The close method is invoked to release resources that the object
+     *                           is holding (such as open files). This parameter corresponds to the
+     *                           declaration of one or more items within the try-with-resources
+     *                           block, which will later be automatically closed.
+     * @return A thread constructor with a defined thread implementation.
+     */
+    public static ResourcesTryAsyncBuilder tryAsync(final ResourcesConsumer attemptedExecution,
+                                                    final Closeable... resources) {
+<span class="fc" id="L164">        return ResourcesTryAsyncBuilder.tryAsync(attemptedExecution, resources);</span>
+    }
+
+    /**
+     * It creates a new thread builder that supports creating threads that are structured
+     * to simulate a try-with-resources block code.&lt;br&gt;
+     * The try-with-resources block will be simulated through a thread that will execute a
+     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
+     * will be the only implementation executed within the thread, so this implementation
+     * represents the try block of a set of try-with-resources blocks. After the thread runs
+     * the closeable object will be closed. Any exception (which extends the
+     * {@code Exception} class) that occurs within the execution (implementation)
+     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     *
+     * @param closeableMap       A Closeable is a source or destination of data that can be closed.
+     *                           The close method is invoked to release resources that the object
+     *                           is holding (such as open files). This parameter corresponds to the
+     *                           declaration of one or more items within the
+     *                           try-with-resources block, which will later be automatically closed.
+     * @param attemptedExecution The implementation of a consumer that will consume
+     *                           implementations of a Closeable.
+     * @return A thread constructor with a defined thread implementation.
+     */
+    public static MappedResourcesTryAsyncBuilder tryAsync(
+            final Map&lt;Object, Closeable&gt; closeableMap,
+            final ResourcesMapConsumer attemptedExecution) {
+<span class="fc" id="L190">        return MappedResourcesTryAsyncBuilder.tryAsync(closeableMap, attemptedExecution);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

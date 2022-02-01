@@ -30,10 +30,11 @@ import java.util.function.BiConsumer;
  * @see #addAfterExecuteConsumer(BiConsumer)
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
  * @deprecated Consider to use {@link ScheduledThreadBuilderExecutor}
- * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after thread has completed normally.
- * Consider seeing <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
+ * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions after
+ * thread has completed normally. Consider seeing
+ * <em>{@code java.util.concurrent.ThreadPoolExecutor#afterExecute(Runnable, Throwable)}</em>
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor {
     private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
 
@@ -52,7 +53,8 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
      * @param threadFactory the factory to use when the executor creates a new thread
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)
      */
-    public ScheduledCaughtExecutorService(final int corePoolSize, final ThreadFactory threadFactory) {
+    public ScheduledCaughtExecutorService(final int corePoolSize,
+                                          final ThreadFactory threadFactory) {
         super(corePoolSize, threadFactory);
     }
 
@@ -61,11 +63,13 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
      * This method is invoked by the thread that executed the task. If
      * non-null, the Throwable is the uncaught {@link java.lang.RuntimeException}
      * or {@link java.lang.Error} that caused execution to terminate abruptly.
-     * This method will consume a list of {@code java.util.function.BiConsumer} with a runnable and a throwable as
+     * This method will consume a list of {@code java.util.function.BiConsumer} with
+     * a runnable and a throwable as
      * arguments. See {@link #addAfterExecuteConsumer(BiConsumer)}
      *
      * @param runnable  the runnable that has completed
-     * @param throwable the exception that caused termination, or null if execution completed normally
+     * @param throwable the exception that caused termination,
+     *                  or null if execution completed normally
      */
     @Override
     public void afterExecute(final Runnable runnable, final Throwable throwable) {
@@ -74,6 +78,8 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
     }
 
     /**
+     * Returns the consumers list that will be performed after thread completed normally.
+     *
      * @return the consumers list that will be performed after thread completed normally.
      */
     public List<BiConsumer<Runnable, Throwable>> getAfterExecuteConsumers() {
@@ -81,9 +87,14 @@ public class ScheduledCaughtExecutorService extends ScheduledThreadPoolExecutor 
     }
 
     /**
-     * @param afterExecuteBiConsumer the consumer that will be performed after thread has completed normally.
+     * Adds the implementation that will be executed after the end (successfully) of
+     * the thread execution.
+     *
+     * @param afterExecuteBiConsumer the consumer that will be performed after
+     *                               thread has completed normally.
      */
-    public void addAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteBiConsumer) {
+    public void addAfterExecuteConsumer(
+            final BiConsumer<Runnable, Throwable> afterExecuteBiConsumer) {
         this.afterExecuteConsumers.add(afterExecuteBiConsumer);
     }
 }

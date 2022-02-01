@@ -19,6 +19,7 @@ import br.com.armange.commons.thread.builder.ThreadBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -70,6 +71,23 @@ public class ThreadUtilTest {
 
         Assert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
         Assert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
+    }
+
+    @Test
+    public void interruptSleepUnchecked() {
+        final Thread t1 = spy(new Thread(() -> System.out.println("Thread 01 executed.")));
+        final Thread t2 = spy(new Thread(() -> {
+            System.out.println("Thread 02 executed.");
+            ThreadUtil.sleepUnchecked(1000);
+            t1.start();
+        }));
+
+        t2.start();
+        ThreadUtil.sleepUnchecked(100);
+        t2.interrupt();
+
+        verifyNoInteractions(t1);
+        verify(t2).run();
     }
 
     @Test(expected = RuntimeException.class)

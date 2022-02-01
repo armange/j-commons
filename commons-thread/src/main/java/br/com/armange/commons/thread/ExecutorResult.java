@@ -35,7 +35,7 @@ import java.util.concurrent.Future;
  * {@link java.util.concurrent.ExecutorService} and
  * {@link java.util.concurrent.Future} in their respective documentation.
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ExecutorResult {
 
     private final ExecutorService executorService;
@@ -48,14 +48,18 @@ public class ExecutorResult {
     }
 
     /**
-     * @return the {@link java.util.concurrent.ExecutorService}
+     * Returns the {@link java.util.concurrent.ExecutorService} used to
+     * start and control the thread.
+     * @return the {@link java.util.concurrent.ExecutorService} used to
+     * start and control the thread.
      */
     public ExecutorService getExecutorService() {
         return executorService;
     }
 
     /**
-     * @return the {@link Future}s list.
+     * Returns the list of {@link Future} objects.
+     * @return the list of {@link Future} objects.
      */
     @SuppressWarnings("rawtypes")
     public List<Future> getFutures() {

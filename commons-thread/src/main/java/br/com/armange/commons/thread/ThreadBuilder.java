@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -65,7 +67,8 @@ import java.util.function.Supplier;
  *          .start();
  * </pre>
  */
-@Deprecated
+@Slf4j
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ThreadBuilder {
     /**
      * 1000 milliseconds as a minimal delay.
@@ -400,8 +403,13 @@ public class ThreadBuilder {
     private BiConsumer<Runnable, Throwable> handleException(final Future<?> future) {
         return (a, b) -> {
             try {
-                if (future.isDone()) future.get();
+                if (future.isDone())
+                    future.get();
             } catch (final Exception e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+
                 if (isNotSilentOrIsExecutionException(e)) {
                     uncaughtExceptionConsumer.ifPresent(consumer -> consumer.accept(e));
                 }

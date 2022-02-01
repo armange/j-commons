@@ -1,0 +1,4 @@
+dependencies {
+    implementation library.org_slf4j_slf4j_api
+    implementation library.org_slf4j_slf4j_simple
+}

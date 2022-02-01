@@ -15,11 +15,11 @@
  * */
 package br.com.armange.commons.thread.util;
 
+import br.com.armange.commons.thread.exception.UncheckedException;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.util.function.BooleanSupplier;
-
-import br.com.armange.commons.thread.exception.UncheckedException;
 
 /**
  * Useful structure for handling the current segment.
@@ -42,6 +42,9 @@ public class ThreadUtil {
     public static void sleepUnchecked(final long millis) {
         try {
             Thread.sleep(millis);
+        } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new UncheckedException(e);
         } catch (final Exception e) {
             throw new UncheckedException(e);
         }
@@ -78,7 +81,8 @@ public class ThreadUtil {
      * <i>interrupted status</i> of the current thread is cleared when this exception is thrown.
      * @see java.lang.Thread#sleep(long)
      */
-    public static void sleepUntil(final long millis, final BooleanSupplier condition) throws InterruptedException {
+    public static void sleepUntil(final long millis, final BooleanSupplier condition)
+            throws InterruptedException {
         while(condition.getAsBoolean()) {
             Thread.sleep(millis);
         }
@@ -87,7 +91,8 @@ public class ThreadUtil {
     /**
      * Wraps a thread-sleep execution in a try-catch block and rethrow a
      * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
-     * if any exception is thrown. Keeps the thread in sleep state until the given condition is true.
+     * if any exception is thrown. Keeps the thread in sleep state until the given
+     * condition is true.
      * @param millis the length of time to sleep in milliseconds
      * @param condition The condition for the current thread to continue sleeping.
      *                  When it has the true value the thread will continue to sleep.
@@ -95,11 +100,7 @@ public class ThreadUtil {
      */
     public static void sleepUncheckedUntil(final long millis, final BooleanSupplier condition) {
         while(condition.getAsBoolean()) {
-            try {
-                Thread.sleep(millis);
-            } catch (final Exception e) {
-                throw new UncheckedException(e);
-            }
+            sleepUnchecked(millis);
         }
     }
 }

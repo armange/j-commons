@@ -23,7 +23,7 @@ package br.com.armange.commons.thread;
  * Unchecked exceptions can be thrown instead of the RuntimeException option to
  * release the handling of exceptions when they do not need to be handled.
  */
-@Deprecated
+@Deprecated(since = "2.0.0", forRemoval = true)
 @SuppressWarnings("serial")
 public class UncheckedException extends RuntimeException {
 

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractTryAsyncBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.async</a> &gt; <span class="el_source">AbstractTryAsyncBuilder.java</span></div><h1>AbstractTryAsyncBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.async;
+
+import br.com.armange.commons.thread.builder.ThreadBuilder;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+/**
+ * Abstraction to implement a try-async operations builder.
+ * These operations are simply try-catch-finally statements executed on a new thread.
+ *
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+<span class="fc" id="L36">public abstract class AbstractTryAsyncBuilder&lt;T extends AbstractTryAsyncBuilder&lt;T&gt;&gt; {</span>
+<span class="fc" id="L37">    protected final Map&lt;Class&lt;Throwable&gt;, Consumer&lt;Throwable&gt;&gt; exceptionConsumers = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L38">    protected final List&lt;Runnable&gt; finalizingExecutables = new LinkedList&lt;&gt;();</span>
+
+    /**
+     * It adds a treatment for a particular exception, if it is thrown during the
+     * implementation contained in the &quot;try-block&quot;.
+     *
+     * @param exceptionClass    the exception class that can be thrown and will be handled.
+     * @param exceptionConsumer the implementation of the exception handling launched
+     *                          in the &quot;try-block&quot;.
+     * @return the current builder.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public T addCatcher(
+            final Class&lt;? extends Throwable&gt; exceptionClass,
+            final Consumer&lt;Throwable&gt; exceptionConsumer) {
+<span class="fc" id="L53">        exceptionConsumers.put((Class&lt;Throwable&gt;) exceptionClass, exceptionConsumer);</span>
+
+<span class="fc" id="L55">        return (T) this;</span>
+    }
+
+    /**
+     * It adds an implementation that will be executed inside the &quot;finally-block&quot;.
+     *
+     * @param runnable the implementation that will be executed inside the &quot;finally-block&quot;.
+     * @return the current builder.
+     */
+    public T finallyAsync(final Runnable runnable) {
+<span class="fc" id="L65">        return addFinalizer(runnable);</span>
+    }
+
+    /**
+     * Adds an implementation that will be executed inside the finally-block.
+     *
+     * @param runnable the implementation that will be executed inside the &quot;finally-block&quot;.
+     * @return the current builder.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    protected T addFinalizer(final Runnable runnable) {
+<span class="fc" id="L76">        finalizingExecutables.add(runnable);</span>
+
+<span class="fc" id="L78">        return (T) this;</span>
+    }
+
+    /**
+     * Executes a thread according to the given implementation, which simulates a try block,
+     * configured with an (or more) exception catcher, as well as a finalizer.
+     * As with a try-catch block implementation, only the main implementation(try-block)
+     * is mandatory.
+     *
+     * @param attemptedExecution the thread implementation, which simulates the try-block
+     * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher
+     * @see AbstractTryAsyncBuilder#finallyAsync(java.lang.Runnable)
+     */
+    protected void execute(final RunnableWithException attemptedExecution) {
+        ThreadBuilder
+<span class="fc" id="L93">                .newBuilder()</span>
+<span class="fc" id="L94">                .setExecution(() -&gt; {</span>
+                    try {
+<span class="fc" id="L96">                        attemptedExecution.run();</span>
+<span class="fc" id="L97">                    } catch (final Exception e) {</span>
+<span class="fc" id="L98">                        throw new AsyncRuntimeException(e);</span>
+<span class="fc" id="L99">                    }</span>
+<span class="fc" id="L100">                })</span>
+<span class="fc" id="L101">                .setUncaughtExceptionConsumer(consumeExceptionIfExists())</span>
+<span class="fc" id="L102">                .setAfterExecuteConsumer((runnable, throwable) -&gt;</span>
+<span class="fc" id="L103">                        finalizingExecutables.forEach(Runnable::run))</span>
+<span class="fc" id="L104">                .start();</span>
+<span class="fc" id="L105">    }</span>
+
+    /**
+     * A new thread will be configured and executed with the following structure:&lt;br&gt;&lt;br&gt;
+     * In addition to the thread implementation, existing exception handling implementations
+     * will be added, however, only the implementation corresponding to the thrown exception
+     * will be executed. After the thread runs, even if it throws an exception, the finalizing
+     * implementation (if configured) will be executed. Finally, if the thread produces some
+     * object as a result, and if there is a consumer for that result, it will be executed.
+     *
+     * @param task           the thread implementation, which simulates the try-block
+     * @param resultConsumer the thread result consumer implementation.
+     * @param &lt;S&gt;            the type of the object resulting from the execution of the thread.
+     * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher
+     * @see AbstractTryAsyncBuilder#finallyAsync(java.lang.Runnable)
+     */
+    protected &lt;S&gt; void execute(final Callable&lt;S&gt; task,
+                               final Consumer&lt;S&gt; resultConsumer) {
+        ThreadBuilder
+<span class="fc" id="L124">                .newBuilder()</span>
+<span class="fc" id="L125">                .setExecution(task)</span>
+<span class="fc" id="L126">                .setUncaughtExceptionConsumer(consumeExceptionIfExists())</span>
+<span class="fc" id="L127">                .setAfterExecuteConsumer((runnable, throwable) -&gt;</span>
+<span class="fc" id="L128">                        finalizingExecutables.forEach(Runnable::run))</span>
+<span class="fc" id="L129">                .setThreadResultConsumer(resultConsumer)</span>
+<span class="fc" id="L130">                .start();</span>
+<span class="fc" id="L131">    }</span>
+
+    /**
+     * It consumes an exception according the given consumers added by
+     * {@link br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher}.
+     * If no consumers is present, no action will be performed.
+     * Only consumers compatible with the exception will be triggered.
+     * It will be triggered twice if the exception consumer is rethrowing any exception.
+     * The second calling will be triggered in
+     * &quot;java.lang.Thread#dispatchUncaughtException(Throwable)&quot;.
+     * see &quot;AbstractThreadBuilder#getThreadFactory()&quot;
+     *
+     * @return the exception consumer implementation.
+     */
+    protected Consumer&lt;Throwable&gt; consumeExceptionIfExists() {
+<span class="fc" id="L146">        return throwable -&gt;</span>
+<span class="fc" id="L147">                exceptionConsumers</span>
+<span class="fc" id="L148">                        .keySet()</span>
+<span class="fc" id="L149">                        .stream()</span>
+<span class="fc" id="L150">                        .filter(isMatchingException(throwable))</span>
+<span class="fc" id="L151">                        .findFirst()</span>
+<span class="fc" id="L152">                        .ifPresent(catchException(throwable));</span>
+    }
+
+    private Predicate&lt;? super Class&lt;Throwable&gt;&gt; isMatchingException(final Throwable thrown) {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        return expectedException -&gt; isExpectedException(thrown, expectedException)</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                || isExpectedCause(thrown, expectedException);</span>
+    }
+
+    private boolean isExpectedException(final Throwable origin,
+                                        final Class&lt;? extends Throwable&gt; expectedException) {
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        return isClassOf(origin, expectedException)</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">                || expectedException.isAssignableFrom(origin.getClass());</span>
+    }
+
+    private boolean isExpectedCause(final Throwable origin,
+                                    final Class&lt;? extends Throwable&gt; expectedCause) {
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        return isCauseOf(origin, expectedCause)</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">                &amp;&amp; (isClassOf(origin, ExecutionException.class)</span>
+<span class="pc bnc" id="L170" title="All 2 branches missed.">                || isClassOf(origin, RuntimeException.class));</span>
+    }
+
+    private boolean isClassOf(final Throwable origin,
+                              final Class&lt;? extends Throwable&gt; expectedClass) {
+<span class="fc" id="L175">        return origin.getClass().equals(expectedClass);</span>
+    }
+
+    private boolean isCauseOf(final Throwable origin,
+                              final Class&lt;? extends Throwable&gt; expectedCause) {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        return origin.getCause().getClass().equals(expectedCause) ||</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">                expectedCause.isAssignableFrom(origin.getCause().getClass());</span>
+    }
+
+    private Consumer&lt;? super Class&lt;Throwable&gt;&gt; catchException(final Throwable throwable) {
+<span class="fc" id="L185">        return exceptionClass -&gt;</span>
+                exceptionConsumers
+<span class="fc" id="L187">                        .get(exceptionClass)</span>
+<span class="fc" id="L188">                        .accept(throwable);</span>
+    }
+
+    /**
+     * As a try-block implementation, performs the thread configured with the
+     * exception catcher(s) and a finalizer. If the thread generates a result value
+     * and no exceptions is thrown, a result consumer will be triggered.
+     *
+     * @see AbstractTryAsyncBuilder#execute(RunnableWithException)
+     * @see AbstractTryAsyncBuilder#execute(Callable, Consumer)
+     */
+    public abstract void execute();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

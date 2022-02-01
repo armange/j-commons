@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExecutorResult.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.builder</a> &gt; <span class="el_source">ExecutorResult.java</span></div><h1>ExecutorResult.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2020] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+/**
+ * A bean that encapsulates a thread result, composed of an ExecutorService,
+ * a Future list, and another ExecutorResult list for timed threads.&lt;br&gt;
+ * The ExecutorResult list will be present when some thread has a timeout.&lt;br&gt;
+ * A {@link Future} object will be present by each thread started.&lt;br&gt;
+ * Consider seeing the logical relationship between
+ * {@link java.util.concurrent.ExecutorService} and
+ * {@link java.util.concurrent.Future} in their respective documentation.
+ *
+ * @author Diego Armange Costa
+ * @see ScheduledThreadBuilderExecutor
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public class ExecutorResult&lt;T&gt; {
+
+    private final ExecutorService executorService;
+<span class="fc" id="L41">    @SuppressWarnings(&quot;rawtypes&quot;)</span>
+    private final List&lt;Future&lt;T&gt;&gt; futures = new LinkedList&lt;&gt;();
+<span class="fc" id="L43">    private final List&lt;ExecutorResult&lt;T&gt;&gt; timeoutExecutorResults = new LinkedList&lt;&gt;();</span>
+    private T threadResult;
+
+<span class="fc" id="L46">    public ExecutorResult(final ExecutorService executorService) {</span>
+<span class="fc" id="L47">        this.executorService = executorService;</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * @return the {@link java.util.concurrent.ExecutorService}
+     */
+    public ExecutorService getExecutorService() {
+<span class="fc" id="L54">        return executorService;</span>
+    }
+
+    /**
+     * @return the {@link Future}s list.
+     */
+    @SuppressWarnings(&quot;rawtypes&quot;)
+    public List&lt;Future&lt;T&gt;&gt; getFutures() {
+<span class="fc" id="L62">        return futures;</span>
+    }
+
+    /**
+     * Whenever a thread times out, its respective ExecutorService and Future will be present in this list.
+     *
+     * @return the timeout thread's {@link ExecutorResult}s
+     */
+    public List&lt;ExecutorResult&lt;T&gt;&gt; getTimeoutExecutorResults() {
+<span class="fc" id="L71">        return timeoutExecutorResults;</span>
+    }
+
+    /**
+     * @return the thread result object.
+     */
+    public T getThreadResult() {
+<span class="fc" id="L78">        return threadResult;</span>
+    }
+
+    /**
+     * Sets the thread result object.
+     *
+     * @param threadResult the thread result object.
+     */
+    void setThreadResult(final T threadResult) {
+<span class="fc" id="L87">        this.threadResult = threadResult;</span>
+<span class="fc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
