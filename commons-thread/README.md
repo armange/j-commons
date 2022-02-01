@@ -6,7 +6,7 @@ This release was created based on the need to simplify daily software developmen
 
 <a name="summary"></a>
 
-##### The tasks simplified by this lib thread are:
+##### The tasks simplified by this lib are:
 - [Thread delayed](#delay).
 - [Thread timed out](#timeout).
 - [Thread loop](#interval).
@@ -21,9 +21,9 @@ This release was created based on the need to simplify daily software developmen
 - [The combination of several of these factors together](#allfeatures)
 
 ##### Docs
- - [Javadoc](https://armange.github.io/j-commons/commons-thread/javadoc)
- - [Tests report](https://armange.github.io/j-commons/commons-thread/test)
- - [Jacoco](https://armange.github.io/j-commons/commons-thread/jacoco)
+ - [Javadoc](https://armange.github.io/j-commons/commons-thread/2-0-0/javadoc)
+ - [Tests report](https://armange.github.io/j-commons/commons-thread/2-0-0/test)
+ - [Jacoco](https://armange.github.io/j-commons/commons-thread/2-0-0/jacoco)
 
 [![Build][buildbadge]](https://github.com/armange/j-commons/commits/master) 
 [![Nexus][nexusbadge]](https://search.maven.org/artifact/br.com.armange/commons-thread) 

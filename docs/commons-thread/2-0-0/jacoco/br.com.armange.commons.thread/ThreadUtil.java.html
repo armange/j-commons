@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThreadUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread</a> &gt; <span class="el_source">ThreadUtil.java</span></div><h1>ThreadUtil.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread;
+
+import java.io.InputStream;
+import java.net.URL;
+
+/**
+ * @author Diego Armange Costa
+ * @since 2019-11-26 V1.0.0
+ * @deprecated Consider to use {@link br.com.armange.commons.thread.util.ThreadUtil}
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
+ */
+@Deprecated(since = &quot;2.0.0&quot;, forRemoval = true)
+@SuppressWarnings(&quot;SameNameButDifferent&quot;)
+public class ThreadUtil {
+
+    private ThreadUtil() {
+    }
+
+    /**
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
+     * if any exception is thrown.
+     *
+     * @param millis the time in milliseconds to sleep the current thread.
+     * @see java.lang.Thread#sleep(long)
+     */
+    public static void sleepUnchecked(final long millis) {
+<span class="fc" id="L45">        br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked(millis);</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * @param relativePath the resource relative path.
+     * @return The input stream found or null if not found.
+     * @see java.lang.ClassLoader#getResourceAsStream(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
+     */
+    public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
+<span class="fc" id="L56">        return br.com.armange.commons.thread.util.ThreadUtil</span>
+<span class="fc" id="L57">                .getCurrentThreadResourceAsStream(relativePath);</span>
+    }
+
+    /**
+     * @param relativePath the resource relative path.
+     * @return The URL found or null if not found.
+     * @see java.lang.ClassLoader#getResource(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
+     */
+    public static URL getCurrentThreadResource(final String relativePath) {
+<span class="fc" id="L68">        return br.com.armange.commons.thread.util.ThreadUtil.getCurrentThreadResource(relativePath);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

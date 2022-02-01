@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RunnableTryAsyncBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.async</a> &gt; <span class="el_source">RunnableTryAsyncBuilder.java</span></div><h1>RunnableTryAsyncBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2020] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.async;
+
+/**
+ * It is a thread builder that assists in creating structured threads to simulate a set of
+ * try-catch-finally or try-with-resources blocks.
+ *
+ * @author Diego Armange Costa
+ * @see br.com.armange.commons.thread.async.TryAsyncBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public class RunnableTryAsyncBuilder extends AbstractTryAsyncBuilder&lt;RunnableTryAsyncBuilder&gt; {
+    private final RunnableWithException attemptedExecution;
+
+<span class="fc" id="L29">    private RunnableTryAsyncBuilder(final RunnableWithException runnable) {</span>
+<span class="fc" id="L30">        attemptedExecution = runnable;</span>
+<span class="fc" id="L31">    }</span>
+
+    /**
+     * Creates a thread builder.
+     *
+     * @param execution the thread implementation.
+     * @return the current thread builder.
+     */
+    protected static RunnableTryAsyncBuilder tryAsync(final RunnableWithException execution) {
+<span class="fc" id="L40">        return new RunnableTryAsyncBuilder(execution);</span>
+    }
+
+    /**
+     * From the configuration parameters previously provided in the thread constructor,
+     * a new thread will be configured and executed so that it can simulate a try-catch-finally
+     * code block or a try-with-resources code block.
+     *
+     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     */
+    @Override
+    public void execute() {
+<span class="fc" id="L52">        execute(attemptedExecution);</span>
+<span class="fc" id="L53">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

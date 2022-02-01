@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractThreadBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.builder</a> &gt; <span class="el_source">AbstractThreadBuilder.java</span></div><h1>AbstractThreadBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
+/**
+ * Abstraction for thread builders that simplify, and provide some additional features(below)
+ * to the thread implementation.
+ * &lt;br&gt;
+ * &lt;ul&gt;
+ *   &lt;li&gt;
+ *     Uncaught exception consumer
+ *   &lt;/li&gt;
+ *   &lt;li&gt;
+ *     After execute consumer
+ *   &lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * @param &lt;S&gt; the type of the object resulting from the execution of the thread.
+ * @param &lt;T&gt; Execution type. {@link Runnable}, {@link Callable}.
+ * @param &lt;U&gt; Builder. The Builder extending {@link AbstractThreadBuilder}
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public abstract class AbstractThreadBuilder&lt;S, T, U extends AbstractThreadBuilder&lt;S, T, U&gt;&gt; {
+
+    private static final String ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE = &quot;Illegal executor-type \&quot;{0}\&quot;.&quot;;
+<span class="fc" id="L53">    private static final Logger LOGGER = LogManager.getLogger();</span>
+
+<span class="fc" id="L55">    protected Optional&lt;BiConsumer&lt;Runnable, Throwable&gt;&gt; afterExecuteConsumer = Optional.empty();</span>
+<span class="fc" id="L56">    protected Optional&lt;Consumer&lt;? super Throwable&gt;&gt; uncaughtExceptionConsumer = Optional.empty();</span>
+<span class="fc" id="L57">    protected Optional&lt;ExceptionCatcherThreadFactory&gt; threadFactory = Optional.empty();</span>
+<span class="fc" id="L58">    protected Optional&lt;Supplier&lt;String&gt;&gt; threadNameSupplier = Optional.empty();</span>
+<span class="fc" id="L59">    protected Optional&lt;IntSupplier&gt; threadPrioritySupplier = Optional.empty();</span>
+<span class="fc" id="L60">    protected Optional&lt;Consumer&lt;S&gt;&gt; threadResultConsumer = Optional.empty();</span>
+
+    protected ScheduledThreadBuilderExecutor executor;
+    protected ExecutorResult&lt;S&gt; executorResult;
+
+    protected T execution;
+
+    protected boolean mayInterruptIfRunning;
+    protected boolean silentInterruption;
+
+    protected final ExecutionType executionType;
+    protected final int corePoolSize;
+
+    /**
+     * Constructs an abstract thread builder.
+     *
+     * @param corePoolSize the number of threads to keep in the pool,
+     *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
+     */
+<span class="fc" id="L79">    protected AbstractThreadBuilder(final int corePoolSize) {</span>
+<span class="fc" id="L80">        this.corePoolSize = corePoolSize;</span>
+
+<span class="fc" id="L82">        executionType = ExecutionType.valueOf(getExecutionClass());</span>
+<span class="fc" id="L83">    }</span>
+
+    /**
+     * Sets the consumer to be called after thread execution.
+     *
+     * @param afterExecuteConsumer the consumer to be called after thread execution.
+     * @return the current thread builder.
+     * @see ScheduledThreadBuilderExecutor#afterExecute(Runnable, Throwable)
+     */
+    public U setAfterExecuteConsumer(final BiConsumer&lt;Runnable, Throwable&gt; afterExecuteConsumer) {
+<span class="fc" id="L93">        this.afterExecuteConsumer = Optional.ofNullable(afterExecuteConsumer);</span>
+
+<span class="fc" id="L95">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the consumer to be called after exception throwing. This consumer will
+     * be called as a first after-executes consumer.
+     *
+     * @param uncaughtExceptionConsumer the consumer to be called after exception throwing.
+     * @return the current thread builder.
+     */
+    public U setUncaughtExceptionConsumer(
+            final Consumer&lt;? super Throwable&gt; uncaughtExceptionConsumer) {
+<span class="fc" id="L107">        this.uncaughtExceptionConsumer = Optional.ofNullable(uncaughtExceptionConsumer);</span>
+
+<span class="fc" id="L109">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread name supplier. The thread factory will consume this supplier
+     * to generate a thread name before return a new thread.
+     *
+     * @param threadNameSupplier the thread name supplier.
+     * @return the current thread builder.
+     */
+    public U setThreadNameSupplier(final Supplier&lt;String&gt; threadNameSupplier) {
+<span class="fc" id="L120">        this.threadNameSupplier = Optional.ofNullable(threadNameSupplier);</span>
+
+<span class="fc" id="L122">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread priority supplier. The thread factory will consume this
+     * supplier to generate a thread priority before return a new thread.
+     *
+     * @param threadPrioritySupplier the thread priority supplier.
+     * @return the current thread builder.
+     */
+    public U setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier) {
+<span class="fc" id="L133">        this.threadPrioritySupplier = Optional.ofNullable(threadPrioritySupplier);</span>
+
+<span class="fc" id="L135">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread execution.
+     *
+     * @param execution the thread execution({@link java.lang.Runnable})
+     * @return the current thread builder.
+     */
+    protected U setExecution(final T execution) {
+<span class="fc" id="L145">        this.execution = execution;</span>
+
+<span class="fc" id="L147">        requireExecutionNonNull();</span>
+
+<span class="fc" id="L149">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread-silent-interrupting-flag.&lt;br&gt;
+     * When this flag is true, exceptions caught on the thread will only be logged,
+     * and will not be handled in any way.
+     *
+     * @param flag true if the Interruption/Cancellation exceptions should be ignored.
+     * @return the current thread builder.
+     * @see java.util.concurrent.Future#cancel(boolean)
+     * @see java.util.concurrent.CancellationException
+     * @see java.lang.InterruptedException
+     */
+    public U setSilentInterruption(final boolean flag) {
+<span class="fc" id="L164">        silentInterruption = flag;</span>
+
+<span class="fc" id="L166">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread result consumer.&lt;br&gt;
+     * After the thread execution, the result obtained will be consumed by this consumer.
+     *
+     * @param threadResultConsumer the thread result consumer.
+     * @return the current thread builder.
+     */
+    protected U setThreadResultConsumer(final Consumer&lt;S&gt; threadResultConsumer) {
+<span class="fc" id="L177">        this.threadResultConsumer = Optional.ofNullable(threadResultConsumer);</span>
+
+<span class="fc" id="L179">        return getSelf();</span>
+    }
+
+    /**
+     * @return the current thread builder.
+     */
+    @SuppressWarnings(&quot;unchecked&quot;)
+    protected U getSelf() {
+<span class="fc" id="L187">        return (U) this;</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     *
+     * @return the executor's result after starting thread.
+     * @see ExecutorResult
+     */
+    public ExecutorResult&lt;S&gt; start() {
+<span class="fc" id="L197">        createExecutorAndRunThread();</span>
+
+<span class="fc" id="L199">        return executorResult;</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     *
+     * @return the current thread builder to prepare another thread.
+     */
+    public U startAndBuildOther() {
+<span class="fc" id="L208">        createExecutorAndRunThread();</span>
+
+<span class="fc" id="L210">        return getSelf();</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
+    protected void createExecutorAndRunThread() {
+<span class="fc" id="L217">        requireExecutionNonNull();</span>
+
+<span class="fc" id="L219">        newExecutorServiceIfNull();</span>
+
+<span class="fc" id="L221">        runThread();</span>
+<span class="fc" id="L222">    }</span>
+
+    /**
+     * Creates the thread executor (if necessary).
+     */
+    protected void newExecutorServiceIfNull() {
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        executor = executor == null</span>
+<span class="fc" id="L229">                ? new ScheduledThreadBuilderExecutor(corePoolSize, getThreadFactory()) : executor;</span>
+<span class="fc" id="L230">    }</span>
+
+    /**
+     * Throws {@link NullPointerException} if it has no thread execution implementation.
+     */
+    protected void requireExecutionNonNull() {
+<span class="fc" id="L236">        Objects.requireNonNull(execution);</span>
+<span class="fc" id="L237">    }</span>
+
+    protected ThreadFactory getThreadFactory() {
+<span class="fc" id="L240">        final ExceptionCatcherThreadFactory factory = threadFactory.orElseGet(ExceptionCatcherThreadFactory::new);</span>
+
+<span class="fc" id="L242">        uncaughtExceptionConsumer</span>
+<span class="fc" id="L243">                .ifPresent(uec -&gt; factory.setUncaughtExceptionHandler((thread, throwable) -&gt; uec.accept(throwable)));</span>
+
+<span class="fc" id="L245">        threadNameSupplier.ifPresent(tns -&gt; factory.setThreadName(tns.get()));</span>
+
+<span class="fc" id="L247">        threadPrioritySupplier.ifPresent(tps -&gt; factory.setThreadPriority(tps.getAsInt()));</span>
+
+<span class="fc" id="L249">        return factory;</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
+    protected void runThread() {
+<span class="fc" id="L256">        final Holder&lt;Future&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L258">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+
+<span class="fc" id="L260">        afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);</span>
+
+<span class="fc" id="L262">        futureHolder.set(submit());</span>
+
+<span class="fc" id="L264">        newExecutorResultIfNull();</span>
+
+<span class="fc" id="L266">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L267">    }</span>
+
+    /**
+     * Submits the thread's implementation to the executor.
+     *
+     * @return the Future object.
+     * @see ScheduledThreadPoolExecutor#submit(java.util.concurrent.Callable)
+     */
+    @SuppressWarnings({&quot;unchecked&quot;})
+    protected Future&lt;S&gt; submit() {
+        final Future&lt;S&gt; future;
+
+<span class="fc bfc" id="L279" title="All 2 branches covered.">        switch (executionType) {</span>
+            case CALLABLE:
+<span class="fc" id="L281">                future = executor.submit((Callable&lt;S&gt;) execution);</span>
+
+<span class="fc" id="L283">                break;</span>
+            case RUNNABLE:
+            default:
+<span class="fc" id="L286">                future = (Future&lt;S&gt;) executor.submit((Runnable) execution);</span>
+
+                break;
+        }
+
+<span class="fc" id="L291">        return future;</span>
+    }
+
+    /**
+     * Returns a lambda that handles exceptions caught on the thread.&lt;br&gt;
+     * If the thread has not been canceled and there are no exceptions, and if there is
+     * a consumer for the thread's result, it will be executed.&lt;br&gt;
+     * If the thread has thrown an exception, and if the thread has not been configured
+     * to silence exceptions, it will be handled according to the exception's
+     * consumer (if configured previously).
+     *
+     * @param futureHolder the thread's Future object, encapsulated by a Holder object.
+     * @param &lt;F&gt;          the type of the object resulting from the execution of the thread.
+     * @return a consumer for exceptions caught within threads.
+     * @see Holder
+     * @see Future
+     * @see #setSilentInterruption(boolean)
+     */
+    protected &lt;F extends Future&lt;S&gt;&gt; BiConsumer&lt;Runnable, Throwable&gt; handleException(final Holder&lt;F&gt; futureHolder) {
+<span class="fc" id="L310">        return (runnable, throwable) -&gt; {</span>
+<span class="fc" id="L311">            final Future&lt;S&gt; future = futureHolder.get();</span>
+
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">            if (throwable == null) {</span>
+                try {
+<span class="fc bfc" id="L315" title="All 2 branches covered.">                    if (future.isDone()) {</span>
+<span class="fc" id="L316">                        consumesFuture(future);</span>
+                    }
+<span class="fc" id="L318">                } catch (final Exception e) {</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">                    if (isNotSilentOrIsExecutionException(e)) {</span>
+<span class="fc" id="L320">                        uncaughtExceptionConsumer.orElseGet(() -&gt; LOGGER::error).accept(e);</span>
+                    } else {
+<span class="fc" id="L322">                        LOGGER.error(e);</span>
+                    }
+<span class="fc" id="L324">                }</span>
+            }
+<span class="fc" id="L326">        };</span>
+    }
+
+    /**
+     * If the thread is of type {@link Callable}, it stores the thread result in an
+     * {@link ExecutorResult} instance and applies this result to the respective consumer.
+     * If it is a {@link Runnable} thread, it just calls the get method of the
+     * {@link Future} object.
+     *
+     * @param future the thread Future object.
+     * @throws InterruptedException if the thread was interrupted.
+     * @throws ExecutionException   if the thread fails.
+     */
+    protected void consumesFuture(final Future&lt;S&gt; future) throws InterruptedException, ExecutionException {
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        switch (executionType) {</span>
+            case CALLABLE:
+<span class="fc" id="L342">                executorResult.setThreadResult(future.get());</span>
+
+<span class="fc" id="L344">                threadResultConsumer.ifPresent(consumer -&gt; consumer.accept(executorResult.getThreadResult()));</span>
+
+<span class="fc" id="L346">                break;</span>
+            case RUNNABLE:
+            default:
+<span class="fc" id="L349">                future.get();</span>
+
+                break;
+        }
+<span class="fc" id="L353">    }</span>
+
+    private boolean isNotSilentOrIsExecutionException(final Exception e) {
+<span class="fc bfc" id="L356" title="All 4 branches covered.">        return !silentInterruption || !(e instanceof CancellationException);</span>
+    }
+
+    /**
+     * Creates a new {@link ExecutorResult} if necessary.
+     */
+    protected void newExecutorResultIfNull() {
+<span class="fc bfc" id="L363" title="All 2 branches covered.">        executorResult = executorResult == null ? new ExecutorResult&lt;&gt;(executor) : executorResult;</span>
+<span class="fc" id="L364">    }</span>
+
+    /**
+     * @return the type of the thread implementation.
+     */
+    abstract Class&lt;T&gt; getExecutionClass();
+
+    /**
+     * Class that enumerates the types of thread implementations that are supported by this builder.
+     */
+<span class="fc" id="L374">    protected enum ExecutionType {</span>
+<span class="fc" id="L375">        CALLABLE, RUNNABLE; //RECURSIVE_TASK, RECURSIVE_ACTION</span>
+
+        static ExecutionType valueOf(final Class&lt;?&gt; sourceClass) {
+<span class="fc bfc" id="L378" title="All 2 branches covered.">            if (Callable.class.equals(sourceClass)) {</span>
+<span class="fc" id="L379">                return CALLABLE;</span>
+<span class="fc bfc" id="L380" title="All 2 branches covered.">            } else if (Runnable.class.equals(sourceClass)) {</span>
+<span class="fc" id="L381">                return RUNNABLE;</span>
+            } else {
+<span class="fc" id="L383">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L384">                        String.format(ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE, sourceClass.getName()));</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
