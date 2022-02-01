@@ -15,20 +15,22 @@
  * */
 package br.com.armange.commons.thread;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
+ * @author Diego Armange Costa
+ * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService
+ * @since 2019-11-26 V1.0.0 (JDK 1.8)
+ * @deprecated Consider to use {@link br.com.armange.commons.thread.builder.ThreadBuilder}
  * Useful structure for thread creation in the following scenarios:
  * <ul>
  * <li><em><b>Timeout</b></em><br>
@@ -43,18 +45,18 @@ import java.util.function.Supplier;
  * <b>Note:</b><br>
  * <em>The thread will wait a minimum delay
  * ({@link br.com.armange.commons.thread.ThreadBuilder#MINIMAL_REQUIRED_DELAY}) if and only if a
- * ({@link br.com.armange.commons.thread.ThreadBuilder#setAfterExecuteConsumer(BiConsumer)}) 
- * or a ({@link br.com.armange.commons.thread.ThreadBuilder#setUncaughtExceptionConsumer(Consumer)}) 
+ * ({@link br.com.armange.commons.thread.ThreadBuilder#setAfterExecuteConsumer(BiConsumer)})
+ * or a ({@link br.com.armange.commons.thread.ThreadBuilder#setUncaughtExceptionConsumer(Consumer)})
  * is present.</em>
- * 
+ *
  * <pre>
  * <b>Example:</b>
- * 
+ *
  * final ExecutorService thread = ThreadBuilder
  *          .newBuilder() //New object to build a new thread.
  *          .setDelay(1000) //The thread will wait one second before start.
  *          .setTimeout(4000) //The thread will be canceled after four seconds.
- *          .setInterval(1000) //The thread will be repeated every second. 
+ *          .setInterval(1000) //The thread will be repeated every second.
  *          .setAfterExecuteConsumer(afterExecuteConsumer) //A consumer will be called after thread execution.
  *          .setUncaughtExceptionConsumer(throwableConsumer) //A consumer will be called after any exception thrown.
  *          .setMayInterruptIfRunning(true) //The thread interruption/cancellation will not wait execution.
@@ -64,11 +66,9 @@ import java.util.function.Supplier;
  *          .setThreadPrioritySupplier(() -&gt; 4)
  *          .start();
  * </pre>
- * 
- * @author Diego Armange Costa
- * @since 2019-11-26 V1.0.0 (JDK 1.8)
- * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService
  */
+@Slf4j
+@Deprecated(since = "2.0.0", forRemoval = true)
 public class ThreadBuilder {
     /**
      * 1000 milliseconds as a minimal delay.
@@ -86,13 +86,13 @@ public class ThreadBuilder {
     private ScheduledCaughtExecutorService executor;
     private ExecutorResult executorResult;
     private boolean mayInterruptIfRunning;
-    private boolean silentInterruption; 
+    private boolean silentInterruption;
     private final int corePoolSize;
 
     private ThreadBuilder() {
         corePoolSize = 1;
     }
-    
+
     private ThreadBuilder(final int corePoolSize) {
         this.corePoolSize = corePoolSize;
     }
@@ -103,7 +103,7 @@ public class ThreadBuilder {
     public static ThreadBuilder newBuilder() {
         return new ThreadBuilder();
     }
-    
+
     /**
      * @param corePoolSize the {@link ScheduledCaughtExecutorService} pool size.
      * @return a new object to perform a thread creation.
@@ -115,7 +115,8 @@ public class ThreadBuilder {
 
     /**
      * Sets the timeout value.
-     * @param milliseconds the timeout value in milliseconds. 
+     *
+     * @param milliseconds the timeout value in milliseconds.
      * @return the current thread builder.
      */
     public ThreadBuilder setTimeout(final long milliseconds) {
@@ -126,6 +127,7 @@ public class ThreadBuilder {
 
     /**
      * Sets the delay value.
+     *
      * @param milliseconds the delay value in milliseconds.
      * @return the current thread builder.
      */
@@ -137,6 +139,7 @@ public class ThreadBuilder {
 
     /**
      * Sets the repeating interval value.
+     *
      * @param milliseconds the repeating interval value in milliseconds.
      * @return the current thread builder.
      */
@@ -148,6 +151,7 @@ public class ThreadBuilder {
 
     /**
      * Sets the consumer to be called after thread execution.
+     *
      * @param afterExecuteConsumer the consumer to be called after thread execution.
      * @return the current thread builder.
      * @see br.com.armange.commons.thread.ScheduledCaughtExecutorService#afterExecute(Runnable, Throwable)
@@ -159,8 +163,9 @@ public class ThreadBuilder {
     }
 
     /**
-     * Sets the consumer to be called after exception throwing. This consumer will be called as a first after-executes 
+     * Sets the consumer to be called after exception throwing. This consumer will be called as a first after-executes
      * consumer.
+     *
      * @param uncaughtExceptionConsumer the consumer to be called after exception throwing.
      * @return the current thread builder.
      */
@@ -169,33 +174,36 @@ public class ThreadBuilder {
 
         return this;
     }
-    
+
     /**
-     * Sets the thread name supplier.The thread factory will consume this supplier to generate a thread name 
+     * Sets the thread name supplier.The thread factory will consume this supplier to generate a thread name
      * before return a new thread.
+     *
      * @param threadNameSupplier the thread name supplier.
      * @return the current thread builder.
      */
     public ThreadBuilder setThreadNameSupplier(final Supplier<String> threadNameSupplier) {
         this.threadNameSupplier = Optional.ofNullable(threadNameSupplier);
-        
+
         return this;
     }
-    
+
     /**
-     * Sets the thread priority supplier.The thread factory will consume this supplier to generate a thread priority 
+     * Sets the thread priority supplier.The thread factory will consume this supplier to generate a thread priority
      * before return a new thread.
+     *
      * @param threadPrioritySupplier the thread priority supplier.
      * @return the current thread builder.
      */
     public ThreadBuilder setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier) {
         this.threadPrioritySupplier = Optional.ofNullable(threadPrioritySupplier);
-        
+
         return this;
     }
 
     /**
      * Sets the thread execution.
+     *
      * @param execution the thread execution({@link java.lang.Runnable})
      * @return the current thread builder.
      */
@@ -209,8 +217,9 @@ public class ThreadBuilder {
 
     /**
      * Sets the thread-interrupting-flag.
-     * @param flag true if the thread executing this task should be interrupted; 
-     * otherwise, in-progress tasks are allowed to complete.
+     *
+     * @param flag true if the thread executing this task should be interrupted;
+     *             otherwise, in-progress tasks are allowed to complete.
      * @return the current thread builder.
      * @see java.util.concurrent.Future#cancel(boolean)
      */
@@ -222,6 +231,7 @@ public class ThreadBuilder {
 
     /**
      * Sets the thread-silent-interrupting-flag.
+     *
      * @param flag true if the Interruption/Cancellation exceptions should be ignored.
      * @return the current thread builder.
      * @see java.util.concurrent.Future#cancel(boolean)
@@ -236,6 +246,7 @@ public class ThreadBuilder {
 
     /**
      * Starts the thread.
+     *
      * @return the executor's result after starting thread.
      * @see ExecutorResult
      */
@@ -244,9 +255,10 @@ public class ThreadBuilder {
 
         return executorResult;
     }
-    
+
     /**
      * Starts the thread.
+     *
      * @return the current thread builder to prepare another thread.
      */
     public ThreadBuilder startAndBuildOther() {
@@ -259,7 +271,7 @@ public class ThreadBuilder {
         requireExecutionNonNull();
 
         executor = new ScheduledCaughtExecutorService(corePoolSize, getThreadFactory());
-        
+
         runThread();
 
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
@@ -267,14 +279,14 @@ public class ThreadBuilder {
 
     private ThreadFactory getThreadFactory() {
         final CaughtExecutorThreadFactory factory = threadFactory.orElse(new CaughtExecutorThreadFactory());
-        
+
         uncaughtExceptionConsumer
                 .ifPresent(uec -> factory.setUncaughtExceptionHandler((thread, throwable) -> uec.accept(throwable)));
-        
+
         threadNameSupplier.ifPresent(tns -> factory.setThreadName(tns.get()));
-        
+
         threadPrioritySupplier.ifPresent(tps -> factory.setThreadPriority(tps.getAsInt()));
-        
+
         return factory;
     }
 
@@ -346,7 +358,7 @@ public class ThreadBuilder {
         executor.addAfterExecuteConsumer(handleException(future));
 
         final ExecutorResult timeoutExecutorResult = handleInterruption(future);
-        
+
         newExecutorResultIfNull();
         executorResult.getFutures().add(future);
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
@@ -360,7 +372,7 @@ public class ThreadBuilder {
         newExecutorResultIfNull();
         executorResult.getFutures().add(future);
     }
-    
+
     private void newExecutorResultIfNull() {
         executorResult = executorResult == null ? new ExecutorResult(executor) : executorResult;
     }
@@ -368,11 +380,11 @@ public class ThreadBuilder {
     private void runWithAllTimesControls() {
         final ScheduledFuture<?> future = executor.scheduleAtFixedRate(execution, handleDelay(),
                 interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
-        
+
         executor.addAfterExecuteConsumer(handleException(future));
 
         final ExecutorResult timeoutExecutorResult = handleInterruption(future);
-        
+
         newExecutorResultIfNull();
         executorResult.getFutures().add(future);
         executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);
@@ -380,7 +392,7 @@ public class ThreadBuilder {
 
     private long handleDelay() {
         final long localDelay = delay.orElse(Duration.ofMillis(0)).toMillis();
-        
+
         if (uncaughtExceptionConsumer.isPresent() || afterExecuteConsumer.isPresent()) {
             return localDelay >= MINIMAL_REQUIRED_DELAY ? localDelay : localDelay + MINIMAL_REQUIRED_DELAY;
         } else {
@@ -391,8 +403,13 @@ public class ThreadBuilder {
     private BiConsumer<Runnable, Throwable> handleException(final Future<?> future) {
         return (a, b) -> {
             try {
-                if (future.isDone()) future.get();
+                if (future.isDone())
+                    future.get();
             } catch (final Exception e) {
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+
                 if (isNotSilentOrIsExecutionException(e)) {
                     uncaughtExceptionConsumer.ifPresent(consumer -> consumer.accept(e));
                 }
@@ -406,18 +423,20 @@ public class ThreadBuilder {
 
     private ExecutorResult handleInterruption(final ScheduledFuture<?> future) {
         final ScheduledCaughtExecutorService localExecutor = new ScheduledCaughtExecutorService(1);
-        
+
         localExecutor.addAfterExecuteConsumer(handleException(future));
         localExecutor.schedule(cancelFuture(future), timeout.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS);
-        
+
         final ExecutorResult timeoutExecutorResult = new ExecutorResult(localExecutor);
-        
+
         timeoutExecutorResult.getFutures().add(future);
-        
+
         return timeoutExecutorResult;
     }
 
     private Runnable cancelFuture(final ScheduledFuture<?> future) {
-        return () -> {if(!future.isDone() && !future.isCancelled()) future.cancel(mayInterruptIfRunning);};
+        return () -> {
+            if (!future.isDone() && !future.isCancelled()) future.cancel(mayInterruptIfRunning);
+        };
     }
 }

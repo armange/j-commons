@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
+def
+        NET_BYTE_BUDDY = '1.10.21',
+        ORG_SLF4J = '1.7.32',
+        ORG_LOG4J = '2.17.1'
 ext.library = [
     // Eclipse Public License 1.0
     junit_junit: "junit:junit:4.12",
@@ -21,4 +25,11 @@ ext.library = [
     org_assertj_assertj_core: "org.assertj:assertj-core:3.12.1",
     org_hamcrest_hamcrest: "org.hamcrest:hamcrest:2.1",
     org_mockito_mockito_core: "org.mockito:mockito-core:3.1.0",
+
+    net_bytebuddy_byte_buddy: "net.bytebuddy:byte-buddy:${NET_BYTE_BUDDY}",
+    net_bytebuddy_byte_buddy_agent: "net.bytebuddy:byte-buddy-agent:${NET_BYTE_BUDDY}",
+
+    org_slf4j_slf4j_api: "org.slf4j:slf4j-api:${ORG_SLF4J}",
+    org_slf4j_slf4j_simple: "org.slf4j:slf4j-simple:${ORG_SLF4J}",
+    org_apache_logging_log4j_log4j_core: "org.apache.logging.log4j:log4j-core:${ORG_LOG4J}"
 ]

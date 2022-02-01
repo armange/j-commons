@@ -23,6 +23,8 @@ hs_err_pid*
 **/.gradle/
 **/bin/
 **/build/
+**/.idea/
+**/out/
 
 #Eclipse
 .classpath

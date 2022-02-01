@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CommonCallableThreadBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.builder</a> &gt; <span class="el_source">CommonCallableThreadBuilder.java</span></div><h1>CommonCallableThreadBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+
+/**
+ * Class responsible for simplifying and speeding up the creation and configuration of threads.
+ *
+ * @param &lt;S&gt; the result type of method call.
+ * @author Diego Armange Costa
+ * @see br.com.armange.commons.thread.builder.ThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+@SuppressWarnings(&quot;rawtypes&quot;)
+public class CommonCallableThreadBuilder&lt;S&gt; extends
+        AbstractThreadBuilder&lt;S, Callable, CommonCallableThreadBuilder&lt;S&gt;&gt; {
+
+    private CommonCallableThreadBuilder(final int corePoolSize) {
+<span class="fc" id="L34">        super(corePoolSize);</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Creates a thread builder.
+     *
+     * @param corePoolSize the number of threads to keep in the pool,
+     *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
+     * @param &lt;T&gt;          the type of the object resulting from the execution of the thread.
+     * @return a new thread builder
+     */
+    protected static &lt;T&gt; CommonCallableThreadBuilder&lt;T&gt; newBuilder(final int corePoolSize) {
+<span class="fc" id="L46">        return new CommonCallableThreadBuilder&lt;&gt;(corePoolSize);</span>
+    }
+
+    /**
+     * Sets a consumer for the thread's execution result.
+     *
+     * @param threadResultConsumer the consumer for the thread's execution result.
+     * @return the current thread builder.
+     */
+    @Override
+    public CommonCallableThreadBuilder&lt;S&gt; setThreadResultConsumer(
+            final Consumer&lt;S&gt; threadResultConsumer) {
+<span class="fc" id="L58">        return super.setThreadResultConsumer(threadResultConsumer);</span>
+    }
+
+    @Override
+    Class&lt;Callable&gt; getExecutionClass() {
+<span class="fc" id="L63">        return Callable.class;</span>
+    }
+
+    /**
+     * Sets the thread task.
+     *
+     * @param execution a task that returns a result and may throw an exception.
+     * @return the current thread builder.
+     */
+    @Override
+    public CommonCallableThreadBuilder&lt;S&gt; setExecution(final Callable execution) {
+<span class="fc" id="L74">        return super.setExecution(execution);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

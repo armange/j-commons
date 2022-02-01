@@ -20,7 +20,7 @@
  * <p>Useful structure for handling the current thread.</p>
  * <pre>
  * ThreadUtil.sleepUnchecked(1000);
- * final URL url = ThreadUtil.getCurrentThreadResource("path");
+ * final URL url = sleepUnchecked.getCurrentThreadResource("path");
  * final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream("path");
  * </pre></li>
  * <li><b>{@link br.com.armange.commons.thread.ThreadBuilder}</b>
@@ -33,6 +33,12 @@
  *          .setUncaughtExceptionConsumer(throwableConsumer) //A consumer will be called after any exception thrown.
  *          .start();
  * </pre></li>
+ * <li><b>{@link br.com.armange.commons.thread.async.TryAsyncBuilder}</b>
+ * <p>Useful structure for try-async operation creation</p>
+ * </li>
+ * <li><b>{@link br.com.armange.commons.thread.builder.ThreadBuilder}</b>
+ * <p>Useful structure for thread creation</p>
+ * </li>
  * </ul>
- * */
+ */
 package br.com.armange.commons.thread;

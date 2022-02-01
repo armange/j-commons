@@ -2,9 +2,9 @@ package br.com.armange.commons.object.impl.artifact;
 
 import java.math.BigDecimal;
 
-import br.com.armange.commons.object.annotation.ConvertibleBean;
+import br.com.armange.commons.object.api.typeconverter.annotation.ConvertibleBean;
 
-@ConvertibleBean
+@ConvertibleBean({BeanArtifact.class})
 public class ConvertibleBeanArtifact {
     
     private String name;

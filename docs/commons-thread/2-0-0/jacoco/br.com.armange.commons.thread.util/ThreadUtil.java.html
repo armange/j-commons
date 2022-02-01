@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThreadUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.util</a> &gt; <span class="el_source">ThreadUtil.java</span></div><h1>ThreadUtil.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.util;
+
+import br.com.armange.commons.thread.exception.UncheckedException;
+
+import java.io.InputStream;
+import java.net.URL;
+import java.util.function.BooleanSupplier;
+
+/**
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public class ThreadUtil {
+
+    private ThreadUtil() {}
+    
+    /**
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
+     * if any exception is thrown.
+     * @param millis the length of time to sleep in milliseconds
+     * @see java.lang.Thread#sleep(long)
+     */
+    public static void sleepUnchecked(final long millis) {
+        try {
+<span class="fc" id="L44">            Thread.sleep(millis);</span>
+<span class="fc" id="L45">        } catch (final InterruptedException e) {</span>
+<span class="fc" id="L46">            Thread.currentThread().interrupt();</span>
+<span class="fc" id="L47">            throw new UncheckedException(e);</span>
+<span class="fc" id="L48">        } catch (final Exception e) {</span>
+<span class="fc" id="L49">            throw new UncheckedException(e);</span>
+<span class="fc" id="L50">        }</span>
+<span class="fc" id="L51">    }</span>
+    
+    /**
+     * @param relativePath the resource relative path.
+     * @return The input stream found or null if not found.
+     * @see java.lang.ClassLoader#getResourceAsStream(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
+     */
+    public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
+<span class="fc" id="L61">        return Thread.currentThread().getContextClassLoader().getResourceAsStream(relativePath);</span>
+    }
+    
+    /**
+     * @param relativePath the resource relative path.
+     * @return The URL found or null if not found.
+     * @see java.lang.ClassLoader#getResource(String)
+     * @see java.lang.Thread#getContextClassLoader()
+     * @see java.lang.Thread#currentThread()
+     */
+    public static URL getCurrentThreadResource(final String relativePath) {
+<span class="fc" id="L72">        return Thread.currentThread().getContextClassLoader().getResource(relativePath);</span>
+    }
+
+    /**
+     * Keeps the thread in sleep state until the given condition is true.
+     * @param millis the length of time to sleep in milliseconds
+     * @param condition The condition for the current thread to continue sleeping.
+     *                  When it has the true value the thread will continue to sleep.
+     * @throws InterruptedException if any thread has interrupted the current thread. The
+     * &lt;i&gt;interrupted status&lt;/i&gt; of the current thread is cleared when this exception is thrown.
+     * @see java.lang.Thread#sleep(long)
+     */
+    public static void sleepUntil(final long millis, final BooleanSupplier condition)
+            throws InterruptedException {
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        while(condition.getAsBoolean()) {</span>
+<span class="fc" id="L87">            Thread.sleep(millis);</span>
+        }
+<span class="fc" id="L89">    }</span>
+
+    /**
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
+     * if any exception is thrown. Keeps the thread in sleep state until the given
+     * condition is true.
+     * @param millis the length of time to sleep in milliseconds
+     * @param condition The condition for the current thread to continue sleeping.
+     *                  When it has the true value the thread will continue to sleep.
+     * @see ThreadUtil#sleepUnchecked(long)
+     */
+    public static void sleepUncheckedUntil(final long millis, final BooleanSupplier condition) {
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        while(condition.getAsBoolean()) {</span>
+<span class="fc" id="L103">            sleepUnchecked(millis);</span>
+        }
+<span class="fc" id="L105">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThreadBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.builder</a> &gt; <span class="el_source">ThreadBuilder.java</span></div><h1>ThreadBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import java.util.concurrent.Callable;
+
+/**
+ * Class responsible for simplifying and speeding up the creation and configuration of threads.&lt;br&gt;
+ * The implementation of threads can be simplified using one of the four classes below.&lt;br&gt;
+ * &lt;ul&gt;
+ *     &lt;li&gt;
+ *          &lt;b&gt;CommonRunnableThreadBuilder:&lt;/b&gt; To implement threads that run tasks
+ *          but do not need to return values after execution. See {@link #setExecution(Runnable)}.
+ *     &lt;/li&gt;
+ *     &lt;li&gt;
+ *          &lt;b&gt;TimingRunnableThreadBuilder:&lt;/b&gt; To implement threads that run tasks
+ *          but do not need to return values after execution. However, they can be configured
+ *          with scheduling options such as delay, interval or timeout, for example.
+ *          See {@link #setScheduling(Runnable)}
+ *     &lt;/li&gt;
+ *     &lt;li&gt;
+ *          &lt;b&gt;CommonCallableThreadBuilder:&lt;/b&gt; To implement threads that execute tasks
+ *          and return values after execution. See {@link #setExecution(Callable)}
+ *     &lt;/li&gt;
+ *     &lt;li&gt;
+ *          &lt;b&gt;TimingCallableThreadBuilder:&lt;/b&gt; To implement threads that execute tasks
+ *          and return values after execution. However, they can be configured with
+ *          scheduling options such as delay, interval or timeout, for example.
+ *          See {@link #setScheduling(Callable)}
+ *     &lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * @author Diego Armange Costa
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public final class ThreadBuilder {
+
+    private final int corePoolSize;
+
+<span class="fc" id="L53">    private ThreadBuilder() {</span>
+<span class="fc" id="L54">        corePoolSize = 1;</span>
+<span class="fc" id="L55">    }</span>
+
+<span class="fc" id="L57">    private ThreadBuilder(final int corePoolSize) {</span>
+<span class="fc" id="L58">        this.corePoolSize = corePoolSize;</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Creates a thread builder.
+     *
+     * @param corePoolSize the number of threads to keep in the pool,
+     *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
+     * @return a thread builder
+     */
+    public static ThreadBuilder newBuilder(final int corePoolSize) {
+<span class="fc" id="L69">        return new ThreadBuilder(corePoolSize);</span>
+    }
+
+    /**
+     * Creates a thread builder.
+     *
+     * @return a thread builder.
+     */
+    public static ThreadBuilder newBuilder() {
+<span class="fc" id="L78">        return new ThreadBuilder();</span>
+    }
+
+    /**
+     * Sets the thread task that can be configured with some common resources.
+     *
+     * @param execution the Runnable interface should be implemented by any class whose
+     *                  instances are intended to be executed by a thread. The class must
+     *                  define a method of no arguments called run.
+     * @return a thread builder with scheduling settings options.
+     */
+    public CommonRunnableThreadBuilder setExecution(final Runnable execution) {
+<span class="fc" id="L90">        final CommonRunnableThreadBuilder builder = CommonRunnableThreadBuilder</span>
+<span class="fc" id="L91">                .newBuilder(corePoolSize);</span>
+
+<span class="fc" id="L93">        return builder.setExecution(execution);</span>
+    }
+
+    /**
+     * Sets the thread task that can be configured with some common resources.
+     *
+     * @param execution a task that returns a result and may throw an exception.
+     * @param &lt;S&gt;       the type of the object resulting from the execution of the thread.
+     * @return a thread builder with common settings options.
+     */
+    public &lt;S&gt; CommonCallableThreadBuilder&lt;S&gt; setExecution(final Callable&lt;S&gt; execution) {
+<span class="fc" id="L104">        final CommonCallableThreadBuilder&lt;S&gt; builder = CommonCallableThreadBuilder</span>
+<span class="fc" id="L105">                .newBuilder(corePoolSize);</span>
+
+<span class="fc" id="L107">        return builder.setExecution(execution);</span>
+    }
+
+    /**
+     * Sets the thread task that can be configured with some scheduling features.
+     *
+     * @param execution the Runnable interface should be implemented by any class whose
+     *                  instances are intended to be executed by a thread. The class must
+     *                  define a method of no arguments called run.
+     * @return a thread builder with scheduling settings options.
+     */
+    public TimingRunnableThreadBuilder setScheduling(final Runnable execution) {
+<span class="fc" id="L119">        final TimingRunnableThreadBuilder builder = TimingRunnableThreadBuilder</span>
+<span class="fc" id="L120">                .newBuilder(corePoolSize);</span>
+
+<span class="fc" id="L122">        return builder.setScheduling(execution);</span>
+    }
+
+    /**
+     * Sets the thread task that can be configured with some scheduling features.
+     *
+     * @param execution a task that returns a result and may throw an exception.
+     * @param &lt;S&gt;       the type of the object resulting from the execution of the thread.
+     * @return a thread builder with scheduling settings options.
+     */
+    public &lt;S&gt; TimingCallableThreadBuilder&lt;S&gt; setScheduling(final Callable&lt;S&gt; execution) {
+<span class="fc" id="L133">        final TimingCallableThreadBuilder&lt;S&gt; builder = TimingCallableThreadBuilder</span>
+<span class="fc" id="L134">                .newBuilder(corePoolSize);</span>
+
+<span class="fc" id="L136">        return builder.setScheduling(execution);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>

@@ -19,28 +19,32 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- * Useful structure for handling the current thread.
  * @author Diego Armange Costa
  * @since 2019-11-26 V1.0.0
+ * @deprecated Consider to use {@link br.com.armange.commons.thread.util.ThreadUtil}
+ * Useful structure for handling the current segment.
+ * Some methods that require handling a checked exception
+ * are rewritten in this class, however, throwing an unchecked exception.
  */
+@Deprecated(since = "2.0.0", forRemoval = true)
+@SuppressWarnings("SameNameButDifferent")
 public class ThreadUtil {
 
-    private ThreadUtil() {}
-    
+    private ThreadUtil() {
+    }
+
     /**
-     * It wraps a thread-sleep execution in a try-catch block and rethrow a {@link java.lang.RuntimeException#RuntimeException(Throwable)} 
+     * Wraps a thread-sleep execution in a try-catch block and rethrow a
+     * {@link java.lang.RuntimeException#RuntimeException(Throwable)}
      * if any exception is thrown.
+     *
      * @param millis the time in milliseconds to sleep the current thread.
      * @see java.lang.Thread#sleep(long)
      */
     public static void sleepUnchecked(final long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (final Exception e) {
-            throw new UncheckedException(e);
-        }
+        br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked(millis);
     }
-    
+
     /**
      * @param relativePath the resource relative path.
      * @return The input stream found or null if not found.
@@ -49,9 +53,10 @@ public class ThreadUtil {
      * @see java.lang.Thread#currentThread()
      */
     public static InputStream getCurrentThreadResourceAsStream(final String relativePath) {
-        return Thread.currentThread().getContextClassLoader().getResourceAsStream(relativePath);
+        return br.com.armange.commons.thread.util.ThreadUtil
+                .getCurrentThreadResourceAsStream(relativePath);
     }
-    
+
     /**
      * @param relativePath the resource relative path.
      * @return The URL found or null if not found.
@@ -60,6 +65,6 @@ public class ThreadUtil {
      * @see java.lang.Thread#currentThread()
      */
     public static URL getCurrentThreadResource(final String relativePath) {
-        return Thread.currentThread().getContextClassLoader().getResource(relativePath);
+        return br.com.armange.commons.thread.util.ThreadUtil.getCurrentThreadResource(relativePath);
     }
 }

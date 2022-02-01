@@ -1,11 +1,11 @@
-name: Java CI
+name: J-Commons CI
 
 on: [push]
 
 jobs:
-  build:
+  jCommonsCI:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'ci skip')"
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
     
     steps:
     #######################################################################################
@@ -17,10 +17,10 @@ jobs:
     #######################################################################################
     ## JDK                                                                               ##
     #######################################################################################
-    - name: Set up JDK 1.8
+    - name: Set up JDK 11
       uses: actions/setup-java@v1
       with:
-        java-version: 1.8
+        java-version: 11
     
     #######################################################################################
     ## Build commons-message                                                             ##
@@ -32,8 +32,8 @@ jobs:
     ## Test commons-message                                                              ##
     #######################################################################################
     - name: Test commons-message
-      run: echo "::set-env name=build_commons_message::ok"; ./gradlew :commons-message:test
-      
+      run: echo "build_commons_message=ok" >> $GITHUB_ENV; ./gradlew :commons-message:test
+
     #######################################################################################
     ## Report commons-message failure tests                                              ##
     #######################################################################################
@@ -43,19 +43,19 @@ jobs:
       with:
         name: commons-message-test-report
         path: /home/runner/work/j-commons/j-commons/commons-message/build/reports/tests/test
-      
+
     #######################################################################################
     ## Build commons-thread                                                              ##
     #######################################################################################
     - name: Build commons-thread
       run: ./gradlew :commons-thread:build -x test
-    
+
     #######################################################################################
     ## Test commons-thread                                                               ##
     #######################################################################################
     - name: Test commons-thread
-      run: echo "::set-env name=build_commons_thread::ok"; ./gradlew :commons-thread:test
-    
+      run: echo "build_commons_thread=ok" >> $GITHUB_ENV; ./gradlew :commons-thread:test
+
     #######################################################################################
     ## Report commons-thread failure tests                                               ##
     #######################################################################################
@@ -65,19 +65,19 @@ jobs:
       with:
         name: commons-thread-test-report
         path: /home/runner/work/j-commons/j-commons/commons-thread/build/reports/tests/test
-    
+
     #######################################################################################
     ## Build commons-reflection                                                          ##
     #######################################################################################
     - name: Build commons-reflection
       run: ./gradlew :commons-reflection:build -x test
-    
+
     #######################################################################################
     ## Test commons-reflection                                                           ##
     #######################################################################################
     - name: Test commons-reflection
-      run: echo "::set-env name=build_commons_reflection::ok"; ./gradlew :commons-reflection:test
-    
+      run: echo "build_commons_reflection=ok" >> $GITHUB_ENV; ./gradlew :commons-reflection:test
+
     #######################################################################################
     ## Report commons-reflection failure tests                                           ##
     #######################################################################################
@@ -87,19 +87,19 @@ jobs:
       with:
         name: commons-reflection-test-report
         path: /home/runner/work/j-commons/j-commons/commons-reflection/build/reports/tests/test
-    
+
     #######################################################################################
     ## Build commons-object-api                                                          ##
     #######################################################################################
     - name: Build commons-object-api
       run: ./gradlew :commons-object-api:build -x test
-    
+
     #######################################################################################
     ## Test commons-object-api                                                           ##
     #######################################################################################
     - name: Test commons-object-api
-      run: echo "::set-env name=build_commons_object_api::ok"; ./gradlew :commons-object-api:test
-    
+      run: echo "build_commons_object_api=ok" >> $GITHUB_ENV; ./gradlew :commons-object-api:test
+
     #######################################################################################
     ## Report commons-object-api failure tests                                           ##
     #######################################################################################
@@ -109,19 +109,19 @@ jobs:
       with:
         name: commons-object-api-test-report
         path: /home/runner/work/j-commons/j-commons/commons-object-api/build/reports/tests/test
-      
+
     #######################################################################################
     ## Build commons-object-impl                                                         ##
     #######################################################################################
     - name: Build commons-object-impl
       run: ./gradlew :commons-object-impl:build -x test
-    
+
     #######################################################################################
     ## Test commons-object-impl                                                          ##
     #######################################################################################
     - name: Test commons-object-impl
-      run: echo "::set-env name=build_commons_object_impl::ok"; ./gradlew :commons-object-impl:test
-    
+      run: echo "build_commons_object_impl=ok" >> $GITHUB_ENV; ./gradlew :commons-object-impl:test
+
     #######################################################################################
     ## Report commons-object-impl failure tests                                          ##
     #######################################################################################
@@ -131,4 +131,4 @@ jobs:
       with:
         name: commons-object-impl-test-report
         path: /home/runner/work/j-commons/j-commons/commons-object-impl/build/reports/tests/test
-    
+

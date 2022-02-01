@@ -14,10 +14,21 @@
  * limitations under the License.
  * */
 dependencies {
-    testCompile (library.junit_junit){
+    implementation library.org_slf4j_slf4j_api
+    implementation library.org_slf4j_slf4j_simple
+    implementation library.org_apache_logging_log4j_log4j_core
+
+    testImplementation (library.junit_junit){
         exclude group: 'org.hamcrest'
     }
-    testCompile library.org_assertj_assertj_core
-    testCompile library.org_mockito_mockito_core
-    testCompile library.org_hamcrest_hamcrest
+    testImplementation library.org_assertj_assertj_core
+    testImplementation library.org_mockito_mockito_core
+    testImplementation library.org_hamcrest_hamcrest
+
+    testFixturesApi library.net_bytebuddy_byte_buddy
+    testFixturesApi library.net_bytebuddy_byte_buddy_agent
+    testFixturesImplementation library.org_hamcrest_hamcrest
+    testFixturesImplementation (library.junit_junit){
+        exclude group: 'org.hamcrest'
+    }
 }

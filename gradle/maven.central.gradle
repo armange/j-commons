@@ -18,7 +18,9 @@ apply plugin: 'signing'
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeployment { 
+            beforeDeployment {
+                // gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
+                // gpg --list-keys --keyid-format 0xSHORT
                 MavenDeployment deployment -> signing.signPom(deployment) 
             }
             repository(url: "${nexusUrl}/service/local/staging/deploy/maven2/") {

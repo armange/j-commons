@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import br.com.armange.commons.object.impl.artifact.BeanArtifact;
 import br.com.armange.commons.object.impl.artifact.ConvertibleBeanArtifact;
+import br.com.armange.commons.object.impl.typeconverter.bean.BeanConverterImpl;
 
 public class BeanConverterImplTest {
 
@@ -25,9 +26,9 @@ public class BeanConverterImplTest {
 
     @Test
     public void anyConvertibleBeanIsMatchingWithItsConverter() {
-        final BeanConverterImpl<ConvertibleBeanArtifact, ConvertibleBeanArtifact> converter = new BeanConverterImpl<>();
+        final BeanConverterImpl<ConvertibleBeanArtifact, BeanArtifact> converter = new BeanConverterImpl<>();
         
-        assertTrue(converter.matches(new ConvertibleBeanArtifact()));
+        assertTrue(converter.matches(new ConvertibleBeanArtifact(), BeanArtifact.class));
     }
     
     @Test

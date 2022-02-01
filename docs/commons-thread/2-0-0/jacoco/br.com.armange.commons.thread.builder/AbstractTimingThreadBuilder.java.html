@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractTimingThreadBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">commons-thread</a> &gt; <a href="index.source.html" class="el_package">br.com.armange.commons.thread.builder</a> &gt; <span class="el_source">AbstractTimingThreadBuilder.java</span></div><h1>AbstractTimingThreadBuilder.java</h1><pre class="source lang-java linenums">/*
+ * Copyright [2019] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
+
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.*;
+
+/**
+ * Abstraction for building threads with the main timing configuration options: Delay, Interval, Timeout.
+ *
+ * @param &lt;S&gt; the type of the object resulting from the execution of the thread.
+ * @param &lt;T&gt; Execution type. {@link Runnable}, {@link Callable}.
+ * @param &lt;U&gt; Builder. The Builder extending {@link AbstractThreadBuilder}
+ * @author Diego Armange Costa
+ * @see AbstractThreadBuilder
+ * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ */
+public abstract class AbstractTimingThreadBuilder&lt;S, T, U extends AbstractTimingThreadBuilder&lt;S, T, U&gt;&gt;
+        extends AbstractThreadBuilder&lt;S, T, U&gt; {
+
+<span class="fc" id="L37">    protected Optional&lt;Duration&gt; timeout = Optional.empty();</span>
+<span class="fc" id="L38">    protected Optional&lt;Duration&gt; delay = Optional.empty();</span>
+<span class="fc" id="L39">    protected Optional&lt;Duration&gt; interval = Optional.empty();</span>
+    protected ThreadTimeConfig threadTimeConfig;
+
+    protected AbstractTimingThreadBuilder(final int corePoolSize) {
+<span class="fc" id="L43">        super(corePoolSize);</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Sets the timeout value.&lt;br&gt;
+     * The thread will have a timeout to complete its execution. After that time the thread will
+     * be canceled({@link Future#cancel(boolean)}).
+     *
+     * @param milliseconds the timeout value in milliseconds.
+     * @return the current thread builder.
+     * @see #setMayInterruptIfRunning(boolean)
+     */
+    public U setTimeout(final long milliseconds) {
+<span class="fc" id="L56">        timeout = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L58">        threadTimeConfig = null;</span>
+
+<span class="fc" id="L60">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the delay value.&lt;br&gt;
+     * The thread will wait a predefined time before starting its execution.
+     *
+     * @param milliseconds the delay value in milliseconds.
+     * @return the current thread builder.
+     */
+    public U setDelay(final long milliseconds) {
+<span class="fc" id="L71">        delay = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L73">        threadTimeConfig = null;</span>
+
+<span class="fc" id="L75">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the repeating interval value.&lt;br&gt;
+     * The thread will repeat its execution, waiting a predefined time before each new execution.
+     *
+     * @param milliseconds the repeating interval value in milliseconds.
+     * @return the current thread builder.
+     */
+    public U setInterval(final long milliseconds) {
+<span class="fc" id="L86">        interval = Optional.of(Duration.ofMillis(milliseconds));</span>
+
+<span class="fc" id="L88">        threadTimeConfig = null;</span>
+
+<span class="fc" id="L90">        return getSelf();</span>
+    }
+
+    /**
+     * Sets the thread-interrupting-flag.&lt;br&gt;
+     * It is used during execution of cancellation by timeout feature.
+     * The timeout feature uses a dedicated and secondary thread to perform the cancellation
+     * of the primary thread. Note: the primary thread is the one that has been
+     * configured with the timeout feature.
+     *
+     * @param flag true if the thread executing this task should be interrupted;
+     *             otherwise, in-progress tasks are allowed to complete.
+     * @return the current thread builder.
+     * @see java.util.concurrent.Future#cancel(boolean)
+     */
+    public U setMayInterruptIfRunning(final boolean flag) {
+<span class="fc" id="L106">        mayInterruptIfRunning = flag;</span>
+
+<span class="fc" id="L108">        return getSelf();</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
+    @Override
+    protected void createExecutorAndRunThread() {
+<span class="fc" id="L116">        requireExecutionNonNull();</span>
+
+<span class="fc" id="L118">        readThreadTimeConfig();</span>
+
+<span class="fc" id="L120">        newExecutorServiceIfNull();</span>
+
+<span class="fc" id="L122">        afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);</span>
+
+<span class="fc" id="L124">        runThread();</span>
+<span class="fc" id="L125">    }</span>
+
+    private void readThreadTimeConfig() {
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (this.threadTimeConfig == null)</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (noSchedule()) {</span>
+<span class="fc" id="L130">                this.threadTimeConfig = ThreadTimeConfig.NO_SCHEDULE;</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            } else if (onlyDelay()) {</span>
+<span class="fc" id="L132">                this.threadTimeConfig = ThreadTimeConfig.DELAY;</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            } else if (onlyTimeout()) {</span>
+<span class="fc" id="L134">                this.threadTimeConfig = ThreadTimeConfig.TIMEOUT;</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            } else if (onlyInterval()) {</span>
+<span class="fc" id="L136">                this.threadTimeConfig = ThreadTimeConfig.INTERVAL;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            } else if (delayAndTimeout()) {</span>
+<span class="fc" id="L138">                this.threadTimeConfig = ThreadTimeConfig.DELAY_AND_TIMEOUT;</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">            } else if (delayAndInterval()) {</span>
+<span class="fc" id="L140">                this.threadTimeConfig = ThreadTimeConfig.DELAY_AND_INTERVAL;</span>
+            } else /* All */ {
+<span class="fc" id="L142">                this.threadTimeConfig = ThreadTimeConfig.ALL_CONFIGURATION;</span>
+            }
+<span class="fc" id="L144">    }</span>
+
+    private boolean noSchedule() {
+<span class="fc bfc" id="L147" title="All 6 branches covered.">        return !delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyDelay() {
+<span class="fc bfc" id="L151" title="All 6 branches covered.">        return delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyTimeout() {
+<span class="fc bfc" id="L155" title="All 6 branches covered.">        return !delay.isPresent() &amp;&amp; timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean onlyInterval() {
+<span class="pc bpc" id="L159" title="1 of 6 branches missed.">        return !delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; interval.isPresent();</span>
+    }
+
+    private boolean delayAndTimeout() {
+<span class="fc bfc" id="L163" title="All 6 branches covered.">        return delay.isPresent() &amp;&amp; timeout.isPresent() &amp;&amp; !interval.isPresent();</span>
+    }
+
+    private boolean delayAndInterval() {
+<span class="pc bpc" id="L167" title="1 of 6 branches missed.">        return delay.isPresent() &amp;&amp; !timeout.isPresent() &amp;&amp; interval.isPresent();</span>
+    }
+
+    /**
+     * Creates the thread executor (if necessary) and starts the thread.
+     */
+    @Override
+    protected void runThread() {
+<span class="fc" id="L175">        newExecutorResultIfNull();</span>
+
+<span class="fc bfc" id="L177" title="All 5 branches covered.">        switch (threadTimeConfig) {</span>
+            case DELAY:
+<span class="fc" id="L179">                runWithDelay();</span>
+<span class="fc" id="L180">                break;</span>
+            case DELAY_AND_INTERVAL:
+            case INTERVAL:
+<span class="fc" id="L183">                runWithDelayAndInterval();</span>
+<span class="fc" id="L184">                break;</span>
+            case DELAY_AND_TIMEOUT:
+            case TIMEOUT:
+<span class="fc" id="L187">                runWithDelayAndTimeout();</span>
+<span class="fc" id="L188">                break;</span>
+            case NO_SCHEDULE:
+<span class="fc" id="L190">                runWithNoSchedule();</span>
+<span class="fc" id="L191">                break;</span>
+            case ALL_CONFIGURATION:
+            default:
+<span class="fc" id="L194">                runWithAllTimesControls();</span>
+                break;
+        }
+<span class="fc" id="L197">    }</span>
+
+    private void runWithNoSchedule() {
+<span class="fc" id="L200">        final Holder&lt;Future&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L202">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L203">        futureHolder.set(submit());</span>
+<span class="fc" id="L204">        newExecutorResultIfNull();</span>
+<span class="fc" id="L205">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L206">    }</span>
+
+    private void runWithDelay() {
+<span class="fc" id="L209">        final Holder&lt;Future&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L211">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L212">        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));</span>
+<span class="fc" id="L213">        newExecutorResultIfNull();</span>
+<span class="fc" id="L214">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L215">    }</span>
+
+    private void runWithDelayAndTimeout() {
+<span class="fc" id="L218">        final Holder&lt;ScheduledFuture&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L220">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L221">        futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));</span>
+
+<span class="fc" id="L223">        final ExecutorResult&lt;S&gt; timeoutExecutorResult = handleInterruption(futureHolder);</span>
+
+<span class="fc" id="L225">        newExecutorResultIfNull();</span>
+<span class="fc" id="L226">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L227">        executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);</span>
+<span class="fc" id="L228">    }</span>
+
+    private void runWithDelayAndInterval() {
+<span class="fc" id="L231">        final Holder&lt;ScheduledFuture&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L233">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L234">        futureHolder.set(scheduleAtFixedRate(handleDelay(),</span>
+<span class="fc" id="L235">                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));</span>
+<span class="fc" id="L236">        newExecutorResultIfNull();</span>
+<span class="fc" id="L237">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L238">    }</span>
+
+    private void runWithAllTimesControls() {
+<span class="fc" id="L241">        final Holder&lt;ScheduledFuture&lt;S&gt;&gt; futureHolder = Holder.empty();</span>
+
+<span class="fc" id="L243">        executor.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L244">        futureHolder.set(scheduleAtFixedRate(handleDelay(),</span>
+<span class="fc" id="L245">                interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));</span>
+
+<span class="fc" id="L247">        final ExecutorResult&lt;S&gt; timeoutExecutorResult = handleInterruption(futureHolder);</span>
+
+<span class="fc" id="L249">        newExecutorResultIfNull();</span>
+<span class="fc" id="L250">        executorResult.getFutures().add(futureHolder.get());</span>
+<span class="fc" id="L251">        executorResult.getTimeoutExecutorResults().add(timeoutExecutorResult);</span>
+<span class="fc" id="L252">    }</span>
+
+    /**
+     * It schedules the thread, configuring the delay parameter.
+     *
+     * @param delay the delay before thread execution.
+     * @param unit  the time unit of the delay.
+     * @return the scheduled-future-object of the thread.
+     * @see ScheduledThreadPoolExecutor#schedule(Callable, long, TimeUnit)
+     * @see ScheduledFuture
+     */
+    @SuppressWarnings({&quot;unchecked&quot;})
+    protected ScheduledFuture&lt;S&gt; schedule(final long delay, final TimeUnit unit) {
+        final ScheduledFuture&lt;S&gt; future;
+
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        switch (executionType) {</span>
+            case CALLABLE:
+<span class="fc" id="L269">                future = executor.schedule((Callable&lt;S&gt;) execution, delay, unit);</span>
+
+<span class="fc" id="L271">                break;</span>
+            case RUNNABLE:
+            default:
+<span class="fc" id="L274">                future = (ScheduledFuture&lt;S&gt;) executor.schedule((Runnable) execution, delay, unit);</span>
+
+                break;
+        }
+
+<span class="fc" id="L279">        return future;</span>
+    }
+
+    /**
+     * It schedules the thread, configuring the delay and period parameters.
+     *
+     * @param delay  the delay before thread execution.
+     * @param period the interval between thread executions.
+     * @param unit   the time unit of the delay and period.
+     * @return the scheduled-future-object of the thread.
+     * @see ScheduledThreadPoolExecutor#scheduleAtFixedRate(Runnable, long, long, TimeUnit)
+     * @see ScheduledFuture
+     */
+    @SuppressWarnings({&quot;unchecked&quot;})
+    protected ScheduledFuture&lt;S&gt; scheduleAtFixedRate(final long delay,
+                                                     final long period, final TimeUnit unit) {
+        final ScheduledFuture&lt;S&gt; future;
+
+<span class="fc bfc" id="L297" title="All 2 branches covered.">        switch (executionType) {</span>
+            case CALLABLE:
+<span class="fc" id="L299">                throw new UnsupportedOperationException(ExecutionType.CALLABLE.name());</span>
+            case RUNNABLE:
+            default:
+<span class="fc" id="L302">                future = (ScheduledFuture&lt;S&gt;) executor</span>
+<span class="fc" id="L303">                        .scheduleAtFixedRate((Runnable) execution, delay, period, unit);</span>
+
+                break;
+        }
+
+<span class="fc" id="L308">        return future;</span>
+    }
+
+    private long handleDelay() {
+<span class="fc" id="L312">        return delay.orElseGet(() -&gt; Duration.ofMillis(0)).toMillis();</span>
+    }
+
+    private ExecutorResult&lt;S&gt; handleInterruption(final Holder&lt;ScheduledFuture&lt;S&gt;&gt; futureHolder) {
+<span class="fc" id="L316">        final ScheduledFuture&lt;S&gt; scheduledFuture = futureHolder.get();</span>
+<span class="fc" id="L317">        final ScheduledThreadBuilderExecutor localExec = new ScheduledThreadBuilderExecutor(1);</span>
+
+<span class="fc" id="L319">        localExec.addAfterExecuteConsumer(handleException(futureHolder));</span>
+<span class="fc" id="L320">        localExec.schedule(cancelFuture(scheduledFuture), timeout</span>
+<span class="fc" id="L321">                        .orElse(Duration.ofMillis(0)).toMillis(),</span>
+                TimeUnit.MILLISECONDS);
+
+<span class="fc" id="L324">        final ExecutorResult&lt;S&gt; timeoutExecutorResult = new ExecutorResult&lt;&gt;(localExec);</span>
+
+<span class="fc" id="L326">        timeoutExecutorResult.getFutures().add(scheduledFuture);</span>
+
+<span class="fc" id="L328">        return timeoutExecutorResult;</span>
+    }
+
+    private Runnable cancelFuture(final ScheduledFuture&lt;S&gt; future) {
+<span class="fc" id="L332">        return () -&gt; {</span>
+<span class="pc bpc" id="L333" title="1 of 4 branches missed.">            if (!future.isDone() &amp;&amp; !future.isCancelled())</span>
+<span class="fc" id="L334">                future.cancel(mayInterruptIfRunning);</span>
+<span class="fc" id="L335">        };</span>
+    }
+
+    /**
+     * Class that enumerates the types of thread configuration that are supported by this builder.
+     */
+<span class="fc" id="L341">    protected enum ThreadTimeConfig {</span>
+<span class="fc" id="L342">        NO_SCHEDULE, DELAY, TIMEOUT, INTERVAL,</span>
+<span class="fc" id="L343">        DELAY_AND_TIMEOUT, DELAY_AND_INTERVAL, ALL_CONFIGURATION;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.6.202009150832</span></div></body></html>
