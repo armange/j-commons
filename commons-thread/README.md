@@ -2,6 +2,8 @@
 
 This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies thread creation for some specific scenarios that may be routine for some types of software projects.
 
+- [Some context](#somecontext)
+
 <a name="summary"></a>
 
 ##### The tasks simplified by this lib thread are:
@@ -14,7 +16,9 @@ This release was created based on the need to simplify daily software developmen
 - [Prioritization](#prioritization).
 - [No Schedule](#noschedule).
 - [Thread Pool](#threadpool).
-- [The combination of all these factors together.](#allfeatures)
+- [Consumer of the thread's resulting value](#threadconsumer)
+- [Get the resulting value from the thread](#getthreadval)
+- [The combination of several of these factors together](#allfeatures)
 
 ##### Docs
  - [Javadoc](https://armange.github.io/j-commons/commons-thread/javadoc)
@@ -43,15 +47,31 @@ This release was created based on the need to simplify daily software developmen
 <dependency>
     <groupId>br.com.armange</groupId>
     <artifactId>commons-thread</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 ##### [Gradle import](https://search.maven.org/artifact/br.com.armange/commons-thread)
 
 ```
-compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
+compile group: 'br.com.armange', name: 'commons-thread', version: '2.0.0'
 ```
+
+<a name="somecontext"></a>
+
+### Some context... [:arrow_double_up:](#summary)
+
+To create a new thread, we need to observe the context in which it should be applied. For example, if it is necessary to return a value resulting from the termination of the thread, we would use a specific implementation, and for cases where the thread would not have any resulting value, we would use a different implementation. See a summarized example in the graphic below:
+
+| Java classes for thread creation.                                         |
+|-----------------------------------------------|
+| ![Java classes for thread creation.](./assets/images/readme/java-thread-class-chart.png) |
+
+Following the same reasoning exemplified above, the thread constructors, provided by this lib, were also divided according to the context in which the thread will need to be applied, where threads that must return some value after their completion, will have a thread constructor different from the context where no resulting value would be expected from the thread. See a summarized example in the graphic below:
+
+| Constructor classes to simplify the creation of threads.           |
+|--------------------------------------------------------------------|
+| ![Constructors](./assets/images/readme/lib-thread-class-chart.png) |
 
 ### Samples
 
@@ -160,9 +180,33 @@ compile group: 'br.com.armange', name: 'commons-thread', version: '1.0.0'
         .setExecution(() -> System.out.println("Thread 5"))
         .start();
 ```
+<a name="threadconsumer"></a>
+
+#### Consumer of the thread's resulting value [:arrow_double_up:](#summary)
+```java
+    ThreadBuilder
+        .newBuilder()
+        .setExecution(() -> "An execution with priority")
+        .setThreadResultConsumer(System.out::println)
+        .start();
+```
+
+<a name="getthreadval"></a>
+
+#### Get the resulting value from the thread [:arrow_double_up:](#summary)
+```java
+    final ExecutorResult<String> executorResult = ThreadBuilder
+        .newBuilder()
+        .setExecution(() -> "An execution with priority")
+        .start();
+
+    final Future<String> stringFuture = executorResult.getFutures().get(0);
+    final String result = stringFuture.get();
+```
+
 <a name="allfeatures"></a>
 
-#### All features [:arrow_double_up:](#summary)
+#### The combination of several of these factors together [:arrow_double_up:](#summary)
 ```java
     ThreadBuilder
         .newBuilder(2)
