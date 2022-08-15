@@ -1,5 +1,7 @@
 # Commons-thread [:rewind:](https://github.com/armange/j-commons)
 
+[![J-Commons CI](https://github.com/armange/j-commons/actions/workflows/gradle.yml/badge.svg)](https://github.com/armange/j-commons/actions/workflows/gradle.yml)
+
 This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies thread creation for some specific scenarios that may be routine for some types of software projects.
 
 - [Some context](#somecontext)
