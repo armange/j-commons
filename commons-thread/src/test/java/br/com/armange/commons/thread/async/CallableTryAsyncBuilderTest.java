@@ -1,13 +1,13 @@
 package br.com.armange.commons.thread.async;
 
 import br.com.armange.commons.thread.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static br.com.armange.commons.thread.Constants.JDK_BEHAVIOR;
 import static br.com.armange.commons.thread.async.TryAsyncBuilder.tryAsync;
 import static br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

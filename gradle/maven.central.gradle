@@ -15,53 +15,13 @@
  * */
 apply plugin: 'signing'
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment {
-                // gpg --keyring secring.gpg --export-secret-keys > ~/.gnupg/secring.gpg
-                // gpg --list-keys --keyid-format 0xSHORT
-                MavenDeployment deployment -> signing.signPom(deployment) 
-            }
-            repository(url: "${nexusUrl}/service/local/staging/deploy/maven2/") {
-                authentication(userName: nexusUsername, password: nexusPassword)
-            }
-            
-            snapshotRepository(url: "${nexusUrl}/content/repositories/snapshots") {
-                authentication(userName: nexusUsername, password: nexusPassword)
-            }
-
-            pom.project {
-               name 'commons-thread'
-               packaging 'jar'
-               description 'It is a framework that simplifies thread building'
-               url 'https://github.com/armange/j-commons/tree/master/commons-thread'
-
-               scm {
-                   url 'scm:git@github.com:armange/j-commons.git'
-                   connection 'scm:git@github.com:armange/j-commons.git'
-                   developerConnection 'scm:git@github.com:armange/j-commons.git'
-               }
-
-               licenses {
-                   license {
-                       name 'The Apache Software License, Version 2.0'
-                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                       distribution 'repo'
-                   }
-               }
-
-               developers {
-                   developer {
-                       id "$System.env.J_COMMONS_MAVEN_USER_ID"
-                       name 'Diego Armange Costa'
-                   }
-               }
-           }
-        }
-    }
-}
+def signingKey = providers.environmentVariable('SIGNING_KEY').orNull
+def signingPassword = providers.environmentVariable('SIGNING_PASSWORD').orNull
 
 signing {
-    if (hasSigning && isReleaseVersion) sign configurations.archives
+    required = !version.toString().endsWith('-SNAPSHOT')
+    if (signingKey && signingPassword) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign publishing.publications.mavenJava
 }

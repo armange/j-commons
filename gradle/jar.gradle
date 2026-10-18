@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-task javadocJar(type: Jar) {
-  from javadoc
-  archiveClassifier = 'javadoc'
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    from sourceSets.main.allSource
-    archiveClassifier = 'sources'
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
+tasks.withType(Javadoc).configureEach {
+    options.addBooleanOption('Xdoclint:none', true)
 }

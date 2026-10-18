@@ -13,7 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.process.CommandLineArgumentProvider
+
+abstract class TestAgentProvider implements CommandLineArgumentProvider {
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    abstract ConfigurableFileCollection getAgentJars()
+
+    @Override
+    Iterable<String> asArguments() {
+        agentJars.files.collect { "-javaagent:${it.absolutePath}" }
+    }
+}
+
+configurations {
+    testJavaAgents
+}
+
+dependencies {
+    testImplementation library.net_bytebuddy_byte_buddy
+    testImplementation library.net_bytebuddy_byte_buddy_agent
+    testJavaAgents(library.org_mockito_mockito_core) {
+        transitive = false
+    }
+}
+
 test {
+    useJUnitPlatform()
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     forkEvery = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    jvmArgumentProviders.add(objects.newInstance(TestAgentProvider).tap {
+        agentJars.from(configurations.testJavaAgents)
+    })
 }

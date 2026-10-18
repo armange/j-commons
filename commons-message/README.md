@@ -1,29 +1,26 @@
-# Commons-message [:rewind:](https://github.com/armange/j-commons)
+# commons-message
 
-...
+Formata mensagens parametrizadas para uso por aplicações e outros módulos.
 
-##### Summary (WIP)
+[Voltar ao README principal](../README.md)
 
-...
+## Contrato
 
-###### Javadoc (WIP)
+`MessageFormat` define a mensagem e oferece `format(Object...)`.
+`CommonMessages` contém mensagens comuns; por exemplo,
+`CommonMessages.REQUIRED_PARAMETER.format("nome")`.
 
-...
+## Consumo
 
-[![Build][buildbadge]](https://github.com/armange/j-commons/commits/development) 
-[![License][licensebadge]](https://github.com/armange/j-commons/blob/development/LICENSE)
+Versão de trabalho: `br.com.armange:commons-message:1.0.0-SNAPSHOT`.
+A compilação e a execução exigem JDK 25. Em uma aplicação Gradle:
 
-[buildbadge]: https://img.shields.io/github/workflow/status/armange/j-commons/Java%20CI?style=for-the-badge "Build Status"
-[licensebadge]: https://img.shields.io/github/license/armange/j-commons?style=for-the-badge
+```gradle
+dependencies {
+    implementation 'br.com.armange:commons-message:1.0.0-SNAPSHOT'
+}
+```
 
-##### Maven import (WIP)
-
-...
-
-##### Gradle import (WIP)
-
-...
-
-### Samples (WIP)
-
-...
+Esta versão ainda não foi publicada. Consulte o
+[build e os metadados](../README.md#2-build-e-validação) para validá-la
+localmente.

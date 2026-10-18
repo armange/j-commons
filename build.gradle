@@ -13,31 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * */
-buildscript {
-    project.ext {
-        nexusUsername = "$System.env.NEXUS_USERNAME"
-        nexusPassword = "$System.env.NEXUS_PASSWORD"
-    }
-}
-
 plugins {
-    id "io.freefair.lombok" version "6.0.0-m2"
+    id "io.freefair.lombok" version "9.8.0" apply false
+    id "org.sonarqube" version "7.5.0.8588" apply false
     id 'idea'
 }
 
-version = '2.0.0'
-
-apply from: "$projectDir/gradle/env.gradle"
+version = '3.0.0-SNAPSHOT'
 
 allprojects {
     apply plugin: 'java'
     apply plugin: 'java-library'
-    apply plugin: 'maven'
     apply plugin: 'java-test-fixtures'
     apply plugin: 'io.freefair.lombok'
+    apply plugin: 'idea'
 
     group = 'br.com.armange'
-    sourceCompatibility = 11
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
 
     apply from: "$rootDir/gradle/library.gradle"
     apply from: "$rootDir/gradle/repositories.gradle"
@@ -49,6 +45,7 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: 'org.sonarqube'
     apply from: "$projectDir/gradle/$name/dependencies.gradle"
     apply from: "$projectDir/gradle/jar.gradle"
     apply from: "$projectDir/gradle/publishing.gradle"
@@ -57,3 +54,23 @@ subprojects {
 }
 
 apply from: "$projectDir/gradle/dependencies.gradle"
+
+dependencies {
+    testImplementation platform(library.org_junit_junit_bom)
+    testImplementation library.org_junit_jupiter_junit_jupiter
+    testImplementation gradleTestKit()
+    testRuntimeOnly library.org_junit_platform_junit_platform_launcher
+    testFixturesImplementation localGroovy()
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    subprojects.each { module ->
+        dependsOn module.tasks.named('jar'),
+            module.tasks.named('sourcesJar'),
+            module.tasks.named('javadocJar'),
+            module.tasks.named('generatePomFileForMavenJavaPublication'),
+            module.tasks.named('generateMetadataFileForMavenJavaPublication')
+    }
+    systemProperty 'jCommons.projectRoot', rootDir.absolutePath
+}

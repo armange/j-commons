@@ -24,7 +24,7 @@ public class StringToFloatConverterImpl implements StringToFloatConverter {
     
     @Override
     public TypeConverter<String, Float> from(final String sourceObject) {
-        result = sourceObject != null ? new Float(sourceObject) : null;
+        result = sourceObject != null ? Float.valueOf(sourceObject) : null;
         
         return this; 
     }

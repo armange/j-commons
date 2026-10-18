@@ -15,10 +15,8 @@
  * */
 package br.com.armange.commons.thread.async;
 
-import br.com.armange.commons.thread.util.ByteBuddyUtil;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.Closeable;
 import java.io.InputStream;
@@ -29,67 +27,42 @@ import static org.mockito.Mockito.mock;
 
 public class TryAsyncBuilderTest {
 
-    private static final RunnableTryAsyncBuilder MOCKED_RUNNABLE_TRY_ASYNC_BUILDER = Mockito
-            .mock(RunnableTryAsyncBuilder.class);
-    private static final CallableTryAsyncBuilder MOCKED_CALLABLE_TRY_ASYNC_BUILDER = Mockito
-            .mock(CallableTryAsyncBuilder.class);
-    private static final ResourceTryAsyncBuilder MOCKED_RESOURCE_TRY_ASYNC_BUILDER = Mockito
-            .mock(ResourceTryAsyncBuilder.class);
-    private static final ResourcesTryAsyncBuilder MOCKED_RESOURCES_TRY_ASYNC_BUILDER = Mockito
-            .mock(ResourcesTryAsyncBuilder.class);
-    private static final MappedResourcesTryAsyncBuilder MOCKED_MAPPED_RESOURCES_TRY_ASYNC_BUILDER = Mockito
-            .mock(MappedResourcesTryAsyncBuilder.class);
-
     @Test
     public void shouldCallRunnableTryAsyncBuilder() {
-        mockStatic(RunnableTryAsyncBuilder.class, RunnableTryAsyncBuilderInterceptor.class);
-
         final RunnableTryAsyncBuilder runnableTryAsyncBuilder = TryAsyncBuilder.tryAsync(() -> {
         });
 
-        Assert.assertEquals(MOCKED_RUNNABLE_TRY_ASYNC_BUILDER, runnableTryAsyncBuilder);
-        ByteBuddyUtil.resetClassDefinition(RunnableTryAsyncBuilder.class);
+        Assertions.assertEquals(RunnableTryAsyncBuilder.class, runnableTryAsyncBuilder.getClass());
     }
 
     @Test
     public void shouldCallCallableTryAsyncBuilder() {
-        mockStatic(CallableTryAsyncBuilder.class, CallableTryAsyncBuilderInterceptor.class);
-
         final CallableTryAsyncBuilder<?> callableTryAsyncBuilder = TryAsyncBuilder.tryAsync(() -> null, result -> {
         });
 
-        Assert.assertEquals(MOCKED_CALLABLE_TRY_ASYNC_BUILDER, callableTryAsyncBuilder);
-        ByteBuddyUtil.resetClassDefinition(CallableTryAsyncBuilder.class);
+        Assertions.assertEquals(CallableTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
     }
 
     @Test
     public void shouldCallResourceTryAsyncBuilder() {
-        mockStatic(ResourceTryAsyncBuilder.class, ResourceTryAsyncBuilderInterceptor.class);
-
         final InputStream inputStream = mock(InputStream.class);
         final ResourceTryAsyncBuilder callableTryAsyncBuilder = TryAsyncBuilder.tryAsync(inputStream, closeable -> {
         });
 
-        Assert.assertEquals(MOCKED_RESOURCE_TRY_ASYNC_BUILDER, callableTryAsyncBuilder);
-        ByteBuddyUtil.resetClassDefinition(ResourceTryAsyncBuilder.class);
+        Assertions.assertEquals(ResourceTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
     }
 
     @Test
     public void shouldCallResourcesTryAsyncBuilder() {
-        mockStatic(ResourcesTryAsyncBuilder.class, ResourcesTryAsyncBuilderInterceptor.class);
-
         final InputStream inputStream = mock(InputStream.class);
         final ResourcesTryAsyncBuilder resourcesTryAsyncBuilder = TryAsyncBuilder.tryAsync(closeable -> {
         }, inputStream);
 
-        Assert.assertEquals(MOCKED_RESOURCES_TRY_ASYNC_BUILDER, resourcesTryAsyncBuilder);
-        ByteBuddyUtil.resetClassDefinition(ResourcesTryAsyncBuilder.class);
+        Assertions.assertEquals(ResourcesTryAsyncBuilder.class, resourcesTryAsyncBuilder.getClass());
     }
 
     @Test
     public void shouldCallMappedResourcesTryAsyncBuilder() {
-        mockStatic(MappedResourcesTryAsyncBuilder.class, MappedResourcesTryAsyncBuilderInterceptor.class);
-
         final InputStream inputStream = mock(InputStream.class);
         final Map<Object, Closeable> map = new HashMap<>();
 
@@ -99,44 +72,6 @@ public class TryAsyncBuilderTest {
                 .tryAsync(map, mapOfCloseable -> {
                 });
 
-        Assert.assertEquals(MOCKED_MAPPED_RESOURCES_TRY_ASYNC_BUILDER, mappedResourcesTryAsyncBuilder);
-        ByteBuddyUtil.resetClassDefinition(MappedResourcesTryAsyncBuilder.class);
-    }
-
-    private void mockStatic(final Class<?> targetClass, final Class<?> interceptor) {
-        ByteBuddyUtil
-                .changeClass(targetClass)
-                .whenCallMethod("tryAsync")
-                .thenCall(interceptor);
-    }
-
-    public static class RunnableTryAsyncBuilderInterceptor {
-        public static RunnableTryAsyncBuilder intercept() {
-            return MOCKED_RUNNABLE_TRY_ASYNC_BUILDER;
-        }
-    }
-
-    public static class CallableTryAsyncBuilderInterceptor {
-        public static CallableTryAsyncBuilder intercept() {
-            return MOCKED_CALLABLE_TRY_ASYNC_BUILDER;
-        }
-    }
-
-    public static class ResourceTryAsyncBuilderInterceptor {
-        public static ResourceTryAsyncBuilder intercept() {
-            return MOCKED_RESOURCE_TRY_ASYNC_BUILDER;
-        }
-    }
-
-    public static class ResourcesTryAsyncBuilderInterceptor {
-        public static ResourcesTryAsyncBuilder intercept() {
-            return MOCKED_RESOURCES_TRY_ASYNC_BUILDER;
-        }
-    }
-
-    public static class MappedResourcesTryAsyncBuilderInterceptor {
-        public static MappedResourcesTryAsyncBuilder intercept() {
-            return MOCKED_MAPPED_RESOURCES_TRY_ASYNC_BUILDER;
-        }
+        Assertions.assertEquals(MappedResourcesTryAsyncBuilder.class, mappedResourcesTryAsyncBuilder.getClass());
     }
 }

@@ -15,26 +15,58 @@
  * */
 apply plugin: 'maven-publish'
 
+components.java.withVariantsFromConfiguration(configurations.testFixturesApiElements) {
+    skip()
+}
+components.java.withVariantsFromConfiguration(configurations.testFixturesRuntimeElements) {
+    skip()
+}
+
 publishing {
     repositories {
         maven {
-            name = "GitHubPackages"
-            url = uri(jCommonsGhpUrl)
+            name = 'GitHubPackages'
+            url = uri(providers.environmentVariable('J_COMMONS_GHP_URL')
+                .orElse('https://maven.pkg.github.com/armange/j-commons').get())
             credentials {
-                username = ghpUsername
-                password = ghpPassword
+                username = providers.environmentVariable('GHP_USER').orNull
+                password = providers.environmentVariable('GHP_TOKEN').orNull
             }
         }
     }
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            artifact javadocJar
-            artifact sourcesJar
-        }
-        
-        gpr(MavenPublication) {
-            from(components.java)
+            pom {
+                name = project.name
+                description = [
+                    'commons-message': 'Utilities for message handling and internationalization',
+                    'commons-object-api': 'Common object contracts',
+                    'commons-object-impl': 'Implementations of common object contracts',
+                    'commons-reflection': 'Utilities for Java reflection',
+                    'commons-spi': 'Utilities for Java service providers',
+                    'commons-thread': 'Utilities for thread creation and execution'
+                ][project.name]
+                url = "https://github.com/armange/j-commons/tree/master/${project.name}"
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'armange'
+                        name = 'Diego Armange Costa'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/armange/j-commons'
+                    connection = 'scm:git:https://github.com/armange/j-commons.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/armange/j-commons.git'
+                }
+            }
         }
     }
 }

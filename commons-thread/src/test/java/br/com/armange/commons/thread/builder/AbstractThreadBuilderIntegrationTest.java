@@ -16,7 +16,7 @@
 package br.com.armange.commons.thread.builder;
 
 import br.com.armange.commons.thread.util.ThreadUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.io.PrintStream;
@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

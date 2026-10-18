@@ -14,14 +14,14 @@
  * limitations under the License.
  * */
 dependencies {
-    implementation projects.commons_object_api
-    implementation projects.commons_message
-    implementation projects.commons_reflection
-    implementation projects.commons_spi
+    api project(':commons-object-api')
+    implementation project(':commons-message')
+    implementation project(':commons-reflection')
+    implementation project(':commons-spi')
 
-    testImplementation (library.junit_junit){
-        exclude group: 'org.hamcrest'
-    }
+    testImplementation platform(library.org_junit_junit_bom)
+    testImplementation library.org_junit_jupiter_junit_jupiter
+    testRuntimeOnly library.org_junit_platform_junit_platform_launcher
     testImplementation library.org_assertj_assertj_core
     testImplementation library.org_mockito_mockito_core
     testImplementation library.org_hamcrest_hamcrest

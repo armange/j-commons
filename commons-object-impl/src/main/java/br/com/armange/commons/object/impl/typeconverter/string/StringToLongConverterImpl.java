@@ -24,7 +24,7 @@ public class StringToLongConverterImpl implements StringToLongConverter {
     
     @Override
     public TypeConverter<String, Long> from(final String sourceObject) {
-        result = sourceObject != null ? new Long(sourceObject) : null;
+        result = sourceObject != null ? Long.valueOf(sourceObject) : null;
         
         return this; 
     }

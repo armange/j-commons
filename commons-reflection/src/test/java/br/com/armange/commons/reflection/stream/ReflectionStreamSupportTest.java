@@ -15,12 +15,12 @@
  * */
 package br.com.armange.commons.reflection.stream;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ReflectionStreamSupportTest {
 

@@ -16,14 +16,19 @@
 package br.com.armange.commons.thread.util;
 
 import br.com.armange.commons.thread.builder.ThreadBuilder;
+import br.com.armange.commons.thread.exception.UncheckedException;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 import static org.mockito.Mockito.*;
@@ -51,14 +56,14 @@ public class ThreadUtilTest {
     public void findResourceURL() {
         final URL url = ThreadUtil.getCurrentThreadResource(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(url);
+        Assertions.assertNotNull(url);
     }
 
     @Test
     public void findResourceInputStream() {
         final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(is);
+        Assertions.assertNotNull(is);
     }
 
     @Test
@@ -69,30 +74,37 @@ public class ThreadUtilTest {
 
         final long end = System.currentTimeMillis();
 
-        Assert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
-        Assert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
+        MatcherAssert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
+        MatcherAssert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
     }
 
     @Test
-    public void interruptSleepUnchecked() {
-        final Thread t1 = spy(new Thread(() -> System.out.println("Thread 01 executed.")));
-        final Thread t2 = spy(new Thread(() -> {
-            System.out.println("Thread 02 executed.");
-            ThreadUtil.sleepUnchecked(1000);
-            t1.start();
-        }));
+    public void interruptSleepUnchecked() throws InterruptedException {
+        final CountDownLatch started = new CountDownLatch(1);
+        final AtomicReference<UncheckedException> failure = new AtomicReference<>();
+        final Thread thread = new Thread(() -> {
+            started.countDown();
 
-        t2.start();
-        ThreadUtil.sleepUnchecked(100);
-        t2.interrupt();
+            try {
+                ThreadUtil.sleepUnchecked(1000);
+            } catch (final UncheckedException e) {
+                failure.set(e);
+            }
+        });
 
-        verifyNoInteractions(t1);
-        verify(t2).run();
+        thread.start();
+        Assertions.assertTrue(started.await(5, TimeUnit.SECONDS));
+        thread.interrupt();
+        thread.join(5000);
+
+        Assertions.assertFalse(thread.isAlive());
+        Assertions.assertNotNull(failure.get());
+        Assertions.assertTrue(failure.get().getCause() instanceof InterruptedException);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void sleepUncheckedThrowRuntimeException() {
-        ThreadUtil.sleepUnchecked(-1);
+        Assertions.assertThrows(RuntimeException.class, () -> ThreadUtil.sleepUnchecked(-1));
     }
 
     @Test

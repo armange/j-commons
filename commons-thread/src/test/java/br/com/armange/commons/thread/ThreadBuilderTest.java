@@ -17,15 +17,15 @@ package br.com.armange.commons.thread;
 
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -768,7 +768,7 @@ public class ThreadBuilderTest {
 
         ThreadUtil.sleepUnchecked(1000);
 
-        Assert.assertEquals(threadName, lastThread.getName());
+        Assertions.assertEquals(threadName, lastThread.getName());
     }
 
 
@@ -784,6 +784,6 @@ public class ThreadBuilderTest {
 
         ThreadUtil.sleepUnchecked(1000);
 
-        Assert.assertEquals(threadPriority, lastThread.getPriority());
+        Assertions.assertEquals(threadPriority, lastThread.getPriority());
     }
 }

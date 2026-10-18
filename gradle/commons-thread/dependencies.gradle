@@ -18,17 +18,12 @@ dependencies {
     implementation library.org_slf4j_slf4j_simple
     implementation library.org_apache_logging_log4j_log4j_core
 
-    testImplementation (library.junit_junit){
-        exclude group: 'org.hamcrest'
-    }
+    testImplementation platform(library.org_junit_junit_bom)
+    testImplementation library.org_junit_jupiter_junit_jupiter
+    testRuntimeOnly library.org_junit_platform_junit_platform_launcher
     testImplementation library.org_assertj_assertj_core
     testImplementation library.org_mockito_mockito_core
     testImplementation library.org_hamcrest_hamcrest
 
-    testFixturesApi library.net_bytebuddy_byte_buddy
-    testFixturesApi library.net_bytebuddy_byte_buddy_agent
     testFixturesImplementation library.org_hamcrest_hamcrest
-    testFixturesImplementation (library.junit_junit){
-        exclude group: 'org.hamcrest'
-    }
 }

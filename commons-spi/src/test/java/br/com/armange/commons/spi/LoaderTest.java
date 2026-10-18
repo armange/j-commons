@@ -18,9 +18,10 @@ package br.com.armange.commons.spi;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import br.com.armange.commons.spi.artifact.MultipleServices;
 import br.com.armange.commons.spi.artifact.Service;
@@ -30,29 +31,31 @@ public class LoaderTest {
 
     @Test
     public void loadSingleService() {
-        Assert.assertNotNull(Loader.loadService(Service.class));
+        Assertions.assertNotNull(Loader.loadService(Service.class));
         
         final List<Service> services = Loader.loadServices(Service.class);
         
-        Assert.assertThat(services, Matchers.hasSize(1));
+        MatcherAssert.assertThat(services, Matchers.hasSize(1));
     }
     
     @Test
     public void loadMultipleServices() {
-        Assert.assertNotNull(Loader.loadService(MultipleServices.class));
+        Assertions.assertNotNull(Loader.loadService(MultipleServices.class));
         
         final List<MultipleServices> services = Loader.loadServices(MultipleServices.class);
         
-        Assert.assertThat(services, Matchers.hasSize(2));
+        MatcherAssert.assertThat(services, Matchers.hasSize(2));
     }
     
-    @Test(expected = NoImplementationFoundException.class)
+    @Test
     public void throwNoImplExceptionForSingleServiceLoading() {
-        Loader.loadService(Iterator.class);
+        Assertions.assertThrows(NoImplementationFoundException.class,
+                () -> Loader.loadService(Iterator.class));
     }
     
-    @Test(expected = NoImplementationFoundException.class)
+    @Test
     public void throwNoImplExceptionForMultipleServiceLoading() {
-        Loader.loadServices(Iterator.class);
+        Assertions.assertThrows(NoImplementationFoundException.class,
+                () -> Loader.loadServices(Iterator.class));
     }
 }

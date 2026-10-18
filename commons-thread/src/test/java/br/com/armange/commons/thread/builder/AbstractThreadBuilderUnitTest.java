@@ -17,7 +17,7 @@ package br.com.armange.commons.thread.builder;
 
 import br.com.armange.commons.thread.builder.AbstractThreadBuilder.ExecutionType;
 import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class AbstractThreadBuilderUnitTest {
