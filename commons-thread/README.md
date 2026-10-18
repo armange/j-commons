@@ -13,6 +13,18 @@ tarefa `Runnable` ou `Callable` e configurar a execução. O tipo
 A API antiga em `br.com.armange.commons.thread` está marcada como depreciada
 para remoção; novos consumidores devem usar o pacote `builder`.
 
+Com `setThreadNameSupplier`, a fábrica padrão de threads de plataforma consulta
+o fornecedor uma vez para cada thread que cria. Como o executor reutiliza
+threads do pool, isso não significa uma consulta por tarefa. Se o fornecedor
+devolver `null`, a thread conserva o nome gerado.
+
+Uma subclasse de `AbstractThreadBuilder` pode fornecer uma
+`ExceptionCatcherThreadFactory`. Nesse caso, o builder consulta o fornecedor
+uma vez ao configurar a fábrica e passa o resultado a `setThreadName(String)`.
+A fábrica base usa esse nome nas threads seguintes; se receber `null`, conserva
+o nome gerado. Uma subclasse da fábrica pode personalizar esse setter e
+determinar outro nome efetivo.
+
 Exemplo com uma tarefa simples:
 
 ```java

@@ -110,8 +110,14 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Sets the thread name supplier. The thread factory will consume this supplier
-     * to generate a thread name before return a new thread.
+     * Sets the thread name supplier. The default thread factory consults this
+     * supplier once for each new thread. When an
+     * {@link ExceptionCatcherThreadFactory} is supplied, this builder consults
+     * the supplier once while configuring the factory and passes the result to
+     * {@link ExceptionCatcherThreadFactory#setThreadName(String)}. The supplied
+     * factory determines each thread's actual name. With the default factory
+     * or the base supplied factory, a null result keeps the generated name;
+     * a supplied subclass may handle null differently.
      *
      * @param threadNameSupplier the thread name supplier.
      * @return the current thread builder.
@@ -237,16 +243,52 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     protected ThreadFactory getThreadFactory() {
-        final ExceptionCatcherThreadFactory factory = threadFactory.orElseGet(ExceptionCatcherThreadFactory::new);
+        if (threadFactory.isPresent()) {
+            return configureSuppliedThreadFactory(threadFactory.get());
+        }
 
+        return createPlatformThreadFactory();
+    }
+
+    private ThreadFactory configureSuppliedThreadFactory(final ExceptionCatcherThreadFactory factory) {
         uncaughtExceptionConsumer
-                .ifPresent(uec -> factory.setUncaughtExceptionHandler((thread, throwable) -> uec.accept(throwable)));
-
-        threadNameSupplier.ifPresent(tns -> factory.setThreadName(tns.get()));
-
-        threadPrioritySupplier.ifPresent(tps -> factory.setThreadPriority(tps.getAsInt()));
+                .ifPresent(consumer -> factory.setUncaughtExceptionHandler(
+                        (thread, throwable) -> consumer.accept(throwable)));
+        threadNameSupplier
+                .ifPresent(supplier -> factory.setThreadName(supplier.get()));
+        threadPrioritySupplier
+                .ifPresent(supplier -> factory.setThreadPriority(supplier.getAsInt()));
 
         return factory;
+    }
+
+    private ThreadFactory createPlatformThreadFactory() {
+        final Thread.Builder.OfPlatform platformBuilder = Thread.ofPlatform();
+
+        uncaughtExceptionConsumer
+                .ifPresent(consumer -> platformBuilder.uncaughtExceptionHandler(
+                        (thread, throwable) -> consumer.accept(throwable)));
+        threadPrioritySupplier
+                .ifPresent(supplier -> platformBuilder.priority(supplier.getAsInt()));
+
+        final ThreadFactory platformFactory = platformBuilder.factory();
+
+        if (threadNameSupplier.isEmpty()) {
+            return platformFactory;
+        }
+
+        return createNamedThreadFactory(platformFactory, threadNameSupplier.get());
+    }
+
+    private ThreadFactory createNamedThreadFactory(
+            final ThreadFactory platformFactory, final Supplier<String> nameSupplier) {
+        return runnable -> {
+            final Thread thread = platformFactory.newThread(runnable);
+            Optional.ofNullable(nameSupplier.get())
+                    .ifPresent(thread::setName);
+
+            return thread;
+        };
     }
 
     /**

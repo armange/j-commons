@@ -15,6 +15,7 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
 import br.com.armange.commons.thread.util.ThreadUtil;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -70,6 +72,99 @@ public class AbstractThreadBuilderIntegrationTest {
         assertNotNull(builder.threadPrioritySupplier);
         assertEquals(threadPrioritySupplier, builder.threadPrioritySupplier.get());
         verify(builder, times(3)).getSelf();
+    }
+
+    @Test
+    public void preservesSuppliedFactoryAndAppliesBuilderThreadName() {
+        final ExceptionCatcherThreadFactory suppliedFactory = new ExceptionCatcherThreadFactory();
+        suppliedFactory.setThreadName("original");
+
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
+        builder.threadFactory = Optional.of(suppliedFactory);
+
+        final ThreadFactory configuredFactory = builder
+                .setThreadNameSupplier(() -> "configured")
+                .getThreadFactory();
+        final Thread thread = configuredFactory.newThread(() -> {
+        });
+
+        assertSame(suppliedFactory, configuredFactory);
+        assertEquals("configured", thread.getName());
+    }
+
+    @Test
+    public void consultsNameSupplierForEachPlatformThread() {
+        final AtomicInteger nameRequests = new AtomicInteger();
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
+        final ThreadFactory factory = builder
+                .setThreadNameSupplier(() -> "worker-" + nameRequests.incrementAndGet())
+                .getThreadFactory();
+
+        assertEquals(0, nameRequests.get());
+
+        final Thread firstThread = factory.newThread(() -> {
+        });
+        final Thread secondThread = factory.newThread(() -> {
+        });
+
+        assertEquals("worker-1", firstThread.getName());
+        assertEquals("worker-2", secondThread.getName());
+        assertEquals(2, nameRequests.get());
+    }
+
+    @Test
+    public void configuresSuppliedFactoryNameOnceUsingOverriddenSetter() {
+        final AtomicInteger nameRequests = new AtomicInteger();
+        final AtomicInteger setterCalls = new AtomicInteger();
+        final ExceptionCatcherThreadFactory suppliedFactory = new ExceptionCatcherThreadFactory() {
+            @Override
+            public void setThreadName(final String threadName) {
+                setterCalls.incrementAndGet();
+                super.setThreadName("custom-" + threadName);
+            }
+        };
+        suppliedFactory.setThreadName("original");
+
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
+        builder.threadFactory = Optional.of(suppliedFactory);
+
+        final ThreadFactory factory = builder
+                .setThreadNameSupplier(() -> "worker-" + nameRequests.incrementAndGet())
+                .getThreadFactory();
+
+        assertSame(suppliedFactory, factory);
+        assertEquals(1, nameRequests.get());
+        assertEquals(2, setterCalls.get());
+
+        final Thread firstThread = factory.newThread(() -> {
+        });
+        final Thread secondThread = factory.newThread(() -> {
+        });
+
+        assertEquals("custom-worker-1", firstThread.getName());
+        assertEquals("custom-worker-1", secondThread.getName());
+        assertEquals(1, nameRequests.get());
+
+        suppliedFactory.setThreadName("fixed");
+
+        final Thread fixedNameThread = factory.newThread(() -> {
+        });
+
+        assertEquals("custom-fixed", fixedNameThread.getName());
+        assertEquals(1, nameRequests.get());
+        assertEquals(3, setterCalls.get());
+    }
+
+    @Test
+    public void keepsGeneratedThreadNameWhenSupplierReturnsNull() {
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
+        final ThreadFactory factory = builder
+                .setThreadNameSupplier(() -> null)
+                .getThreadFactory();
+        final Thread thread = factory.newThread(() -> {
+        });
+
+        assertFalse(thread.getName().isEmpty());
     }
 
     @Test

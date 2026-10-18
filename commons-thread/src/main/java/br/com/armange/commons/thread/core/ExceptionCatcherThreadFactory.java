@@ -20,9 +20,13 @@ import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Thread factory for use by the {@link br.com.armange.commons.thread.builder.ThreadBuilder}.
+ * Thread factory for platform threads. It can also be supplied by a subclass
+ * of {@link br.com.armange.commons.thread.builder.AbstractThreadBuilder}.
  * An implementation of {@link UncaughtExceptionHandler}, name and priority
  * can be assigned to each new thread created.
+ * For direct thread creation on JDK 25, prefer {@link Thread#ofPlatform()} or
+ * {@link Thread#ofVirtual()}. Both builders can configure names and uncaught
+ * exception handlers; priority is available for platform threads only.
  *
  * @author Diego Armange Costa
  * @see java.util.concurrent.ThreadFactory

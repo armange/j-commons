@@ -15,8 +15,6 @@
  * */
 package br.com.armange.commons.thread;
 
-import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
-
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
@@ -25,8 +23,9 @@ import java.util.concurrent.ThreadFactory;
  * @author Diego Armange Costa
  * @see java.util.concurrent.ThreadFactory
  * @since 2019-11-26 V1.0.0 (JDK 1.8)
- * @deprecated Consider to use {@link ExceptionCatcherThreadFactory}
- * A thread-factory that sets some thread parameters if non-null:
+ * @deprecated Use {@link Thread#ofPlatform()} or {@link Thread#ofVirtual()}
+ * to create a thread or a {@link ThreadFactory}. A thread-factory that sets
+ * some thread parameters if non-null:
  * <ul>
  * <li>Name</li>
  * <li>Priority</li>
