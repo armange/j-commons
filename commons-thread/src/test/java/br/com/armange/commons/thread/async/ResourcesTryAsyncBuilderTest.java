@@ -2,7 +2,7 @@ package br.com.armange.commons.thread.async;
 
 import br.com.armange.commons.thread.CloseableArrayConsumer;
 import br.com.armange.commons.thread.CloseableArrayConsumerWithException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.Closeable;
 import java.io.IOException;

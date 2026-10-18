@@ -17,8 +17,8 @@ package br.com.armange.commons.reflection.support;
 
 import java.lang.reflect.InaccessibleObjectException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class FieldSupportTest {
     @Test
@@ -26,21 +26,23 @@ public class FieldSupportTest {
         final FieldHolder holder = new FieldHolder();
         final FieldSupport support = FieldSupport.from(FieldHolder.class.getDeclaredField("value"));
 
-        Assert.assertEquals("before", support.getValue(holder));
+        Assertions.assertEquals("before", support.getValue(holder));
 
         support.setValue(holder, "after");
 
-        Assert.assertEquals("after", support.getValue(holder));
+        Assertions.assertEquals("after", support.getValue(holder));
     }
 
-    @Test(expected = InaccessibleObjectException.class)
+    @Test
     public void rejectsReadingPrivateFieldOfJdkClass() throws NoSuchFieldException {
-        FieldSupport.from(String.class.getDeclaredField("value")).getValue("text");
+        Assertions.assertThrows(InaccessibleObjectException.class,
+                () -> FieldSupport.from(String.class.getDeclaredField("value")).getValue("text"));
     }
 
-    @Test(expected = InaccessibleObjectException.class)
+    @Test
     public void rejectsWritingPrivateFieldOfJdkClass() throws NoSuchFieldException {
-        FieldSupport.from(String.class.getDeclaredField("value")).setValue("text", new byte[0]);
+        Assertions.assertThrows(InaccessibleObjectException.class,
+                () -> FieldSupport.from(String.class.getDeclaredField("value")).setValue("text", new byte[0]));
     }
 
     private static class FieldHolder {

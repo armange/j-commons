@@ -18,8 +18,9 @@ def
         ORG_SLF4J = '2.0.18',
         ORG_LOG4J = '2.26.1'
 ext.library = [
-    // Eclipse Public License 1.0
-    junit_junit: "junit:junit:4.13.2",
+    org_junit_junit_bom: "org.junit:junit-bom:6.1.3",
+    org_junit_jupiter_junit_jupiter: "org.junit.jupiter:junit-jupiter",
+    org_junit_platform_junit_platform_launcher: "org.junit.platform:junit-platform-launcher",
     
     // The Apache Software License, Version 2.0
     org_assertj_assertj_core: "org.assertj:assertj-core:3.27.7",

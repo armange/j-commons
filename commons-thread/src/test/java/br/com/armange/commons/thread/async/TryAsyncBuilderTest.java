@@ -15,8 +15,8 @@
  * */
 package br.com.armange.commons.thread.async;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.Closeable;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ public class TryAsyncBuilderTest {
         final RunnableTryAsyncBuilder runnableTryAsyncBuilder = TryAsyncBuilder.tryAsync(() -> {
         });
 
-        Assert.assertEquals(RunnableTryAsyncBuilder.class, runnableTryAsyncBuilder.getClass());
+        Assertions.assertEquals(RunnableTryAsyncBuilder.class, runnableTryAsyncBuilder.getClass());
     }
 
     @Test
@@ -40,7 +40,7 @@ public class TryAsyncBuilderTest {
         final CallableTryAsyncBuilder<?> callableTryAsyncBuilder = TryAsyncBuilder.tryAsync(() -> null, result -> {
         });
 
-        Assert.assertEquals(CallableTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
+        Assertions.assertEquals(CallableTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
     }
 
     @Test
@@ -49,7 +49,7 @@ public class TryAsyncBuilderTest {
         final ResourceTryAsyncBuilder callableTryAsyncBuilder = TryAsyncBuilder.tryAsync(inputStream, closeable -> {
         });
 
-        Assert.assertEquals(ResourceTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
+        Assertions.assertEquals(ResourceTryAsyncBuilder.class, callableTryAsyncBuilder.getClass());
     }
 
     @Test
@@ -58,7 +58,7 @@ public class TryAsyncBuilderTest {
         final ResourcesTryAsyncBuilder resourcesTryAsyncBuilder = TryAsyncBuilder.tryAsync(closeable -> {
         }, inputStream);
 
-        Assert.assertEquals(ResourcesTryAsyncBuilder.class, resourcesTryAsyncBuilder.getClass());
+        Assertions.assertEquals(ResourcesTryAsyncBuilder.class, resourcesTryAsyncBuilder.getClass());
     }
 
     @Test
@@ -72,6 +72,6 @@ public class TryAsyncBuilderTest {
                 .tryAsync(map, mapOfCloseable -> {
                 });
 
-        Assert.assertEquals(MappedResourcesTryAsyncBuilder.class, mappedResourcesTryAsyncBuilder.getClass());
+        Assertions.assertEquals(MappedResourcesTryAsyncBuilder.class, mappedResourcesTryAsyncBuilder.getClass());
     }
 }

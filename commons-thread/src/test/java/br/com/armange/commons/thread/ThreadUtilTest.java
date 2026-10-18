@@ -16,15 +16,16 @@
 package br.com.armange.commons.thread;
 
 import br.com.armange.commons.thread.util.ClassTestUtil;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ThreadUtilTest {
 
@@ -52,13 +53,13 @@ public class ThreadUtilTest {
 
         final long end = System.currentTimeMillis();
 
-        Assert.assertThat(new Long(end - start), Matchers.greaterThanOrEqualTo(1000L));
-        Assert.assertThat(new Long(end - start), Matchers.lessThanOrEqualTo(1200L));
+        MatcherAssert.assertThat(new Long(end - start), Matchers.greaterThanOrEqualTo(1000L));
+        MatcherAssert.assertThat(new Long(end - start), Matchers.lessThanOrEqualTo(1200L));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void sleepUncheckedThrowRuntimeException() {
-        ThreadUtil.sleepUnchecked(-1);
+        Assertions.assertThrows(RuntimeException.class, () -> ThreadUtil.sleepUnchecked(-1));
     }
 
     @Test

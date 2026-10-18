@@ -39,18 +39,15 @@ bytecode de versão 69. A partir da raiz do repositório:
 ```bash
 ./gradlew clean build jacocoTestReport
 ./gradlew generatePomFileForMavenJavaPublication generateMetadataFileForMavenJavaPublication
-python3 examples/consumer-jdk25/stage_artifacts.py
-./gradlew -p examples/consumer-jdk25 clean run -PmetadataSource=module
-./gradlew -p examples/consumer-jdk25 clean run writeApiScanClasspath -PmetadataSource=pom
-bash examples/consumer-jdk25/verify_jdk_apis.sh
 ```
 
-`clean build` executa os testes dos módulos e gera JARs de classes, fontes e
-Javadoc. `jacocoTestReport` gera cobertura nos módulos com testes. O exemplo
-consumidor resolve cópias locais dos JARs, POMs e metadados gerados, primeiro
-pelos metadados Gradle e depois pelos POMs. O script verifica as APIs dos seis
-JARs de produção com `jdeps` e `jdeprscan`. Nenhuma dessas tarefas publica
-artefatos. O CI executa essas validações com Temurin 25. Os
+`clean build` executa os testes dos módulos e os testes JUnit de integração
+da raiz. Estes montam um repositório temporário com os JARs, POMs e metadados
+gerados, executam um consumidor binário por cada formato de metadados e
+analisam os seis JARs de produção com `jdeps` e `jdeprscan`. O build também
+gera JARs de classes, fontes e Javadoc. `jacocoTestReport` gera cobertura nos
+módulos com testes. Nenhuma dessas tarefas publica artefatos. O CI executa as
+mesmas validações com Temurin 25. Os
 [relatórios históricos](docs/README.md) são preservados separadamente dos
 resultados deste build.
 
@@ -70,8 +67,8 @@ dependencies {
 
 `commons-object-impl` expõe `commons-object-api` como dependência transitiva
 de compilação. Para testar as versões de trabalho diretamente deste checkout,
-use o [consumidor de exemplo](examples/consumer-jdk25/) para resolver cópias
-locais dos artefatos antes da publicação dessas coordenadas.
+execute `./gradlew clean build`: a suíte monta um consumidor isolado com os
+artefatos locais antes da publicação dessas coordenadas.
 
 ## 4 Metadados e publicação
 

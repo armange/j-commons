@@ -17,9 +17,10 @@ package br.com.armange.commons.thread.util;
 
 import br.com.armange.commons.thread.builder.ThreadBuilder;
 import br.com.armange.commons.thread.exception.UncheckedException;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
@@ -55,14 +56,14 @@ public class ThreadUtilTest {
     public void findResourceURL() {
         final URL url = ThreadUtil.getCurrentThreadResource(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(url);
+        Assertions.assertNotNull(url);
     }
 
     @Test
     public void findResourceInputStream() {
         final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream(TEST_FILE_RELATIVE_PATH);
 
-        Assert.assertNotNull(is);
+        Assertions.assertNotNull(is);
     }
 
     @Test
@@ -73,8 +74,8 @@ public class ThreadUtilTest {
 
         final long end = System.currentTimeMillis();
 
-        Assert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
-        Assert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
+        MatcherAssert.assertThat((Long) (end - start), Matchers.greaterThanOrEqualTo(1000L));
+        MatcherAssert.assertThat((Long) (end - start), Matchers.lessThanOrEqualTo(1200L));
     }
 
     @Test
@@ -92,18 +93,18 @@ public class ThreadUtilTest {
         });
 
         thread.start();
-        Assert.assertTrue(started.await(5, TimeUnit.SECONDS));
+        Assertions.assertTrue(started.await(5, TimeUnit.SECONDS));
         thread.interrupt();
         thread.join(5000);
 
-        Assert.assertFalse(thread.isAlive());
-        Assert.assertNotNull(failure.get());
-        Assert.assertTrue(failure.get().getCause() instanceof InterruptedException);
+        Assertions.assertFalse(thread.isAlive());
+        Assertions.assertNotNull(failure.get());
+        Assertions.assertTrue(failure.get().getCause() instanceof InterruptedException);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void sleepUncheckedThrowRuntimeException() {
-        ThreadUtil.sleepUnchecked(-1);
+        Assertions.assertThrows(RuntimeException.class, () -> ThreadUtil.sleepUnchecked(-1));
     }
 
     @Test

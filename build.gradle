@@ -54,3 +54,23 @@ subprojects {
 }
 
 apply from: "$projectDir/gradle/dependencies.gradle"
+
+dependencies {
+    testImplementation platform(library.org_junit_junit_bom)
+    testImplementation library.org_junit_jupiter_junit_jupiter
+    testImplementation gradleTestKit()
+    testRuntimeOnly library.org_junit_platform_junit_platform_launcher
+    testFixturesImplementation localGroovy()
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    subprojects.each { module ->
+        dependsOn module.tasks.named('jar'),
+            module.tasks.named('sourcesJar'),
+            module.tasks.named('javadocJar'),
+            module.tasks.named('generatePomFileForMavenJavaPublication'),
+            module.tasks.named('generateMetadataFileForMavenJavaPublication')
+    }
+    systemProperty 'jCommons.projectRoot', rootDir.absolutePath
+}

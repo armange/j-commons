@@ -28,28 +28,13 @@ jobs:
         if: success()
         run: ./gradlew javadoc generatePomFileForMavenJavaPublication generateMetadataFileForMavenJavaPublication
 
-      - name: Stage generated artifacts for local consumption
-        if: success()
-        run: python3 examples/consumer-jdk25/stage_artifacts.py
-
-      - name: Validate JDK 25 consumer using Gradle metadata
-        if: success()
-        run: ./gradlew -p examples/consumer-jdk25 clean run -PmetadataSource=module
-
-      - name: Validate JDK 25 consumer using POMs
-        if: success()
-        run: ./gradlew -p examples/consumer-jdk25 clean run writeApiScanClasspath -PmetadataSource=pom
-
-      - name: Check JDK 25 APIs in generated JARs
-        if: success()
-        run: bash examples/consumer-jdk25/verify_jdk_apis.sh
-
       - name: Upload test and coverage reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: gradle-reports
           path: |
+            build/reports/tests/test/
             commons-*/build/reports/tests/test/
             commons-*/build/reports/jacoco/test/
           if-no-files-found: ignore

@@ -23,6 +23,6 @@ dependencies {
 }
 ```
 
-O [consumidor local](../examples/consumer-jdk25/) compila e executa um
-`StringToLongConverterImpl` declarando somente este módulo. Esta versão
-ainda não foi publicada.
+O teste JUnit `PublishedConsumerTest`, executado por `./gradlew clean build`
+na raiz, compila e executa um consumidor binário que declara somente este
+módulo e usa `StringToLongConverterImpl`. Esta versão ainda não foi publicada.

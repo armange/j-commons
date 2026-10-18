@@ -17,7 +17,7 @@ package br.com.armange.commons.thread.builder;
 
 import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 import br.com.armange.commons.thread.util.ThreadUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 import static java.lang.System.out;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 /**

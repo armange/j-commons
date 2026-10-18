@@ -1,7 +1,7 @@
 package br.com.armange.commons.thread.async;
 
 import br.com.armange.commons.thread.*;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 

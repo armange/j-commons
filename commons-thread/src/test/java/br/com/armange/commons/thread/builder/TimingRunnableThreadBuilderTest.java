@@ -18,7 +18,7 @@ package br.com.armange.commons.thread.builder;
 import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -27,8 +27,8 @@ import java.util.function.Consumer;
 
 import static br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

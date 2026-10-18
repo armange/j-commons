@@ -16,14 +16,15 @@
 package br.com.armange.commons.thread.builder;
 
 import br.com.armange.commons.thread.util.ThreadUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -58,13 +59,14 @@ public class TimingCallableThreadBuilderTest {
         assertNotNull(schedule);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void scheduleAtFixedRateCallableMethod() {
         final TimingCallableThreadBuilderTestArtifact<?> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> null).createExecutorAndRunThread();
 
-        builder.scheduleAtFixedRate(0, 1, TimeUnit.MILLISECONDS);
+        assertThrows(UnsupportedOperationException.class,
+                () -> builder.scheduleAtFixedRate(0, 1, TimeUnit.MILLISECONDS));
     }
 
     private static class LocalCallableString implements Callable<String> {

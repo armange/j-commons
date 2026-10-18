@@ -9,7 +9,7 @@ if (!(metadataSource in ['module', 'pom'])) {
 
 repositories {
     maven {
-        url = uri(file("../../build/consumer-jdk25/repository/$metadataSource"))
+        url = uri("${providers.gradleProperty('fixtureRepository').get()}/${metadataSource}")
         content {
             includeGroup('br.com.armange')
         }
@@ -40,9 +40,9 @@ configurations {
 }
 
 dependencies {
-    implementation 'br.com.armange:commons-object-impl:1.0.0-SNAPSHOT'
-    apiScan 'br.com.armange:commons-object-impl:1.0.0-SNAPSHOT'
-    apiScan 'br.com.armange:commons-thread:3.0.0-SNAPSHOT'
+    implementation "br.com.armange:commons-object-impl:${providers.gradleProperty('objectImplVersion').get()}"
+    apiScan "br.com.armange:commons-object-impl:${providers.gradleProperty('objectImplVersion').get()}"
+    apiScan "br.com.armange:commons-thread:${providers.gradleProperty('threadVersion').get()}"
 }
 
 application {

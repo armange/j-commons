@@ -4,7 +4,6 @@ import br.com.armange.commons.thread.ThreadUtil;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsArrayWithSize;
-import org.junit.Assert;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -22,7 +21,7 @@ public class ClassTestUtil {
 
         try {
             declaredConstructor.newInstance();
-            Assert.fail("The default constructor must be private.");
+            throw new AssertionError("The default constructor must be private.");
         } catch (final IllegalAccessException e) {
             declaredConstructor.setAccessible(true);
             MatcherAssert.assertThat(declaredConstructor.newInstance(), Matchers.notNullValue());
