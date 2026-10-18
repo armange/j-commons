@@ -30,6 +30,13 @@ public class FieldSupport {
         return new FieldSupport(field);
     }
     
+    /**
+     * Reads this field from the given instance.
+     *
+     * @param declaringInstance the instance that declares the field
+     * @return the field value
+     * @throws java.lang.reflect.InaccessibleObjectException if the declaring module does not open its package for reflection
+     */
     public Object getValue(final Object declaringInstance) {
         try {
             field.setAccessible(true);
@@ -40,6 +47,13 @@ public class FieldSupport {
         }
     }
     
+    /**
+     * Writes this field on the given instance.
+     *
+     * @param declaringInstance the instance that declares the field
+     * @param value the new field value
+     * @throws java.lang.reflect.InaccessibleObjectException if the declaring module does not open its package for reflection
+     */
     public void setValue(final Object declaringInstance, final Object value) {
         try {
             field.setAccessible(true);

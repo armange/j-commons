@@ -24,7 +24,7 @@ public class SrtingToIntegerConverterImpl implements StringToIntegerConverter {
     
     @Override
     public TypeConverter<String, Integer> from(final String sourceObject) {
-        result = sourceObject != null ? new Integer(sourceObject) : null;
+        result = sourceObject != null ? Integer.valueOf(sourceObject) : null;
         
         return this; 
     }

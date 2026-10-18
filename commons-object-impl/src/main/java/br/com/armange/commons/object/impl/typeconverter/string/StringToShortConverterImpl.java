@@ -24,7 +24,7 @@ public class StringToShortConverterImpl implements StringToShortConverter {
     
     @Override
     public TypeConverter<String, Short> from(final String sourceObject) {
-        result = sourceObject != null ? new Short(sourceObject) : null;
+        result = sourceObject != null ? Short.valueOf(sourceObject) : null;
         
         return this; 
     }

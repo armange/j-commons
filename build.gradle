@@ -31,7 +31,7 @@ allprojects {
     group = 'br.com.armange'
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(11)
+            languageVersion = JavaLanguageVersion.of(25)
         }
     }
 

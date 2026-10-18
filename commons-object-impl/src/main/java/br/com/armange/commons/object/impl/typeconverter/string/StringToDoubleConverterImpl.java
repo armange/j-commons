@@ -24,7 +24,7 @@ public class StringToDoubleConverterImpl implements StringToDoubleConverter {
     
     @Override
     public TypeConverter<String, Double> from(final String sourceObject) {
-        result = sourceObject != null ? new Double(sourceObject) : null;
+        result = sourceObject != null ? Double.valueOf(sourceObject) : null;
         
         return this; 
     }

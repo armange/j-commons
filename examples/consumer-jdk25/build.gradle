@@ -1,0 +1,58 @@
+plugins {
+    id 'application'
+}
+
+def metadataSource = providers.gradleProperty('metadataSource').orElse('module').get()
+if (!(metadataSource in ['module', 'pom'])) {
+    throw new GradleException("metadataSource deve ser 'module' ou 'pom'")
+}
+
+repositories {
+    maven {
+        url = uri(file("../../build/consumer-jdk25/repository/$metadataSource"))
+        content {
+            includeGroup('br.com.armange')
+        }
+        metadataSources {
+            if (metadataSource == 'module') {
+                gradleMetadata()
+            } else {
+                mavenPom()
+                ignoreGradleMetadataRedirection()
+            }
+        }
+    }
+    mavenCentral {
+        content {
+            excludeGroup('br.com.armange')
+        }
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+configurations {
+    apiScan
+}
+
+dependencies {
+    implementation 'br.com.armange:commons-object-impl:1.0.0-SNAPSHOT'
+    apiScan 'br.com.armange:commons-object-impl:1.0.0-SNAPSHOT'
+    apiScan 'br.com.armange:commons-thread:3.0.0-SNAPSHOT'
+}
+
+application {
+    mainClass = 'br.com.armange.commons.example.ConsumerSmoke'
+}
+
+tasks.register('writeApiScanClasspath') {
+    def classpathFile = layout.buildDirectory.file('api-scan-classpath.txt')
+    outputs.file(classpathFile)
+    doLast {
+        classpathFile.get().asFile.text = configurations.apiScan.asPath
+    }
+}

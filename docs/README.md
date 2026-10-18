@@ -1,10 +1,15 @@
-# j-commons documentations
+# Documentação histórica do j-commons
 
-### Summary
+Este diretório preserva relatórios de versões anteriores. Os relatórios do
+build Java 25 ficam em `commons-*/build/` e ainda não fazem parte deste
+diretório nem de uma publicação estável.
 
- - [commons-thread Javadoc](https://armange.github.io/j-commons/commons-thread/javadoc)
- - [commons-thread Tests report](https://armange.github.io/j-commons/commons-thread/test)
- - [commons-thread Jacoco report](https://armange.github.io/j-commons/commons-thread/jacoco)
- - [commons-spi Javadoc](https://armange.github.io/j-commons/commons-spi/javadoc)
- - [commons-spi Tests report](https://armange.github.io/j-commons/commons-spi/test)
- - [commons-spi Jacoco report](https://armange.github.io/j-commons/commons-spi/jacoco)
+## Relatórios preservados
+
+| Módulo e versão | Javadoc | Testes | Cobertura |
+| --- | --- | --- | --- |
+| commons-thread 1.0.0 | [Javadoc](commons-thread/1-0-0/javadoc/index.html) | [Testes](commons-thread/1-0-0/test/index.html) | [JaCoCo](commons-thread/1-0-0/jacoco/index.html) |
+| commons-thread 2.0.0 | [Javadoc](commons-thread/2-0-0/javadoc/index.html) | [Testes](commons-thread/2-0-0/test/index.html) | [JaCoCo](commons-thread/2-0-0/jacoco/index.html) |
+| commons-spi, relatório anterior | [Javadoc](commons-spi/javadoc/index.html) | [Testes](commons-spi/test/index.html) | [JaCoCo](commons-spi/jacoco/index.html) |
+
+[Voltar ao README principal](../README.md)

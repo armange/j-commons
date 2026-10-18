@@ -24,7 +24,7 @@ public class StringToByteConverterImpl implements StringToByteConverter {
     
     @Override
     public TypeConverter<String, Byte> from(final String sourceObject) {
-        result = sourceObject != null ? new Byte(sourceObject) : null;
+        result = sourceObject != null ? Byte.valueOf(sourceObject) : null;
         
         return this; 
     }

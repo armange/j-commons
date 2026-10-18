@@ -14,7 +14,7 @@
  * limitations under the License.
  * */
 dependencies {
-    implementation project(':commons-object-api')
+    api project(':commons-object-api')
     implementation project(':commons-message')
     implementation project(':commons-reflection')
     implementation project(':commons-spi')
