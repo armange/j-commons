@@ -16,6 +16,7 @@
 package br.com.armange.commons.thread.util;
 
 import br.com.armange.commons.thread.builder.ThreadBuilder;
+import br.com.armange.commons.thread.exception.UncheckedException;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,6 +25,9 @@ import org.mockito.Mockito;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 import static org.mockito.Mockito.*;
@@ -74,20 +78,27 @@ public class ThreadUtilTest {
     }
 
     @Test
-    public void interruptSleepUnchecked() {
-        final Thread t1 = spy(new Thread(() -> System.out.println("Thread 01 executed.")));
-        final Thread t2 = spy(new Thread(() -> {
-            System.out.println("Thread 02 executed.");
-            ThreadUtil.sleepUnchecked(1000);
-            t1.start();
-        }));
+    public void interruptSleepUnchecked() throws InterruptedException {
+        final CountDownLatch started = new CountDownLatch(1);
+        final AtomicReference<UncheckedException> failure = new AtomicReference<>();
+        final Thread thread = new Thread(() -> {
+            started.countDown();
 
-        t2.start();
-        ThreadUtil.sleepUnchecked(100);
-        t2.interrupt();
+            try {
+                ThreadUtil.sleepUnchecked(1000);
+            } catch (final UncheckedException e) {
+                failure.set(e);
+            }
+        });
 
-        verifyNoInteractions(t1);
-        verify(t2).run();
+        thread.start();
+        Assert.assertTrue(started.await(5, TimeUnit.SECONDS));
+        thread.interrupt();
+        thread.join(5000);
+
+        Assert.assertFalse(thread.isAlive());
+        Assert.assertNotNull(failure.get());
+        Assert.assertTrue(failure.get().getCause() instanceof InterruptedException);
     }
 
     @Test(expected = RuntimeException.class)
