@@ -1,5 +1,7 @@
 # Commons-thread [:rewind:](https://github.com/armange/j-commons)
 
+[Voltar ao README principal](../README.md)
+
 This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies thread creation for some specific scenarios that may be routine for some types of software projects.
 
 - [Some context](#somecontext)
@@ -54,7 +56,7 @@ This release was created based on the need to simplify daily software developmen
 ##### [Gradle import](https://search.maven.org/artifact/br.com.armange/commons-thread)
 
 ```
-compile group: 'br.com.armange', name: 'commons-thread', version: '2.0.0'
+implementation 'br.com.armange:commons-thread:2.0.0'
 ```
 
 <a name="somecontext"></a>

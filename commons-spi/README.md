@@ -1,5 +1,7 @@
 # Commons-spi [:rewind:](https://github.com/armange/j-commons)
 
+[Voltar ao README principal](../README.md)
+
 This release was created based on the need to simplify daily software development tasks. It contains a framework that simplifies [SPI](https://docs.oracle.com/javase/tutorial/sound/SPI-intro.html) handling that may be routine for some types of software projects.
 
 <a name="summary"></a>
@@ -44,7 +46,7 @@ This release was created based on the need to simplify daily software developmen
 ##### Gradle import
 
 ```
-compile group: 'br.com.armange', name: 'commons-spi', version: '1.0.0'
+implementation 'br.com.armange:commons-spi:1.0.0'
 ```
 
 ### Samples
