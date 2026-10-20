@@ -16,9 +16,10 @@
 package br.com.armange.commons.thread.async;
 
 /**
- * {@code AsyncRuntimeException} extends the {@code RuntimeException} class and should be used to
- * encapsulate exceptions that occur within a thread exclusively in the context of the resources
- * of the {@code TryAsyncBuilder} class.
+ * Wraps an {@code Exception} caught while running a task submitted by
+ * {@link TryAsyncBuilder}. It is used for the plain {@code RunnableWithException}
+ * path as well as resource-based paths; it does not represent every failure
+ * of an asynchronous task or a resource finalizer.
  *
  * @author Diego Armange Costa
  * @see RuntimeException

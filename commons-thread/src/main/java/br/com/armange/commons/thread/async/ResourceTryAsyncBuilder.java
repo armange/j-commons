@@ -21,8 +21,9 @@ import java.io.Closeable;
 import java.io.IOException;
 
 /**
- * It is a thread builder that assists in creating structured threads to simulate a set of
- * try-with-resources blocks.
+ * Asynchronous builder for one already-open {@link Closeable}. A callback
+ * closes the resource after task execution, separately from the task's
+ * internal {@code Future}; this is not Java try-with-resources.
  *
  * @author Diego Armange Costa
  * @see br.com.armange.commons.thread.async.TryAsyncBuilder
@@ -60,12 +61,12 @@ public class ResourceTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTry
     }
 
     /**
-     * From the configuration parameters previously provided in the thread constructor,
-     * a new thread will be configured and executed so that it can simulate a try-catch-finally
-     * code block or a try-with-resources code block.<br> The consumer of closable objects
-     * will be executed taking the closable objects as a parameter.
+     * Submits the task with the already-open resource. An after-execution
+     * finalizer closes it; an {@code IOException} from closing is wrapped in
+     * {@code UncheckedException} and logged by the executor callback, not
+     * returned to the caller. This method does not wait for task or closure.
      *
-     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     * @see AbstractTryAsyncBuilder#execute(RunnableWithException)
      */
     @Override
     public void execute() {

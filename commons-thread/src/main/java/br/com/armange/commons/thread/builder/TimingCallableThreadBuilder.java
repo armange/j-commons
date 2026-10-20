@@ -19,7 +19,10 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * Class responsible for simplifying and speeding up the creation and configuration of threads.
+ * Builder for a one-shot {@link Callable} with optional delay and timeout.
+ * {@code setInterval()} is inherited but a periodic callable is unsupported:
+ * calling {@code start()} with an interval throws
+ * {@code UnsupportedOperationException}.
  *
  * @param <S> the result type of method call.
  * @author Diego Armange Costa

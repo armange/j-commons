@@ -22,8 +22,12 @@ import java.io.IOException;
 import java.util.stream.Stream;
 
 /**
- * It is a thread builder that assists in creating structured threads to simulate a set of
- * try-with-resources blocks.
+ * Asynchronous builder for an already-open array of {@link Closeable}
+ * resources. Closure runs in an after-execution callback in array order,
+ * stopping at the first {@code IOException}; unlike Java try-with-resources,
+ * it does not aggregate later closing failures as suppressed exceptions.
+ * The inherited fluent type currently causes {@code ClassCastException} when
+ * {@code addCatcher()} or {@code finallyAsync()} is chained.
  *
  * @author Diego Armange Costa
  * @see br.com.armange.commons.thread.async.TryAsyncBuilder
@@ -63,12 +67,12 @@ public class ResourcesTryAsyncBuilder extends AbstractTryAsyncBuilder<ResourceTr
     }
 
     /**
-     * From the configuration parameters previously provided in the thread constructor,
-     * a new thread will be configured and executed so that it can simulate a try-catch-finally
-     * code block or a try-with-resources code block.<br> The consumer of closable objects
-     * will be executed taking the closable objects as a parameter.
+     * Submits the task with the supplied array. Resource closing happens in
+     * an after-execution callback, not before this method returns. A closing
+     * {@code IOException} is wrapped and logged by the executor callback;
+     * no public {@code Future} exposes that failure.
      *
-     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     * @see AbstractTryAsyncBuilder#execute(RunnableWithException)
      */
     @Override
     public void execute() {

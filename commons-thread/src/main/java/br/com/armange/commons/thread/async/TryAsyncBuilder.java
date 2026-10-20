@@ -21,63 +21,50 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * It is a thread builder that assists in creating structured threads to simulate a set of
- * try-catch-finally or try-with-resources blocks.<br><br>
+ * Entry point for asynchronous task builders with exception catchers, finalizers
+ * and overloads for already-open {@link Closeable} resources. This API is not
+ * structured concurrency or Java's try-with-resources: {@code execute()} returns
+ * {@code void}, creates an internal platform-thread executor and exposes neither
+ * a {@code Future} nor manual executor closure. Shutdown is requested after
+ * submission and termination follows task callbacks, without blocking
+ * {@code execute()}.
  *
- * <h3>Example without resources</h3>
- * <pre>
- *     &#064;Test
- *     public void shouldSayHello() throws InterruptedException {
- *         final StringBuilder message = new StringBuilder();
- *         final RunnableWithException sayHello = () -&gt; {
- *             message.append("Hello ");
- *             throw new Exception("Just a test");
- *         };
+ * <p>For example, inside a method that declares {@code throws Exception}, a
+ * caller can arrange a completion signal through a finalizer:
+ * <pre>{@code
+ * java.util.concurrent.CountDownLatch finished =
+ *         new java.util.concurrent.CountDownLatch(1);
+ * TryAsyncBuilder.tryAsync((RunnableWithException) () -> System.out.println("work"))
+ *         .addCatcher(Exception.class, Throwable::printStackTrace)
+ *         .finallyAsync(finished::countDown)
+ *         .execute();
+ * if (!finished.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+ *     throw new IllegalStateException("Task did not finish");
+ * }
+ * }</pre>
+ * The signal observes that this finalizer ran; it does not supply a task result,
+ * prove the internal executor has terminated at that instant or guarantee a
+ * signal if an earlier finalizer fails.
  *
- *         // try {
- *         //     message.append("Hello ");
- *         //     throw new Exception("Just a test");
- *         // } catch (final Exception e) {
- *         //     message.append("world");
- *         // } finally {
- *         //     message.append("!");
- *         // }
- *         tryAsync(sayHello)
- *                 .addCatcher(Exception.class,exception -&gt;
- *                         message.append("world"))
- *                 .addFinalizer(() -&gt; message.append("!"))
- *                 .execute();
- *
- *         Thread.sleep(1000);
- *         Assert.assertEquals("Hello world!",message.toString());
- *     }
- * </pre>
- *
- * <h3>Example with I/O</h3>
- * <pre>
- *     &#064;Test
- *     public void shouldWriteHello() throws IOException {
- *         final Path tempPath = Files.createTempFile("hello", ".txt");
- *         final File tempFile = new File(tempPath.toString());
- *         final FileWriter fileWriter = new FileWriter(tempFile);
- *         final String fileContent = "Hello world!";
- *
- *         // try (final FileWriter fileWriter = new FileWriter(tempFile)) {
- *         //     fileWriter.write(fileContent);
- *         //     fileWriter.flush();
- *         // } catch (final Exception e) {
- *         //     ...
- *         // }
- *         tryAsync(fileWriter, f -&gt; {
- *             fileWriter.write(fileContent);
- *             fileWriter.flush();
- *         }).execute();
- *
- *         final String content = Files.readAllLines(tempPath).get(0);
- *
- *         Assert.assertEquals(fileContent, content);
- *     }
- * </pre>
+ * <p>For I/O, an already-open resource is passed to the task and closed later by
+ * an after-execution callback. Await an explicit completion signal before reading
+ * its output; calling {@code execute()} alone does not wait:
+ * <pre>{@code
+ * java.nio.file.Path file = java.nio.file.Files.createTempFile("hello", ".txt");
+ * java.io.FileWriter writer = new java.io.FileWriter(file.toFile());
+ * java.util.concurrent.CountDownLatch closed =
+ *         new java.util.concurrent.CountDownLatch(1);
+ * TryAsyncBuilder.tryAsync(writer, out ->
+ *         ((java.io.FileWriter) out).write("Hello world!"))
+ *         .finallyAsync(closed::countDown)
+ *         .execute();
+ * if (!closed.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+ *     throw new IllegalStateException("Resource finalization did not finish");
+ * }
+ * String content = java.nio.file.Files.readString(file);
+ * }</pre>
+ * The resource-closing finalizer precedes the added signal. If it fails, the
+ * signal may not run and this API provides no {@code Future} for that failure.
  * @author Diego Armange Costa
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
@@ -87,27 +74,25 @@ public final class TryAsyncBuilder {
     }
 
     /**
-     * It creates a new thread builder that supports creating threads that are structured
-     * to simulate a try-catch block code.
+     * Creates a builder for an asynchronous task with optional catchers and
+     * finalizers. Its {@code execute()} method returns {@code void}.
      *
-     * @param execution The Runnable interface should be implemented by any class whose
-     *                  instances are intended to be executed by a thread. The class must
-     *                  define a method of no arguments called run.
-     * @return A thread constructor with a defined thread implementation.
+     * @param execution the task, which may throw a checked exception
+     * @return a builder for the task
      */
     public static RunnableTryAsyncBuilder tryAsync(final RunnableWithException execution) {
         return RunnableTryAsyncBuilder.tryAsync(execution);
     }
 
     /**
-     * This creates a new thread builder that supports creating threads that are structured
-     * to simulate a try-catch block code.
+     * Creates a builder for an asynchronous {@link Callable} and result
+     * consumer. The consumer runs after the task's internal future completes,
+     * before finalizers, and is not awaited by a caller of {@code execute()}.
      *
-     * @param callable       A task that returns a result and may throw an exception.
-     * @param resultConsumer The consumer for the thread's execution result.
-     * @param <T>            The type of the object resulting from the execution of the thread.
-     * @return A thread constructor with a defined thread implementation and an implementation
-     * of a consumer for the object resulting from the thread's execution.
+     * @param callable       the task that returns a value
+     * @param resultConsumer the callback for a successful value
+     * @param <T>            the result type
+     * @return a builder for the task and result consumer
      */
     public static <T> CallableTryAsyncBuilder<T> tryAsync(final Callable<T> callable,
                                                           final Consumer<T> resultConsumer) {
@@ -115,24 +100,18 @@ public final class TryAsyncBuilder {
     }
 
     /**
-     * It creates a new thread builder that supports creating threads that are structured
-     * to simulate a try-with-resources block code.<br>
-     * The try-with-resources block will be simulated through a thread that will execute a
-     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
-     * will be the only implementation executed within the thread, so this implementation
-     * represents the try block of a set of try-with-resources blocks. After the thread runs
-     * the closeable object will be closed. Any exception (which extends the
-     * {@code Exception} class) that occurs within the execution (implementation)
-     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     * Creates a builder that passes an already-open resource to an asynchronous
+     * task. A finalizer closes the resource after task completion; this is not
+     * Java try-with-resources and {@code execute()} does not await closure.
+     * An {@code Exception} from the task is wrapped in
+     * {@link AsyncRuntimeException}; an {@code IOException} from closing is
+     * wrapped in an unchecked exception in the after-execution callback and
+     * logged there, without a public {@code Future} for the closing failure.
      *
-     * @param closeable          A Closeable is a source or destination of data that can be closed.
-     *                           The close method is invoked to release resources that the object
-     *                           is holding (such as open files). This parameter corresponds to the
-     *                           declaration of one or more items within the
-     *                           try-with-resources block, which will later be automatically closed.
-     * @param attemptedExecution The implementation of a consumer that will consume
-     *                           an implementation of a Closeable.
-     * @return A thread constructor with a defined thread implementation.
+     * @param closeable          the already-open resource passed to and later
+     *                           closed after the task
+     * @param attemptedExecution the task that receives the resource
+     * @return a builder for the resource task
      */
     public static ResourceTryAsyncBuilder tryAsync(final Closeable closeable,
                                                    final ResourceConsumer attemptedExecution) {
@@ -140,24 +119,17 @@ public final class TryAsyncBuilder {
     }
 
     /**
-     * It creates a new thread builder that supports creating threads that are structured
-     * to simulate a try-with-resources block code.<br>
-     * The try-with-resources block will be simulated through a thread that will execute a
-     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
-     * will be the only implementation executed within the thread, so this implementation
-     * represents the try block of a set of try-with-resources blocks. After the thread runs
-     * the closeable object will be closed. Any exception (which extends the
-     * {@code Exception} class) that occurs within the execution (implementation)
-     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     * Creates a builder for an already-open array of resources. The task
+     * receives that array; an after-execution finalizer closes its elements in
+     * array order. Closing stops at the first {@code IOException} and does not
+     * aggregate suppressed exceptions like Java try-with-resources.
+     * This variant currently has a fluent-type defect: chaining
+     * {@code addCatcher()} or {@code finallyAsync()} can throw
+     * {@code ClassCastException}.
      *
-     * @param attemptedExecution The implementation of a consumer that will consume
-     *                           implementations of a Closeable.
-     * @param resources          A Closeable is a source or destination of data that can be closed.
-     *                           The close method is invoked to release resources that the object
-     *                           is holding (such as open files). This parameter corresponds to the
-     *                           declaration of one or more items within the try-with-resources
-     *                           block, which will later be automatically closed.
-     * @return A thread constructor with a defined thread implementation.
+     * @param attemptedExecution the task that receives the resource array
+     * @param resources          already-open resources closed after the task
+     * @return a builder for the resource task
      */
     public static ResourcesTryAsyncBuilder tryAsync(final ResourcesConsumer attemptedExecution,
                                                     final Closeable... resources) {
@@ -165,24 +137,18 @@ public final class TryAsyncBuilder {
     }
 
     /**
-     * It creates a new thread builder that supports creating threads that are structured
-     * to simulate a try-with-resources block code.<br>
-     * The try-with-resources block will be simulated through a thread that will execute a
-     * consumer receiving a closeable object as a parameter. The consumer of the closeable object
-     * will be the only implementation executed within the thread, so this implementation
-     * represents the try block of a set of try-with-resources blocks. After the thread runs
-     * the closeable object will be closed. Any exception (which extends the
-     * {@code Exception} class) that occurs within the execution (implementation)
-     * of the thread, will be encapsulated in the {@code AsyncRuntimeException} class.
+     * Creates a builder for an already-open map of resources. The task receives
+     * the map; an after-execution finalizer closes {@code values()} in map
+     * iteration order. Closing stops at the first {@code IOException} and does
+     * not aggregate suppressed exceptions like Java try-with-resources.
+     * This variant currently has a fluent-type defect: chaining
+     * {@code addCatcher()} or {@code finallyAsync()} can throw
+     * {@code ClassCastException}.
      *
-     * @param closeableMap       A Closeable is a source or destination of data that can be closed.
-     *                           The close method is invoked to release resources that the object
-     *                           is holding (such as open files). This parameter corresponds to the
-     *                           declaration of one or more items within the
-     *                           try-with-resources block, which will later be automatically closed.
-     * @param attemptedExecution The implementation of a consumer that will consume
-     *                           implementations of a Closeable.
-     * @return A thread constructor with a defined thread implementation.
+     * @param closeableMap       already-open resources passed to the task and
+     *                           closed after it
+     * @param attemptedExecution the task that receives the resource map
+     * @return a builder for the resource task
      */
     public static MappedResourcesTryAsyncBuilder tryAsync(
             final Map<Object, Closeable> closeableMap,

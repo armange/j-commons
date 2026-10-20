@@ -15,7 +15,8 @@
  * */
 package br.com.armange.commons.thread.async;
 
-import br.com.armange.commons.thread.builder.ThreadBuilder;
+import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
+import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,12 +24,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * Abstraction to implement a try-async operations builder.
- * These operations are simply try-catch-finally statements executed on a new thread.
+ * Base for asynchronous task builders with exception consumers and finalizers.
+ * Calling {@link #execute()} submits a task through an internally created
+ * executor and returns {@code void}; the executor and {@code Future} are not
+ * exposed. Shutdown is requested immediately after submission; the executor
+ * terminates after task callbacks, without blocking {@code execute()}.
+ * Finalizers are after-execution callbacks, rather than a Java
+ * {@code finally} block inside the task.
  *
  * @author Diego Armange Costa
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
@@ -38,8 +45,11 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     protected final List<Runnable> finalizingExecutables = new LinkedList<>();
 
     /**
-     * It adds a treatment for a particular exception, if it is thrown during the
-     * implementation contained in the "try-block".
+     * Registers a consumer for a matching task exception. If several types
+     * match, this implementation does not guarantee that the most specific
+     * catcher wins. The runnable and resource paths wrap a caught
+     * {@code Exception}, but do not catch {@code Error} in the task body.
+     * Callable failures are captured by their internal {@code Future}.
      *
      * @param exceptionClass    the exception class that can be thrown and will be handled.
      * @param exceptionConsumer the implementation of the exception handling launched
@@ -56,9 +66,14 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * It adds an implementation that will be executed inside the "finally-block".
+     * Adds an after-execution callback. It runs after the task's internal
+     * {@code Future} completes, not inside the task's {@code finally} block.
+     * For a {@code Callable}, its result consumer runs first. Its failure is
+     * logged and finalizers are still attempted. If an earlier finalizer
+     * throws, later finalizers may not run; these failures are logged rather
+     * than delivered through a public result.
      *
-     * @param runnable the implementation that will be executed inside the "finally-block".
+     * @param runnable the after-execution callback
      * @return the current builder.
      */
     public T finallyAsync(final Runnable runnable) {
@@ -66,9 +81,10 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * Adds an implementation that will be executed inside the finally-block.
+     * Adds an after-execution finalizer. This method is protected; callers use
+     * {@link #finallyAsync(Runnable)}.
      *
-     * @param runnable the implementation that will be executed inside the "finally-block".
+     * @param runnable the after-execution finalizer
      * @return the current builder.
      */
     @SuppressWarnings("unchecked")
@@ -79,38 +95,38 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * Executes a thread according to the given implementation, which simulates a try block,
-     * configured with an (or more) exception catcher, as well as a finalizer.
-     * As with a try-catch block implementation, only the main implementation(try-block)
-     * is mandatory.
+     * Submits a {@link RunnableWithException} through an internal executor.
+     * Its checked {@code Exception} is wrapped in
+     * {@link AsyncRuntimeException}; catchers and finalizers run in executor
+     * callbacks after the task's internal {@code Future} completes. The
+     * executor is shut down after submission and terminates after its callbacks
+     * without blocking this method.
+     * Neither the {@code Future} nor the executor is exposed to the caller.
      *
      * @param attemptedExecution the thread implementation, which simulates the try-block
      * @see br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher
      * @see AbstractTryAsyncBuilder#finallyAsync(java.lang.Runnable)
      */
     protected void execute(final RunnableWithException attemptedExecution) {
-        ThreadBuilder
-                .newBuilder()
-                .setExecution(() -> {
-                    try {
-                        attemptedExecution.run();
-                    } catch (final Exception e) {
-                        throw new AsyncRuntimeException(e);
-                    }
-                })
-                .setUncaughtExceptionConsumer(consumeExceptionIfExists())
-                .setAfterExecuteConsumer((runnable, throwable) ->
-                        finalizingExecutables.forEach(Runnable::run))
-                .start();
+        final FutureTask<Void> futureTask = new FutureTask<>(() -> {
+            try {
+                attemptedExecution.run();
+            } catch (final Exception e) {
+                throw new AsyncRuntimeException(e);
+            }
+        }, null);
+
+        submitAsyncTask(futureTask, null);
     }
 
     /**
-     * A new thread will be configured and executed with the following structure:<br><br>
-     * In addition to the thread implementation, existing exception handling implementations
-     * will be added, however, only the implementation corresponding to the thrown exception
-     * will be executed. After the thread runs, even if it throws an exception, the finalizing
-     * implementation (if configured) will be executed. Finally, if the thread produces some
-     * object as a result, and if there is a consumer for that result, it will be executed.
+     * Submits a {@link Callable} through an internal executor. On success,
+     * the result consumer runs in an after-execution callback before the
+     * finalizers. A failed result consumer is logged, then finalizers are
+     * still attempted; a failed finalizer can prevent later finalizers.
+     * Neither the consumer's failure nor the task's {@code Future} is returned
+     * to the caller. Shutdown is requested after submission; the internal
+     * executor terminates after callbacks.
      *
      * @param task           the thread implementation, which simulates the try-block
      * @param resultConsumer the thread result consumer implementation.
@@ -120,25 +136,53 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
      */
     protected <S> void execute(final Callable<S> task,
                                final Consumer<S> resultConsumer) {
-        ThreadBuilder
-                .newBuilder()
-                .setExecution(task)
-                .setUncaughtExceptionConsumer(consumeExceptionIfExists())
-                .setAfterExecuteConsumer((runnable, throwable) ->
-                        finalizingExecutables.forEach(Runnable::run))
-                .setThreadResultConsumer(resultConsumer)
-                .start();
+        submitAsyncTask(new FutureTask<>(task), resultConsumer);
+    }
+
+    private <S> void submitAsyncTask(final FutureTask<S> futureTask,
+                                     final Consumer<S> resultConsumer) {
+        final ScheduledThreadBuilderExecutor executor = createExecutor();
+
+        try {
+            executor.addAfterExecuteConsumer((runnable, throwable) ->
+                    observeResult(futureTask, resultConsumer));
+            executor.addAfterExecuteConsumer((runnable, throwable) ->
+                    finalizingExecutables.forEach(Runnable::run));
+            executor.execute(futureTask);
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    private <S> void observeResult(final FutureTask<S> futureTask,
+                                   final Consumer<S> resultConsumer) {
+        try {
+            final S result = futureTask.get();
+
+            if (resultConsumer != null) {
+                resultConsumer.accept(result);
+            }
+        } catch (final Exception e) {
+            consumeExceptionIfExists().accept(e);
+        }
+    }
+
+    ScheduledThreadBuilderExecutor createExecutor() {
+        final ExceptionCatcherThreadFactory factory = new ExceptionCatcherThreadFactory();
+
+        factory.setUncaughtExceptionHandler((thread, throwable) ->
+                consumeExceptionIfExists().accept(throwable));
+
+        return new ScheduledThreadBuilderExecutor(1, factory);
     }
 
     /**
-     * It consumes an exception according the given consumers added by
-     * {@link br.com.armange.commons.thread.async.AbstractTryAsyncBuilder#addCatcher}.
-     * If no consumers is present, no action will be performed.
-     * Only consumers compatible with the exception will be triggered.
-     * It will be triggered twice if the exception consumer is rethrowing any exception.
-     * The second calling will be triggered in
-     * "java.lang.Thread#dispatchUncaughtException(Throwable)".
-     * see "AbstractThreadBuilder#getThreadFactory()"
+     * Selects one registered consumer compatible with the task exception or
+     * its supported cause. Selection iterates a {@code HashMap}, so there is
+     * no most-specific-first guarantee. The cause matching path assumes a
+     * non-null cause; a matching runtime exception without one can cause
+     * {@code NullPointerException}. An {@code Exception} thrown by a catcher is
+     * logged by the executor callback; later callbacks are still attempted.
      *
      * @return the exception consumer implementation.
      */
@@ -189,9 +233,12 @@ public abstract class AbstractTryAsyncBuilder<T extends AbstractTryAsyncBuilder<
     }
 
     /**
-     * As a try-block implementation, performs the thread configured with the
-     * exception catcher(s) and a finalizer. If the thread generates a result value
-     * and no exceptions is thrown, a result consumer will be triggered.
+     * Starts the configured asynchronous task and returns without waiting for
+     * its result, exception consumers, resource closure or finalizers. This
+     * API does not provide a {@code Future} or a close method for its internal
+     * executor. Shutdown is requested after submission and termination follows
+     * the task callbacks; rejection propagates to the caller and also requests
+     * shutdown.
      *
      * @see AbstractTryAsyncBuilder#execute(RunnableWithException)
      * @see AbstractTryAsyncBuilder#execute(Callable, Consumer)

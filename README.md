@@ -22,7 +22,17 @@ compilado para Java 25 e exige JDK 25 para execução.
 | [commons-object-impl](commons-object-impl/README.md) | Implementações de conversores | `1.0.0-SNAPSHOT` |
 | [commons-reflection](commons-reflection/README.md) | Utilitários de reflexão | `1.0.0-SNAPSHOT` |
 | [commons-spi](commons-spi/README.md) | Carregamento de serviços SPI | `2.0.0-SNAPSHOT` |
-| [commons-thread](commons-thread/README.md) | Construção e execução de tarefas | `3.0.0-SNAPSHOT` |
+| [commons-thread](commons-thread/README.md) | Execução, agendamento, timeout e acompanhamento de tarefas | `3.0.0-SNAPSHOT` |
+
+Em `commons-thread`, o builder poupa composição manual para um `Runnable`
+periódico com atraso, timeout e callbacks, ou para um `Callable` individual
+com resultado; veja a [combinação de facilidades](commons-thread/README.md#combinação-das-facilidades).
+Para tarefas virtuais periódicas com uma thread nova por ciclo, há uma
+[API de agendamento própria](commons-thread/README.md#3-agendamento-em-threads-virtuais).
+Para submeter uma tarefa isolada sem agendamento, o
+[executor do JDK](commons-thread/README.md#51-tarefas-simples-com-o-jdk)
+normalmente exige menos configuração. A [orientação de escolha](commons-thread/README.md#quando-usar-a-biblioteca)
+explica os custos e os limites de cada caminho.
 
 As versões `-SNAPSHOT` acima representam código em desenvolvimento e não foram
 publicadas. Os exemplos de dependência dos módulos usam essas coordenadas para

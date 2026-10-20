@@ -29,8 +29,10 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 /**
- * Abstraction for thread builders that simplify, and provide some additional features(below)
- * to the thread implementation.
+ * Base for builders that submit tasks to a
+ * {@link ScheduledThreadBuilderExecutor}. The builder creates the executor on
+ * first start and reuses it on later starts. The caller owns its shutdown via
+ * {@link ExecutorResult#getExecutorService()}.
  * <br>
  * <ul>
  *   <li>
@@ -83,7 +85,10 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Sets the consumer to be called after thread execution.
+     * Registers a callback on the shared executor after task execution. It
+     * can receive events from other tasks using that executor. For submitted
+     * tasks, {@code throwable} can be {@code null} even when their
+     * {@code Future} contains a failure.
      *
      * @param afterExecuteConsumer the consumer to be called after thread execution.
      * @return the current thread builder.
@@ -96,10 +101,18 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Sets the consumer to be called after exception throwing. This consumer will
-     * be called as a first after-executes consumer.
+     * Configures a consumer for two failure paths. An after-execution callback
+     * reads submitted tasks' {@code Future}s and typically passes an
+     * {@code ExecutionException} (or a cancellation exception), rather than
+     * the task's direct cause. The consumer is also installed as an
+     * {@code UncaughtExceptionHandler} on threads created by the configured
+     * factory; there it receives the original genuinely uncaught throwable.
+     * Failures captured by a submitted task's {@code Future} do not invoke
+     * that thread handler. On a reused executor, callbacks registered by
+     * earlier starts can also observe later tasks.
      *
-     * @param uncaughtExceptionConsumer the consumer to be called after exception throwing.
+     * @param uncaughtExceptionConsumer the consumer for observed task failures
+     *                                  and genuinely uncaught thread failures
      * @return the current thread builder.
      */
     public U setUncaughtExceptionConsumer(
@@ -129,8 +142,10 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Sets the thread priority supplier. The thread factory will consume this
-     * supplier to generate a thread priority before return a new thread.
+     * Sets a priority supplier for platform threads. The default factory
+     * consults it once when the executor is created; a supplied
+     * {@link ExceptionCatcherThreadFactory} receives that value through its
+     * setter. Priority is not a configurable virtual-thread property.
      *
      * @param threadPrioritySupplier the thread priority supplier.
      * @return the current thread builder.
@@ -156,9 +171,11 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Sets the thread-silent-interrupting-flag.<br>
-     * When this flag is true, exceptions caught on the thread will only be logged,
-     * and will not be handled in any way.
+     * Controls handling of {@code CancellationException} observed through an
+     * internal {@code Future}. When true, cancellation is logged instead of
+     * sent to the configured exception consumer; other exceptions still reach
+     * that consumer. This does not suppress interruption of the task or make
+     * the executor silent.
      *
      * @param flag true if the Interruption/Cancellation exceptions should be ignored.
      * @return the current thread builder.
@@ -174,7 +191,10 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
 
     /**
      * Sets the thread result consumer.<br>
-     * After the thread execution, the result obtained will be consumed by this consumer.
+     * After successful {@code Callable} execution, an executor callback reads
+     * the {@code Future} and calls this consumer. A caller's
+     * {@code Future.get()} can return before the consumer finishes. A failed
+     * consumer is handled by the callback path, not stored in that future.
      *
      * @param threadResultConsumer the thread result consumer.
      * @return the current thread builder.
@@ -194,7 +214,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Creates the thread executor (if necessary) and starts the thread.
+     * Creates or reuses the executor and submits the configured task. The
+     * returned result exposes task futures and the executor; the caller must
+     * shut down the executor when it is no longer needed.
      *
      * @return the executor's result after starting thread.
      * @see ExecutorResult
@@ -206,7 +228,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Creates the thread executor (if necessary) and starts the thread.
+     * Creates or reuses the executor, submits the task and returns this same
+     * builder for another submission. The pool size does not itself create
+     * multiple tasks.
      *
      * @return the current thread builder to prepare another thread.
      */
@@ -217,7 +241,9 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Creates the thread executor (if necessary) and starts the thread.
+     * Registers after-execution callbacks, submits one task and adds its
+     * future to the shared {@link ExecutorResult}. Repeated submissions on
+     * this executor also retain previously registered callbacks.
      */
     protected void createExecutorAndRunThread() {
         requireExecutionNonNull();
@@ -340,12 +366,11 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Returns a lambda that handles exceptions caught on the thread.<br>
-     * If the thread has not been canceled and there are no exceptions, and if there is
-     * a consumer for the thread's result, it will be executed.<br>
-     * If the thread has thrown an exception, and if the thread has not been configured
-     * to silence exceptions, it will be handled according to the exception's
-     * consumer (if configured previously).
+     * Returns an after-execution callback that inspects the submitted
+     * {@code Future} when the executor supplies a null throwable. It reads a
+     * successful callable result or passes a caught failure to the configured
+     * consumer. {@code setSilentInterruption(true)} only bypasses that consumer
+     * for {@code CancellationException}; the cancellation is still logged.
      *
      * @param futureHolder the thread's Future object, encapsulated by a Holder object.
      * @param <F>          the type of the object resulting from the execution of the thread.
@@ -375,10 +400,11 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * If the thread is of type {@link Callable}, it stores the thread result in an
-     * {@link ExecutorResult} instance and applies this result to the respective consumer.
-     * If it is a {@link Runnable} thread, it just calls the get method of the
-     * {@link Future} object.
+     * For a {@link Callable}, stores the value in the shared
+     * {@link ExecutorResult} and invokes its result consumer. For a
+     * {@link Runnable}, calls {@code Future.get()} to observe failure.
+     * Callback execution follows future completion and is not awaited by
+     * another caller of that future.
      *
      * @param future the thread Future object.
      * @throws InterruptedException if the thread was interrupted.

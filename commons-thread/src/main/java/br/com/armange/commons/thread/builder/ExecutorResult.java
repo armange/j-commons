@@ -23,13 +23,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
- * A bean that encapsulates a thread result, composed of an ExecutorService,
- * a Future list, and another ExecutorResult list for timed threads.<br>
- * The ExecutorResult list will be present when some thread has a timeout.<br>
- * A {@link Future} object will be present by each thread started.<br>
- * Consider seeing the logical relationship between
- * {@link java.util.concurrent.ExecutorService} and
- * {@link java.util.concurrent.Future} in their respective documentation.
+ * Holds the builder's executor, task futures, optional timeout-executor
+ * results and the latest callable value observed by an executor callback.
+ * The lists are mutable and reused when the same builder submits more tasks.
+ * The caller owns shutdown of the task executor and every separate timeout
+ * executor; {@code Future.get()} does not await result consumers or other
+ * after-execution callbacks.
  *
  * @author Diego Armange Costa
  * @see ScheduledThreadBuilderExecutor
@@ -48,14 +47,14 @@ public class ExecutorResult<T> {
     }
 
     /**
-     * @return the {@link java.util.concurrent.ExecutorService}
+     * @return the task executor, which the caller must shut down
      */
     public ExecutorService getExecutorService() {
         return executorService;
     }
 
     /**
-     * @return the {@link Future}s list.
+     * @return the mutable list of submitted task futures
      */
     @SuppressWarnings("rawtypes")
     public List<Future<T>> getFutures() {
@@ -63,7 +62,10 @@ public class ExecutorResult<T> {
     }
 
     /**
-     * Whenever a thread times out, its respective ExecutorService and Future will be present in this list.
+     * Each task configured with a timeout adds a result holding its separate
+     * cancellation executor. Its future list contains the original task
+     * future, not a future for the cancellation action. The caller must shut
+     * down each cancellation executor, even when the task finishes early.
      *
      * @return the timeout thread's {@link ExecutorResult}s
      */
@@ -72,7 +74,8 @@ public class ExecutorResult<T> {
     }
 
     /**
-     * @return the thread result object.
+     * @return the latest callable value stored by the after-execution callback;
+     *         it can still be unset when a task future has already completed
      */
     public T getThreadResult() {
         return threadResult;

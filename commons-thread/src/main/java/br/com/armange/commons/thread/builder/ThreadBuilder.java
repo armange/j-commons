@@ -18,8 +18,11 @@ package br.com.armange.commons.thread.builder;
 import java.util.concurrent.Callable;
 
 /**
- * Class responsible for simplifying and speeding up the creation and configuration of threads.<br>
- * The implementation of threads can be simplified using one of the four classes below.<br>
+ * Entry point for platform-thread task builders. Each started builder uses a
+ * {@code ScheduledThreadBuilderExecutor}; a pool size configures worker
+ * capacity, not the number of tasks submitted. The caller receives an
+ * {@link ExecutorResult} and owns shutdown of its executor and any separate
+ * timeout executor. The four task forms are:
  * <ul>
  *     <li>
  *          <b>CommonRunnableThreadBuilder:</b> To implement threads that run tasks
@@ -108,7 +111,8 @@ public final class ThreadBuilder {
     }
 
     /**
-     * Sets the thread task that can be configured with some scheduling features.
+     * Selects a runnable task with optional delay, fixed-rate interval and
+     * timeout.
      *
      * @param execution the Runnable interface should be implemented by any class whose
      *                  instances are intended to be executed by a thread. The class must
@@ -123,7 +127,9 @@ public final class ThreadBuilder {
     }
 
     /**
-     * Sets the thread task that can be configured with some scheduling features.
+     * Selects a callable task with delay or timeout. An interval can be set
+     * on the returned builder, but {@code start()} rejects a periodic callable
+     * with {@code UnsupportedOperationException}.
      *
      * @param execution a task that returns a result and may throw an exception.
      * @param <S>       the type of the object resulting from the execution of the thread.

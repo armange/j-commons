@@ -22,7 +22,11 @@ import java.util.Optional;
 import java.util.concurrent.*;
 
 /**
- * Abstraction for building threads with the main timing configuration options: Delay, Interval, Timeout.
+ * Base for scheduled platform-thread builders with delay, fixed-rate interval
+ * and cancellation deadline. A timeout schedules a separate cancellation
+ * executor, exposed through
+ * {@link ExecutorResult#getTimeoutExecutorResults()}, which callers must also
+ * shut down. A deadline is measured from submission, including any delay.
  *
  * @param <S> the type of the object resulting from the execution of the thread.
  * @param <T> Execution type. {@link Runnable}, {@link Callable}.
@@ -44,9 +48,12 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * Sets the timeout value.<br>
-     * The thread will have a timeout to complete its execution. After that time the thread will
-     * be canceled({@link Future#cancel(boolean)}).
+     * Sets a deadline measured from submission, not from the start of the
+     * task body. At that deadline a separate executor attempts
+     * {@link Future#cancel(boolean)} using the configured interruption flag.
+     * Cancellation does not prove the body stopped. The cancellation executor
+     * is returned through {@link ExecutorResult#getTimeoutExecutorResults()}
+     * and must be shut down by the caller.
      *
      * @param milliseconds the timeout value in milliseconds.
      * @return the current thread builder.
@@ -62,7 +69,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
 
     /**
      * Sets the delay value.<br>
-     * The thread will wait a predefined time before starting its execution.
+     * Sets the initial delay before a task or periodic series can start.
      *
      * @param milliseconds the delay value in milliseconds.
      * @return the current thread builder.
@@ -76,8 +83,11 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * Sets the repeating interval value.<br>
-     * The thread will repeat its execution, waiting a predefined time before each new execution.
+     * Sets a fixed-rate period for a {@code Runnable}, measured between
+     * planned starts rather than after each completion. Executions of one
+     * series do not overlap. Configuring an interval for a {@code Callable}
+     * is accepted here, but {@code start()} then throws
+     * {@code UnsupportedOperationException}.
      *
      * @param milliseconds the repeating interval value in milliseconds.
      * @return the current thread builder.
@@ -91,11 +101,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * Sets the thread-interrupting-flag.<br>
-     * It is used during execution of cancellation by timeout feature.
-     * The timeout feature uses a dedicated and secondary thread to perform the cancellation
-     * of the primary thread. Note: the primary thread is the one that has been
-     * configured with the timeout feature.
+     * Selects the argument passed to {@code Future.cancel(boolean)} by the
+     * separate timeout executor. The default is {@code false}; requesting
+     * interruption is only a best-effort attempt to stop a running task.
      *
      * @param flag true if the thread executing this task should be interrupted;
      *             otherwise, in-progress tasks are allowed to complete.
@@ -280,7 +288,9 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     }
 
     /**
-     * It schedules the thread, configuring the delay and period parameters.
+     * Schedules a {@code Runnable} at fixed rate. A {@code Callable} is not
+     * supported and causes {@code UnsupportedOperationException}. A failure
+     * in a cycle suppresses later cycles according to the JDK scheduler.
      *
      * @param delay  the delay before thread execution.
      * @param period the interval between thread executions.

@@ -22,8 +22,11 @@ import java.util.concurrent.ThreadFactory;
 /**
  * Thread factory for platform threads. It can also be supplied by a subclass
  * of {@link br.com.armange.commons.thread.builder.AbstractThreadBuilder}.
- * An implementation of {@link UncaughtExceptionHandler}, name and priority
- * can be assigned to each new thread created.
+ * A handler, fixed name and priority can be assigned to each new thread.
+ * The name and priority setters configure future threads, not an existing
+ * thread. A handler is invoked for genuinely uncaught failures; tasks
+ * submitted to an executor usually capture failures in their {@code Future}
+ * instead.
  * For direct thread creation on JDK 25, prefer {@link Thread#ofPlatform()} or
  * {@link Thread#ofVirtual()}. Both builders can configure names and uncaught
  * exception handlers; priority is available for platform threads only.
@@ -64,19 +67,22 @@ public class ExceptionCatcherThreadFactory implements ThreadFactory {
     }
 
     /**
-     * Set the default handler invoked when a thread abruptly terminates
-     * due to an uncaught exception, and no other handler has been defined
-     * for that thread.
+     * Sets a per-thread handler for future threads created by this factory;
+     * it does not change {@link Thread#setDefaultUncaughtExceptionHandler}.
+     * A {@code null} argument clears the configured handler.
      *
-     * @param uncaughtExceptionHandler the default handler.
-     * @see Thread#setDefaultUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)
+     * @param uncaughtExceptionHandler the per-thread handler, or {@code null}
+     *                                 to clear it
+     * @see Thread#setUncaughtExceptionHandler(java.lang.Thread.UncaughtExceptionHandler)
      */
     public void setUncaughtExceptionHandler(final UncaughtExceptionHandler uncaughtExceptionHandler) {
         this.uncaughtExceptionHandler = Optional.ofNullable(uncaughtExceptionHandler);
     }
 
     /**
-     * Changes the name of this thread to be equal to the argument {@code threadName}.
+     * Sets one fixed name for future threads from this factory. A
+     * {@code null} value clears the override and leaves generated names in
+     * place. This setter does not rename any already-created thread.
      *
      * @param threadName the thread name.
      * @see Thread#setName(java.lang.String)
@@ -86,7 +92,9 @@ public class ExceptionCatcherThreadFactory implements ThreadFactory {
     }
 
     /**
-     * Changes the priority of this thread.
+     * Sets the priority for future platform threads from this factory. A
+     * {@code null} value clears the override; an out-of-range priority is
+     * rejected when a future thread is created, not by this setter.
      *
      * @param threadPriority the thread priority
      * @see java.lang.Thread#setPriority

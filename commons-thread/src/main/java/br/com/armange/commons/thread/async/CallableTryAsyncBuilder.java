@@ -19,9 +19,9 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * Constructs a new thread simulating a try-catch-finally implementation that
- * generates a result value. The thread can contain one (or more) exception catcher,
- * such as a "catch" block. It can also contain a finisher implementation, such as a "finally" block.
+ * Builder for an asynchronous {@link Callable} with a result consumer,
+ * exception catchers and after-execution finalizers. The result consumer
+ * runs before finalizers, after the internal task future completes.
  *
  * @author Diego Armange Costa
  * @see br.com.armange.commons.thread.async.TryAsyncBuilder
@@ -50,9 +50,8 @@ public class CallableTryAsyncBuilder<S> extends AbstractTryAsyncBuilder<Callable
     }
 
     /**
-     * From the configuration parameters previously provided in the thread constructor,
-     * a new thread will be configured and executed so that it can simulate a try-catch-finally
-     * code block or a try-with-resources code block.
+     * Submits the task and returns without waiting for its result consumer
+     * or finalizers. The internal executor and {@code Future} are not exposed.
      *
      * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
      */

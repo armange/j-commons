@@ -16,8 +16,9 @@
 package br.com.armange.commons.thread.async;
 
 /**
- * It is a thread builder that assists in creating structured threads to simulate a set of
- * try-catch-finally or try-with-resources blocks.
+ * Builder for an asynchronous {@link RunnableWithException} with optional
+ * exception catchers and finalizers. Its {@code execute()} method returns
+ * {@code void} and does not expose the internally created executor.
  *
  * @author Diego Armange Costa
  * @see br.com.armange.commons.thread.async.TryAsyncBuilder
@@ -41,11 +42,9 @@ public class RunnableTryAsyncBuilder extends AbstractTryAsyncBuilder<RunnableTry
     }
 
     /**
-     * From the configuration parameters previously provided in the thread constructor,
-     * a new thread will be configured and executed so that it can simulate a try-catch-finally
-     * code block or a try-with-resources code block.
+     * Submits the task and returns without waiting for task or callbacks.
      *
-     * @see AbstractTryAsyncBuilder#execute(java.util.concurrent.Callable, java.util.function.Consumer)
+     * @see AbstractTryAsyncBuilder#execute(RunnableWithException)
      */
     @Override
     public void execute() {

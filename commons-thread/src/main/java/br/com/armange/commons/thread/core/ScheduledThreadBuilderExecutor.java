@@ -25,9 +25,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.BiConsumer;
 
 /**
- * A {@link ScheduledThreadPoolExecutor} that can additionally perform actions
- * after that the thread has completed normally. Consider to see the full documentation
- * ({@link java.util.concurrent.ScheduledThreadPoolExecutor}).
+ * A {@link ScheduledThreadPoolExecutor} with callbacks invoked after each
+ * execution, including exceptional completion. Callbacks are global to this
+ * executor, not scoped to a submitted task. For tasks wrapped in a
+ * {@code Future}, the {@code throwable} argument can be {@code null} even when
+ * the future contains a failure; callers must inspect that future separately.
+ * The mutable callback list is not synchronized.
  *
  * @author Diego Armange Costa
  * @see java.util.concurrent.ScheduledThreadPoolExecutor
@@ -69,16 +72,15 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
     }
 
     /**
-     * Method invoked upon completion of execution of the given Runnable. This
-     * method is invoked by the thread that executed the task. If non-null, the
-     * Throwable is the uncaught {@link java.lang.RuntimeException} or
-     * {@link java.lang.Error} that caused execution to terminate abruptly. This
-     * method will consume a list of {@code java.util.function.BiConsumer} with a
-     * runnable and a throwable as arguments.
+     * Invokes all registered callbacks on the worker thread after an execution.
+     * A submitted or scheduled task normally wraps its failure in a
+     * {@code Future}, so {@code throwable} can be {@code null} despite a failed
+     * task. Exceptions thrown by a callback are logged and later callbacks are
+     * still attempted; an {@code Error} is not caught here.
      *
-     * @param runnable  the runnable that has completed
-     * @param throwable the exception that caused termination, or null if execution
-     *                  completed normally
+     * @param runnable  the completed runnable, possibly a future wrapper
+     * @param throwable an uncaught failure from the runnable, or {@code null}
+     *                  when the wrapper captured it or execution succeeded
      * @see ThreadPoolExecutor#afterExecute(java.lang.Runnable, java.lang.Throwable)
      * @see ScheduledThreadBuilderExecutor#addAfterExecuteConsumer(java.util.function.BiConsumer)
      */
@@ -95,12 +97,10 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
     }
 
     /**
-     * After the execution of the thread, each of the consumers in the list will be executed,
-     * receiving as a parameter the implementation of the newly finished thread and a
-     * throwable object, which will be null if no exception has been thrown.
+     * Returns the live mutable callback list shared by all tasks on this
+     * executor. Modifying it concurrently with execution is not synchronized.
      *
-     * @return the consumers list that will be performed after thread completed
-     * normally.
+     * @return the live list of after-execution callbacks
      * @see ScheduledThreadBuilderExecutor#afterExecute(java.lang.Runnable, java.lang.Throwable)
      */
     public List<BiConsumer<Runnable, Throwable>> getAfterExecuteConsumers() {
@@ -108,12 +108,11 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
     }
 
     /**
-     * After the execution of the thread, each of the consumers in the list will be executed,
-     * receiving as a parameter the implementation of the newly finished thread and a
-     * throwable object, which will be null if no exception has been thrown.
+     * Adds a callback for every execution on this executor, not just the task
+     * that led to registration. The callback's throwable can be {@code null}
+     * even when a submitted task failed inside its {@code Future}.
      *
-     * @param afterExecuteBiConsumer the consumer that will be performed after
-     *                               thread has completed normally.
+     * @param afterExecuteBiConsumer the callback invoked after execution
      * @see ScheduledThreadBuilderExecutor#afterExecute(java.lang.Runnable, java.lang.Throwable)
      */
     public void addAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteBiConsumer) {
