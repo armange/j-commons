@@ -1,6 +1,5 @@
 package br.com.armange.commons.thread.util;
 
-import br.com.armange.commons.thread.ThreadUtil;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsArrayWithSize;

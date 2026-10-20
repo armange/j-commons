@@ -14,31 +14,11 @@
  * limitations under the License.
  * */
 /**
- * Utility package for thread creation.<br>
- * <ul>
- * <li><b>{@link br.com.armange.commons.thread.ThreadUtil}</b>
- * <p>Useful structure for handling the current thread.</p>
- * <pre>
- * ThreadUtil.sleepUnchecked(1000);
- * final URL url = sleepUnchecked.getCurrentThreadResource("path");
- * final InputStream is = ThreadUtil.getCurrentThreadResourceAsStream("path");
- * </pre></li>
- * <li><b>{@link br.com.armange.commons.thread.ThreadBuilder}</b>
- * <p>Useful structure for thread creation</p>
- * <pre>
- * final ExecutorService thread = ThreadBuilder
- *          .newBuilder() //New object to build a new thread.
- *          .setTimeout(4000) //The thread will be canceled after four seconds.
- *          .setAfterExecuteConsumer(afterExecuteConsumer) //A consumer will be called after thread execution.
- *          .setUncaughtExceptionConsumer(throwableConsumer) //A consumer will be called after any exception thrown.
- *          .start();
- * </pre></li>
- * <li><b>{@link br.com.armange.commons.thread.async.TryAsyncBuilder}</b>
- * <p>Useful structure for try-async operation creation</p>
- * </li>
- * <li><b>{@link br.com.armange.commons.thread.builder.ThreadBuilder}</b>
- * <p>Useful structure for thread creation</p>
- * </li>
- * </ul>
+ * Organizes the thread building and asynchronous execution APIs in subpackages.
+ *
+ * <p>Use {@link br.com.armange.commons.thread.builder.ThreadBuilder} to create
+ * tasks with the available builders and
+ * {@link br.com.armange.commons.thread.async.TryAsyncBuilder} for the existing
+ * asynchronous try-style API.
  */
 package br.com.armange.commons.thread;
