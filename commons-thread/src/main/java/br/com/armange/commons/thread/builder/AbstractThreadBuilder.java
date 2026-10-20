@@ -263,15 +263,21 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     private ThreadFactory createPlatformThreadFactory() {
-        final Thread.Builder.OfPlatform platformBuilder = Thread.ofPlatform();
+        final ExceptionCatcherThreadFactory platformFactory = new ExceptionCatcherThreadFactory();
 
         uncaughtExceptionConsumer
-                .ifPresent(consumer -> platformBuilder.uncaughtExceptionHandler(
+                .ifPresent(consumer -> platformFactory.setUncaughtExceptionHandler(
                         (thread, throwable) -> consumer.accept(throwable)));
         threadPrioritySupplier
-                .ifPresent(supplier -> platformBuilder.priority(supplier.getAsInt()));
+                .ifPresent(supplier -> {
+                    final int priority = supplier.getAsInt();
 
-        final ThreadFactory platformFactory = platformBuilder.factory();
+                    if (priority < Thread.MIN_PRIORITY || priority > Thread.MAX_PRIORITY) {
+                        throw new IllegalArgumentException("Invalid thread priority: " + priority);
+                    }
+
+                    platformFactory.setThreadPriority(priority);
+                });
 
         if (threadNameSupplier.isEmpty()) {
             return platformFactory;

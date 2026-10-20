@@ -93,6 +93,14 @@ public class AbstractThreadBuilderIntegrationTest {
     }
 
     @Test
+    public void rejectsInvalidDefaultPlatformPriorityWhenCreatingFactory() {
+        final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
+        builder.setThreadPrioritySupplier(() -> Thread.MAX_PRIORITY + 1);
+
+        assertThrows(IllegalArgumentException.class, builder::getThreadFactory);
+    }
+
+    @Test
     public void consultsNameSupplierForEachPlatformThread() {
         final AtomicInteger nameRequests = new AtomicInteger();
         final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();

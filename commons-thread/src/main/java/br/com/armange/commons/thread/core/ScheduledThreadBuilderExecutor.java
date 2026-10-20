@@ -49,7 +49,8 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
      * @see java.util.concurrent.ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int)
      */
     public ScheduledThreadBuilderExecutor(final int corePoolSize) {
-        super(corePoolSize);
+        super(corePoolSize, ThreadFactories.select(
+                ThreadFactories.Mode.PLATFORM, ThreadFactories.Purpose.TIMER));
     }
 
     /**

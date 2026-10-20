@@ -33,6 +33,8 @@ import java.util.concurrent.ThreadFactory;
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
 public class ExceptionCatcherThreadFactory implements ThreadFactory {
+    private final ThreadFactory delegate = ThreadFactories.select(
+            ThreadFactories.Mode.PLATFORM, ThreadFactories.Purpose.TASK);
     private Optional<UncaughtExceptionHandler> uncaughtExceptionHandler = Optional.empty();
     private Optional<String> threadName = Optional.empty();
     private Optional<Integer> threadPriority = Optional.empty();
@@ -50,7 +52,7 @@ public class ExceptionCatcherThreadFactory implements ThreadFactory {
      */
     @Override
     public Thread newThread(final Runnable runnable) {
-        final Thread thread = new Thread(runnable);
+        final Thread thread = delegate.newThread(runnable);
 
         uncaughtExceptionHandler.ifPresent(thread::setUncaughtExceptionHandler);
 
