@@ -20,13 +20,16 @@ import java.util.concurrent.Callable;
 /**
  * Entry point for platform-thread task builders. Each started builder uses a
  * {@code ScheduledThreadBuilderExecutor}; a pool size configures worker
- * capacity, not the number of tasks submitted. The caller receives an
- * {@link ExecutorResult} and owns shutdown of its executor and any separate
- * timeout executor. The four task forms are:
+ * capacity, not the number of tasks submitted. For tasks without scheduling,
+ * the final {@code start()} requests orderly executor shutdown by default;
+ * {@code keepExecutorOpen()} transfers shutdown responsibility to the caller.
+ * Scheduled tasks expose their executor and any separate timeout executor
+ * for the caller to close. Tasks without scheduling use single and multiple task stages;
+ * scheduled tasks retain their timing builders. The four task forms are:
  * <ul>
  *     <li>
- *          <b>CommonRunnableThreadBuilder:</b> To implement threads that run tasks
- *          but do not need to return values after execution. See {@link #setExecution(Runnable)}.
+ *          <b>Runnable task stages:</b> For tasks without a return value.
+ *          See {@link #setExecution(Runnable)}.
  *     </li>
  *     <li>
  *          <b>TimingRunnableThreadBuilder:</b> To implement threads that run tasks
@@ -35,8 +38,8 @@ import java.util.concurrent.Callable;
  *          See {@link #setScheduling(Runnable)}
  *     </li>
  *     <li>
- *          <b>CommonCallableThreadBuilder:</b> To implement threads that execute tasks
- *          and return values after execution. See {@link #setExecution(Callable)}
+ *          <b>Callable task stages:</b> For tasks that return values.
+ *          See {@link #setExecution(Callable)}.
  *     </li>
  *     <li>
  *          <b>TimingCallableThreadBuilder:</b> To implement threads that execute tasks
@@ -82,32 +85,26 @@ public final class ThreadBuilder {
     }
 
     /**
-     * Sets the thread task that can be configured with some common resources.
+     * Selects a runnable task without scheduling and returns its single-task stage.
      *
      * @param execution the Runnable interface should be implemented by any class whose
      *                  instances are intended to be executed by a thread. The class must
      *                  define a method of no arguments called run.
-     * @return a thread builder with scheduling settings options.
+     * @return the single-task stage for this runnable
      */
-    public CommonRunnableThreadBuilder setExecution(final Runnable execution) {
-        final CommonRunnableThreadBuilder builder = CommonRunnableThreadBuilder
-                .newBuilder(corePoolSize);
-
-        return builder.setExecution(execution);
+    public SingleTaskThreadBuilder<Void, Runnable> setExecution(final Runnable execution) {
+        return new SingleRunnableTaskThreadBuilder(corePoolSize, execution);
     }
 
     /**
-     * Sets the thread task that can be configured with some common resources.
+     * Selects a callable task without scheduling and returns its single-task stage.
      *
      * @param execution a task that returns a result and may throw an exception.
      * @param <S>       the type of the object resulting from the execution of the thread.
-     * @return a thread builder with common settings options.
+     * @return the single-task stage for this callable
      */
-    public <S> CommonCallableThreadBuilder<S> setExecution(final Callable<S> execution) {
-        final CommonCallableThreadBuilder<S> builder = CommonCallableThreadBuilder
-                .newBuilder(corePoolSize);
-
-        return builder.setExecution(execution);
+    public <S> SingleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution) {
+        return new SingleCallableTaskThreadBuilderImpl<>(corePoolSize, execution);
     }
 
     /**

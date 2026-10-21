@@ -54,8 +54,9 @@ As seis classes removidas do pacote raiz e sua migração estão na
 [seção 6](#6-migração-das-seis-classes-removidas).
 
 Os exemplos desta seção são trechos independentes de um método que declara
-`throws Exception` e usam os imports abaixo. Cada um fecha o executor que
-cria; com timeout, fecha também o executor cancelador.
+`throws Exception` e usam os imports abaixo. Os exemplos agendados fecham os
+executores que criam, inclusive o cancelador usado com timeout. Nos estágios
+sem agendamento, `start()` solicita o fechamento ordenado por padrão.
 
 ```java
 import br.com.armange.commons.thread.builder.ThreadBuilder;
@@ -73,8 +74,8 @@ import java.util.concurrent.locks.LockSupport;
 
 As comparações de [execução sem agendamento](#execução-sem-agendamento) e
 [leitura de um `Future`](#obter-valor-com-future) mostram a mesma tarefa com a
-biblioteca e com o JDK. Nesses dois casos, o JDK exige menos configuração para
-executar, aguardar e fechar. Os builders ajudam sobretudo quando o mesmo uso
+biblioteca e com o JDK. Nesses dois casos, o JDK oferece uma composição direta
+para executar e aguardar; seu executor também precisa ser fechado. Os builders ajudam sobretudo quando o mesmo uso
 combina configuração temporal, callbacks e resultado; compare cada combinação
 antes de escolher a API.
 
@@ -261,8 +262,7 @@ var result = ThreadBuilder
         .setThreadNameSupplier(() -> "worker-" + names.incrementAndGet())
         .start();
 try (var worker = result.getExecutorService()) {
-    result.getFutures()
-            .get(0)
+    result.getFuture()
             .get();
 }
 ```
@@ -284,8 +284,7 @@ var result = ThreadBuilder
         .setThreadPrioritySupplier(() -> Thread.NORM_PRIORITY + 1)
         .start();
 try (var worker = result.getExecutorService()) {
-    result.getFutures()
-            .get(0)
+    result.getFuture()
             .get();
 }
 ```
@@ -305,11 +304,8 @@ var result = ThreadBuilder
         .newBuilder()
         .setExecution((Runnable) () -> System.out.println("tarefa"))
         .start();
-try (var worker = result.getExecutorService()) {
-    result.getFutures()
-            .get(0)
-            .get();
-}
+result.getFuture()
+        .get();
 ```
 
 **JDK, mesma tarefa e mesmo ciclo de vida:**
@@ -324,8 +320,9 @@ try (var worker = Executors.newSingleThreadExecutor()) {
 ### Pool de threads
 
 `builder.ThreadBuilder.newBuilder(poolSize)` define o tamanho base do executor
-criado pelo builder. `ExecutorResult.getExecutorService()` entrega esse executor
-para fechamento pelo chamador. O [exemplo do pool](#2-builders-de-plataforma)
+criado pelo builder. O `start()` final solicita seu fechamento ordenado por
+padrão, após enviar as tarefas. Use `keepExecutorOpen()` antes desse `start()`
+se quiser manter o executor e assumir seu fechamento. O [exemplo do pool](#2-builders-de-plataforma)
 mostra `startAndBuildOther()` enviando três tarefas para dois workers. Para
 controlar diretamente tamanho, fábrica e
 ciclo de vida, use `Executors.newFixedThreadPool(...)` ou outro executor do
@@ -339,10 +336,8 @@ var result = ThreadBuilder
         .startAndBuildOther()
         .setExecution(() -> System.out.println("segunda"))
         .start();
-try (var worker = result.getExecutorService()) {
-    for (Future<Void> task : result.getFutures()) {
-        task.get();
-    }
+for (Future<Void> task : result.getFutures()) {
+    task.get();
 }
 ```
 
@@ -371,12 +366,13 @@ try (var worker = result.getExecutorService()) {
 
 ### Obter valor com Future
 
-`ExecutorResult<T>.getFutures().get(0).get()` devolve o resultado do primeiro
-`Callable` iniciado pelo builder, ou lança `ExecutionException`/
+`SingleTaskExecutorResult<T>.getFuture().get()` devolve o resultado de um
+`Callable` individual iniciado pelo builder, ou lança `ExecutionException`/
 `CancellationException` conforme o estado. `ExecutorService.submit(Callable<T>)`
 do JDK devolve diretamente `Future<T>`, como na
 [seção 5.1](#51-tarefas-simples-com-o-jdk). Retenha o `Future` correspondente a
-cada tarefa e feche o executor criado.
+cada tarefa. O `start()` sem agendamento solicita o fechamento ordenado do
+executor por padrão; com `keepExecutorOpen()`, o fechamento cabe ao chamador.
 
 **Biblioteca:**
 
@@ -385,11 +381,8 @@ var result = ThreadBuilder
         .newBuilder()
         .setExecution((Callable<Integer>) () -> 42)
         .start();
-try (var worker = result.getExecutorService()) {
-    System.out.println(result.getFutures()
-            .get(0)
-            .get());
-}
+System.out.println(result.getFuture()
+        .get());
 ```
 
 **JDK, mesmo resultado e mesmo ciclo de vida:**
@@ -439,15 +432,29 @@ try (var worker = result.getExecutorService();
 [Voltar ao sumário](#sumário)
 
 `br.com.armange.commons.thread.builder.ThreadBuilder.setExecution(...)`
-continua disponível para `Runnable` e `Callable`. Seus builders comuns usam
-`ScheduledThreadBuilderExecutor`, mesmo para tarefas sem agendamento; o tipo
-`ExecutorResult` fornece os `Future`s e o `ExecutorService` resultantes.
-As quatro combinações são `CommonRunnableThreadBuilder`,
-`CommonCallableThreadBuilder`, `TimingRunnableThreadBuilder` e
-`TimingCallableThreadBuilder`, selecionadas pelo tipo da tarefa e pelo uso de
-`setExecution(...)` ou `setScheduling(...)`.
-`setScheduling(...)`, timeout e as demais facilidades dos builders continuam
-disponíveis. Para quem prefere compor executores diretamente, a
+continua disponível para `Runnable` e `Callable`. A entrada devolve um estágio
+`SingleTaskThreadBuilder`; `start()` devolve um `SingleTaskExecutorResult`
+com `getFuture()` e `getExecutorService()`. `startAndBuildOther()` envia a
+primeira tarefa e devolve um estágio `MultipleTaskThreadBuilder`; seu `start()`
+devolve um `MultipleTaskExecutorResult` com uma lista imutável de `Future`s do
+lote, na ordem de submissão. Para `Callable`, os estágios especializados
+`SingleCallableTaskThreadBuilder` e `MultipleCallableTaskThreadBuilder` mantêm
+`setThreadResultConsumer(...)` disponível antes e depois da transição. Cada
+lote compartilha um `ScheduledThreadBuilderExecutor`. O `start()` final solicita
+`shutdown()` por padrão, sem aguardar as tarefas ou interrompê-las; os `Future`s
+continuam disponíveis. Após isso, os aliases Single e Multiple ficam inválidos.
+`startAndBuildOther()` não fecha o executor. Com `keepExecutorOpen()` antes do
+`start()` final, o primeiro resultado transfere a posse ao chamador, que deve
+fechar o executor; essa escolha persiste nos próximos lotes. O estágio Single
+fica bloqueado enquanto o lote Multiple está aberto. Após `Multiple.start()`,
+o estágio Multiple deixa de aceitar chamadas; com o executor mantido aberto,
+o alias Single pode iniciar outro lote. Um resultado anterior conserva seu
+snapshot de `Future`s.
+
+`setScheduling(...)` continua devolvendo `TimingRunnableThreadBuilder` ou
+`TimingCallableThreadBuilder` e `ExecutorResult` com a lista de `Future`s, sem
+mudança no fluxo de agendamento. Timeout e as demais facilidades dos builders
+continuam disponíveis. Para quem prefere compor executores diretamente, a
 [seção 5](#5-composição-direta-com-o-jdk) mostra alternativas do JDK.
 `setInterval()` usa taxa fixa, embora sua descrição antiga possa sugerir atraso após cada
 conclusão. `TimingCallableThreadBuilder` aceita configurar um intervalo, mas
@@ -536,10 +543,11 @@ public class BuilderScheduledExample {
 Para uma tarefa com valor, o mesmo `ThreadBuilder` do pacote `builder` aceita
 `Callable`, consumidor do resultado e consulta pelo `Future`. O consumidor é
 chamado pelo callback do executor; `Future.get()` pode retornar antes de esse
-callback terminar. O executor retornado pertence a quem criou o builder.
+callback terminar. O `start()` solicita o fechamento ordenado do executor por
+padrão, mas o `Future` ainda pode ser consultado.
 
 ```java
-import br.com.armange.commons.thread.builder.ExecutorResult;
+import br.com.armange.commons.thread.builder.SingleTaskExecutorResult;
 import br.com.armange.commons.thread.builder.ThreadBuilder;
 
 import java.util.concurrent.Callable;
@@ -547,31 +555,26 @@ import java.util.concurrent.Future;
 
 public class BuilderCallableExample {
     public static void main(final String[] args) throws Exception {
-        final ExecutorResult<Integer> result = ThreadBuilder
+        final SingleTaskExecutorResult<Integer> result = ThreadBuilder
                 .newBuilder()
                 .setExecution((Callable<Integer>) () -> 42)
                 .setThreadResultConsumer(value -> System.out.println("consumidor: " + value))
                 .start();
-        final Future<Integer> future = result.getFutures()
-                .get(0);
+        final Future<Integer> future = result.getFuture();
 
-        try {
-            System.out.println("Future: " + future.get());
-        } finally {
-            result.getExecutorService()
-                    .close();
-        }
+        System.out.println("Future: " + future.get());
     }
 }
 ```
 
 `newBuilder(2)` configura dois workers, mas não cria duas tarefas por si só.
 Use `startAndBuildOther()` para enviar tarefas adicionais ao mesmo executor;
-`ExecutorResult.getFutures()` reúne um `Future` por envio. Aqui três tarefas
-compartilham o pool e o chamador aguarda todas antes de fechá-lo:
+`MultipleTaskExecutorResult.getFutures()` reúne um `Future` por envio. Aqui três tarefas
+compartilham o pool. `keepExecutorOpen()` após os envios intermediários deixa
+o fechamento a cargo do chamador, que aqui aguarda as três antes de fechá-lo:
 
 ```java
-import br.com.armange.commons.thread.builder.ExecutorResult;
+import br.com.armange.commons.thread.builder.MultipleTaskExecutorResult;
 import br.com.armange.commons.thread.builder.ThreadBuilder;
 
 import java.util.concurrent.CountDownLatch;
@@ -594,13 +597,14 @@ public class BuilderPoolExample {
 
     public static void main(final String[] args) throws Exception {
         final CountDownLatch start = new CountDownLatch(1);
-        final ExecutorResult<Void> result = ThreadBuilder
+        final MultipleTaskExecutorResult<Void> result = ThreadBuilder
                 .newBuilder(2)
                 .setExecution(task(start, 1))
                 .startAndBuildOther()
                 .setExecution(task(start, 2))
                 .startAndBuildOther()
                 .setExecution(task(start, 3))
+                .keepExecutorOpen()
                 .start();
 
         try {
@@ -1586,10 +1590,29 @@ publicada permanece disponível e inalterada. A versão 3 ainda não foi
 publicada. As facilidades dos builders, `TryAsyncBuilder` e os tipos homônimos
 em outros pacotes continuam disponíveis.
 
+Há também uma mudança de assinatura nos builders sem agendamento entre 2.0.0
+e esta versão de trabalho: `ThreadBuilder.setExecution(Runnable/Callable)`
+deixa de retornar `CommonRunnableThreadBuilder`/`CommonCallableThreadBuilder`
+e passa a retornar o estágio `SingleTaskThreadBuilder` ou
+`SingleCallableTaskThreadBuilder`. Seu `start()` retorna
+`SingleTaskExecutorResult`: troque `getFutures().get(0)` por `getFuture()`.
+Após `startAndBuildOther()`, use `MultipleTaskThreadBuilder` ou
+`MultipleCallableTaskThreadBuilder`; o `start()` desse estágio retorna
+`MultipleTaskExecutorResult` com `getFutures()`. Atualize variáveis com tipos
+explícitos e recompile os consumidores, pois os descritores binários dos
+métodos também mudaram. O caminho `setScheduling(...)` conserva seus tipos e
+`ExecutorResult`.
+
+Nos estágios sem agendamento, o `start()` final desta versão solicita
+`shutdown()` por padrão. Para continuar enviando tarefas ao executor após
+receber o resultado, use `keepExecutorOpen()` antes de `start()` e feche o
+executor recebido quando terminar. Esse ajuste de ciclo de vida também deve
+ser considerado na migração de consumidores da versão 2.0.0.
+
 | Classe removida do pacote raiz | Caminho atual na biblioteca | Alternativa direta do JDK |
 | --- | --- | --- |
 | `ThreadBuilder` | `builder.ThreadBuilder` mantém `setExecution(...)`, `setScheduling(...)`, atraso, intervalo, timeout e callbacks; veja [builders](#2-builders-de-plataforma). | `ExecutorService.submit(...)` ou `ScheduledExecutorService`, conforme a [seção 5](#5-composição-direta-com-o-jdk). |
-| `ExecutorResult` | `builder.ExecutorResult` ainda entrega executor e lista de `Future`s. | Retenha o executor e cada `Future`; feche o executor criado. |
+| `ExecutorResult` | `builder.ExecutorResult` atende aos builders agendados; `SingleTaskExecutorResult` e `MultipleTaskExecutorResult` atendem aos novos estágios sem agendamento. Todos expõem o executor; o resultado múltiplo entrega uma lista imutável de `Future`s. | Retenha cada `Future`; no fluxo sem agendamento, `start()` solicita `shutdown()` por padrão ou `keepExecutorOpen()` transfere a posse. No fluxo agendado, feche os executores recebidos. |
 | `CaughtExecutorThreadFactory` | `core.ExceptionCatcherThreadFactory` configura nome fixo, prioridade e handler de threads de plataforma. | `Thread.ofPlatform()` com `ThreadFactory` própria quando precisar de nome por criação. |
 | `ScheduledCaughtExecutorService` | `core.ScheduledThreadBuilderExecutor` mantém `addAfterExecuteConsumer(...)` e aceita `ThreadFactory` fornecida. | `ScheduledExecutorService` ou `ScheduledThreadPoolExecutor` com observação explícita. |
 | `ThreadUtil` | `util.ThreadUtil` mantém os métodos de sono e acesso a recursos. | `Thread.sleep(...)` e métodos do classloader de contexto. |
