@@ -22,11 +22,50 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TaskStageStateTest {
+
+    @Test
+    void defaultSingleStartRequestsOrderlyShutdownBeforeReturningFuture() throws Exception {
+        final FailingBuilder builder = new FailingBuilder(100);
+        final TaskStageState<Void> state = new TaskStageState<>(builder);
+
+        final SingleTaskExecutorResult<Void> result = state.startSingle();
+
+        assertTrue(result.getExecutorService()
+                .isShutdown());
+        result.getFuture()
+                .get(5, TimeUnit.SECONDS);
+        assertThrows(IllegalStateException.class, state::startSingle);
+        assertTrue(result.getExecutorService()
+                .awaitTermination(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void defaultMultipleStartRequestsOrderlyShutdownAndReturnsImmutableBatch() throws Exception {
+        final FailingBuilder builder = new FailingBuilder(100);
+        final TaskStageState<Void> state = new TaskStageState<>(builder);
+        final long batchId = state.beginMultiple();
+
+        final MultipleTaskExecutorResult<Void> result = state.finishMultiple(batchId);
+
+        assertTrue(result.getExecutorService()
+                .isShutdown());
+        assertEquals(2, result.getFutures()
+                .size());
+        assertThrows(UnsupportedOperationException.class,
+                () -> result.getFutures()
+                        .clear());
+        for (final Future<Void> future : result.getFutures()) {
+            future.get(5, TimeUnit.SECONDS);
+        }
+        assertTrue(result.getExecutorService()
+                .awaitTermination(5, TimeUnit.SECONDS));
+    }
 
     @Test
     void failedFirstIntermediateSubmissionShutsDownUndeliveredExecutor() throws Exception {
@@ -46,14 +85,14 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final long batchId = state.beginMultiple();
+        final long batchId = state.beginOpenMultiple();
 
         assertSame(builder.rejection, assertThrows(RejectedExecutionException.class,
-                () -> state.submitMultiple(batchId)));
+                () -> state.submitOpenMultiple(batchId)));
         assertTrue(builder.executor.isShutdown());
         assertThrows(IllegalStateException.class, () -> state.configureSingle(() -> {
         }));
-        assertThrows(IllegalStateException.class, () -> state.submitMultiple(batchId));
+        assertThrows(IllegalStateException.class, () -> state.submitOpenMultiple(batchId));
         assertTrue(builder.executor.awaitTermination(5, TimeUnit.SECONDS));
     }
 
@@ -63,14 +102,14 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final long batchId = state.beginMultiple();
+        final long batchId = state.beginOpenMultiple();
 
         assertSame(builder.rejection, assertThrows(RejectedExecutionException.class,
-                () -> state.finishMultiple(batchId)));
+                () -> state.finishOpenMultiple(batchId)));
         assertTrue(builder.executor.isShutdown());
         assertThrows(IllegalStateException.class, () -> state.configureSingle(() -> {
         }));
-        assertThrows(IllegalStateException.class, () -> state.submitMultiple(batchId));
+        assertThrows(IllegalStateException.class, () -> state.submitOpenMultiple(batchId));
         assertTrue(builder.executor.awaitTermination(5, TimeUnit.SECONDS));
     }
 
@@ -80,16 +119,16 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final SingleTaskExecutorResult<Void> first = state.startSingle();
+        final SingleTaskExecutorResult<Void> first = state.startOpenSingle();
 
         try {
             assertFalse(first.getExecutorService()
                     .isShutdown());
             assertSame(builder.rejection, assertThrows(RejectedExecutionException.class,
-                    state::startSingle));
+                    state::startOpenSingle));
             assertFalse(first.getExecutorService()
                     .isShutdown());
-            assertThrows(IllegalStateException.class, state::startSingle);
+            assertThrows(IllegalStateException.class, state::startOpenSingle);
             first.getFuture()
                     .get(5, TimeUnit.SECONDS);
         } finally {
@@ -107,16 +146,16 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final SingleTaskExecutorResult<Void> first = state.startSingle();
+        final SingleTaskExecutorResult<Void> first = state.startOpenSingle();
 
         try {
-            final long batchId = state.beginMultiple();
+            final long batchId = state.beginOpenMultiple();
 
             assertSame(builder.rejection, assertThrows(RejectedExecutionException.class,
-                    () -> state.submitMultiple(batchId)));
+                    () -> state.submitOpenMultiple(batchId)));
             assertFalse(first.getExecutorService()
                     .isShutdown());
-            assertThrows(IllegalStateException.class, state::startSingle);
+            assertThrows(IllegalStateException.class, state::startOpenSingle);
             first.getFuture()
                     .get(5, TimeUnit.SECONDS);
         } finally {

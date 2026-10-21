@@ -36,17 +36,13 @@ class ThreadBuilderStageTest {
 
     @Test
     void singleRunnableStartReturnsOnlyItsTaskFuture() throws Exception {
-        final SingleTaskExecutorResult<Void> result = ThreadBuilder
+        final Future<Void> result = ThreadBuilder
                 .newBuilder()
                 .setExecution((Runnable) () -> {
                 })
                 .start();
 
-        try (var executor = result.getExecutorService()) {
-            assertTrue(executor.isShutdown());
-            assertNull(result.getFuture()
-                    .get(5, TimeUnit.SECONDS));
-        }
+        assertNull(result.get(5, TimeUnit.SECONDS));
     }
 
     @Test
@@ -68,33 +64,19 @@ class ThreadBuilderStageTest {
                         Thread.currentThread().interrupt();
                     }
                 });
-        final SingleTaskExecutorResult<Void> result = single.start();
+        final Future<Void> result = single.start();
 
         try {
             assertTrue(started.await(5, TimeUnit.SECONDS));
-            assertTrue(result.getExecutorService()
-                    .isShutdown());
-            assertFalse(result.getExecutorService()
-                    .isTerminated());
-            assertFalse(result.getFuture()
-                    .isDone());
+            assertFalse(result.isDone());
             assertFalse(interrupted.get());
             assertThrows(IllegalStateException.class, single::start);
             assertThrows(IllegalStateException.class, single::keepExecutorOpen);
         } finally {
             release.countDown();
-
-            if (!result.getExecutorService()
-                    .isShutdown()) {
-                result.getExecutorService()
-                        .shutdownNow();
-            }
         }
 
-        assertNull(result.getFuture()
-                .get(5, TimeUnit.SECONDS));
-        assertTrue(result.getExecutorService()
-                .awaitTermination(5, TimeUnit.SECONDS));
+        assertNull(result.get(5, TimeUnit.SECONDS));
         assertFalse(interrupted.get());
     }
 
@@ -123,20 +105,17 @@ class ThreadBuilderStageTest {
 
         assertTrue(firstStarted.await(5, TimeUnit.SECONDS));
 
-        final MultipleTaskExecutorResult<Void> result = multiple
+        final List<Future<Void>> result = multiple
                 .setExecution(calls::incrementAndGet)
                 .startAndBuildOther()
                 .setExecution(calls::incrementAndGet)
                 .start();
 
         try {
-            assertTrue(result.getExecutorService()
-                    .isShutdown());
-            assertEquals(3, result.getFutures()
-                    .size());
-            assertFalse(result.getFuture(1)
+            assertEquals(3, result.size());
+            assertFalse(result.get(1)
                     .isDone());
-            assertFalse(result.getFuture(2)
+            assertFalse(result.get(2)
                     .isDone());
             assertThrows(IllegalStateException.class, single::startAndBuildOther);
             assertThrows(IllegalStateException.class,
@@ -144,21 +123,13 @@ class ThreadBuilderStageTest {
             assertThrows(IllegalStateException.class, multiple::start);
         } finally {
             releaseFirst.countDown();
-
-            if (!result.getExecutorService()
-                    .isShutdown()) {
-                result.getExecutorService()
-                        .shutdownNow();
-            }
         }
 
-        for (final Future<Void> future : result.getFutures()) {
+        for (final Future<Void> future : result) {
             assertNull(future.get(5, TimeUnit.SECONDS));
         }
 
         assertEquals(3, calls.get());
-        assertTrue(result.getExecutorService()
-                .awaitTermination(5, TimeUnit.SECONDS));
     }
 
     @Test
@@ -166,11 +137,12 @@ class ThreadBuilderStageTest {
         final AtomicInteger calls = new AtomicInteger();
         final SingleTaskThreadBuilder<Void, Runnable> single = ThreadBuilder
                 .newBuilder(2)
-                .setExecution((Runnable) calls::incrementAndGet)
-                .keepExecutorOpen();
-        final MultipleTaskThreadBuilder<Void, Runnable> multiple = single.startAndBuildOther();
+                .setExecution((Runnable) calls::incrementAndGet);
+        final OpenSingleTaskThreadBuilder<Void, Runnable> open = single.keepExecutorOpen();
+        final OpenMultipleTaskThreadBuilder<Void, Runnable> multiple = open.startAndBuildOther();
 
         assertThrows(IllegalStateException.class, single::start);
+        assertThrows(IllegalStateException.class, single::keepExecutorOpen);
         assertThrows(IllegalStateException.class,
                 () -> single.setExecution((Runnable) calls::incrementAndGet));
 
@@ -195,7 +167,7 @@ class ThreadBuilderStageTest {
             assertThrows(IllegalStateException.class, multiple::start);
             assertThrows(IllegalStateException.class, multiple::startAndBuildOther);
 
-            final MultipleTaskThreadBuilder<Void, Runnable> nextBatch = single
+            final OpenMultipleTaskThreadBuilder<Void, Runnable> nextBatch = open
                     .setExecution((Runnable) calls::incrementAndGet)
                     .startAndBuildOther();
 
@@ -235,14 +207,20 @@ class ThreadBuilderStageTest {
 
         try (var executor = batch.getExecutorService()) {
             assertFalse(executor.isShutdown());
+            assertThrows(IllegalStateException.class, single::start);
+            assertThrows(IllegalStateException.class,
+                    () -> single.setExecution(() -> {
+                    }));
 
             final SingleTaskExecutorResult<Void> next = single
+                    .keepExecutorOpen()
                     .setExecution(() -> {
                     })
                     .start();
 
             assertSame(executor, next.getExecutorService());
             assertFalse(executor.isShutdown());
+            assertThrows(IllegalStateException.class, single::keepExecutorOpen);
             next.getFuture()
                     .get(5, TimeUnit.SECONDS);
         }
@@ -260,18 +238,15 @@ class ThreadBuilderStageTest {
                 .setExecution(() -> 22)
                 .setThreadResultConsumer(ignored -> {
                 });
-        final MultipleTaskExecutorResult<Integer> result = multiple.start();
+        final List<Future<Integer>> result = multiple.start();
 
-        try (var executor = result.getExecutorService()) {
-            assertEquals(List.of(11, 22), List.of(
-                    result.getFuture(0)
-                            .get(5, TimeUnit.SECONDS),
-                    result.getFuture(1)
-                            .get(5, TimeUnit.SECONDS)));
-            final List<Future<Integer>> futures = result.getFutures();
-            assertTrue(futures.stream()
-                    .allMatch(Future::isDone));
-        }
+        assertEquals(List.of(11, 22), List.of(
+                result.get(0)
+                        .get(5, TimeUnit.SECONDS),
+                result.get(1)
+                        .get(5, TimeUnit.SECONDS)));
+        assertTrue(result.stream()
+                .allMatch(Future::isDone));
     }
 
     @Test
@@ -314,17 +289,42 @@ class ThreadBuilderStageTest {
     }
 
     @Test
+    void callableOpenSingleKeepsFluentResultConsumerAndCallerOwnedExecutor() throws Exception {
+        final CountDownLatch observed = new CountDownLatch(1);
+        final CountDownLatch releaseTask = new CountDownLatch(1);
+        final SingleCallableTaskThreadBuilder<Integer> defaultStage = ThreadBuilder
+                .newBuilder()
+                .setExecution((Callable<Integer>) () -> {
+                    if (!releaseTask.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("Task was not released");
+                    }
+
+                    return 42;
+                });
+        final SingleTaskExecutorResult<Integer> result = defaultStage
+                .keepExecutorOpen()
+                .setThreadResultConsumer(ignored -> observed.countDown())
+                .start();
+
+        try (var executor = result.getExecutorService()) {
+            releaseTask.countDown();
+            assertFalse(executor.isShutdown());
+            assertEquals(42, result.getFuture()
+                    .get(5, TimeUnit.SECONDS));
+            assertTrue(observed.await(5, TimeUnit.SECONDS));
+            assertThrows(IllegalStateException.class, defaultStage::start);
+        }
+    }
+
+    @Test
     void singleCallableStartExposesItsValue() throws Exception {
-        final SingleTaskExecutorResult<Integer> result = ThreadBuilder
+        final Future<Integer> result = ThreadBuilder
                 .newBuilder()
                 .setExecution((Callable<Integer>) () -> 42)
                 .setThreadResultConsumer(ignored -> {
                 })
                 .start();
 
-        try (var executor = result.getExecutorService()) {
-            assertEquals(42, result.getFuture()
-                    .get(5, TimeUnit.SECONDS));
-        }
+        assertEquals(42, result.get(5, TimeUnit.SECONDS));
     }
 }

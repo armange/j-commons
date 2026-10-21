@@ -49,7 +49,7 @@ public sealed interface SingleCallableTaskThreadBuilder<S>
     SingleCallableTaskThreadBuilder<S> setThreadResultConsumer(final Consumer<S> threadResultConsumer);
 
     @Override
-    SingleCallableTaskThreadBuilder<S> keepExecutorOpen();
+    OpenSingleCallableTaskThreadBuilder<S> keepExecutorOpen();
 
     @Override
     MultipleCallableTaskThreadBuilder<S> startAndBuildOther();

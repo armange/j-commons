@@ -19,10 +19,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
- * Exposes the future of one submitted task and the executor that accepted it.
- * By default the builder has requested orderly executor shutdown before this
- * result is returned. With {@code keepExecutorOpen()}, the caller owns its
- * shutdown. Future completion can occur after the result is returned.
+ * Exposes the future of a task submitted by an open stage and its executor.
+ * The caller owns executor shutdown. Future completion can occur after this
+ * result is returned.
  *
  * @param <T> the task result type, or {@link Void} for a {@link Runnable}
  */
@@ -34,7 +33,7 @@ public sealed interface SingleTaskExecutorResult<T> permits SingleTaskResultSnap
     Future<T> getFuture();
 
     /**
-     * @return the executor that accepted the task, possibly already shut down
+     * @return the caller-owned executor that accepted the task
      */
     ExecutorService getExecutorService();
 }

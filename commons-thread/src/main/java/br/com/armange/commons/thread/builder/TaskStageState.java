@@ -23,7 +23,9 @@ import java.util.concurrent.Future;
 final class TaskStageState<S> {
     private final AbstractThreadBuilder<S, ?, ?> builder;
     private boolean multipleActive;
-    private boolean keepOpen;
+    private boolean openSelected;
+    private boolean singleAliasConverted;
+    private boolean openMultipleCompleted;
     private boolean callerOwnsExecutor;
     private boolean terminal;
     private long batchId;
@@ -34,27 +36,53 @@ final class TaskStageState<S> {
     }
 
     synchronized void configureSingle(final Runnable mutation) {
-        requireSingle();
+        requireDefaultSingle();
         mutation.run();
     }
 
     synchronized void configureMultiple(final long expectedBatchId, final Runnable mutation) {
-        requireMultiple(expectedBatchId);
+        requireDefaultMultiple(expectedBatchId);
+        mutation.run();
+    }
+
+    synchronized void configureOpenSingle(final Runnable mutation) {
+        requireOpenSingle();
+        mutation.run();
+    }
+
+    synchronized void configureOpenMultiple(final long expectedBatchId, final Runnable mutation) {
+        requireOpenMultiple(expectedBatchId);
         mutation.run();
     }
 
     synchronized void keepExecutorOpenSingle() {
         requireSingle();
-        keepOpen = true;
+
+        if (openSelected && (singleAliasConverted || !openMultipleCompleted)) {
+            throw new IllegalStateException("Default single-task alias is no longer available");
+        }
+
+        openSelected = true;
+        singleAliasConverted = true;
     }
 
     synchronized void keepExecutorOpenMultiple(final long expectedBatchId) {
-        requireMultiple(expectedBatchId);
-        keepOpen = true;
+        requireDefaultMultiple(expectedBatchId);
+        openSelected = true;
+        openMultipleCompleted = false;
     }
 
     synchronized SingleTaskExecutorResult<S> startSingle() {
-        requireSingle();
+        requireDefaultSingle();
+        return submitSingle();
+    }
+
+    synchronized SingleTaskExecutorResult<S> startOpenSingle() {
+        requireOpenSingle();
+        return submitSingle();
+    }
+
+    private SingleTaskExecutorResult<S> submitSingle() {
         try {
             final ExecutorResult<S> result = builder.start();
             final List<Future<S>> futures = result.getFutures();
@@ -71,7 +99,16 @@ final class TaskStageState<S> {
     }
 
     synchronized long beginMultiple() {
-        requireSingle();
+        requireDefaultSingle();
+        return submitFirstMultiple();
+    }
+
+    synchronized long beginOpenMultiple() {
+        requireOpenSingle();
+        return submitFirstMultiple();
+    }
+
+    private long submitFirstMultiple() {
         try {
             final int nextBatchStart = currentFuturesCount();
             builder.startAndBuildOther();
@@ -87,7 +124,16 @@ final class TaskStageState<S> {
     }
 
     synchronized void submitMultiple(final long expectedBatchId) {
-        requireMultiple(expectedBatchId);
+        requireDefaultMultiple(expectedBatchId);
+        submitNextMultiple();
+    }
+
+    synchronized void submitOpenMultiple(final long expectedBatchId) {
+        requireOpenMultiple(expectedBatchId);
+        submitNextMultiple();
+    }
+
+    private void submitNextMultiple() {
         try {
             builder.startAndBuildOther();
         } catch (final RuntimeException | Error failure) {
@@ -98,7 +144,19 @@ final class TaskStageState<S> {
     }
 
     synchronized MultipleTaskExecutorResult<S> finishMultiple(final long expectedBatchId) {
-        requireMultiple(expectedBatchId);
+        requireDefaultMultiple(expectedBatchId);
+        return submitFinalMultiple();
+    }
+
+    synchronized MultipleTaskExecutorResult<S> finishOpenMultiple(final long expectedBatchId) {
+        requireOpenMultiple(expectedBatchId);
+        final MultipleTaskExecutorResult<S> result = submitFinalMultiple();
+        openMultipleCompleted = true;
+
+        return result;
+    }
+
+    private MultipleTaskExecutorResult<S> submitFinalMultiple() {
         try {
             final ExecutorResult<S> result = builder.start();
             final List<Future<S>> futures = result.getFutures();
@@ -119,7 +177,7 @@ final class TaskStageState<S> {
     private void completeFinalStart(final ExecutorService executor) {
         multipleActive = false;
 
-        if (keepOpen) {
+        if (openSelected) {
             callerOwnsExecutor = true;
 
             return;
@@ -164,6 +222,38 @@ final class TaskStageState<S> {
 
         if (!multipleActive || batchId != expectedBatchId) {
             throw new IllegalStateException("Multiple-task stage is no longer active");
+        }
+    }
+
+    private void requireDefaultSingle() {
+        requireSingle();
+        requireDefaultMode();
+    }
+
+    private void requireDefaultMultiple(final long expectedBatchId) {
+        requireMultiple(expectedBatchId);
+        requireDefaultMode();
+    }
+
+    private void requireOpenSingle() {
+        requireSingle();
+        requireOpenMode();
+    }
+
+    private void requireOpenMultiple(final long expectedBatchId) {
+        requireMultiple(expectedBatchId);
+        requireOpenMode();
+    }
+
+    private void requireDefaultMode() {
+        if (openSelected) {
+            throw new IllegalStateException("Default task stage has been converted to an open stage");
+        }
+    }
+
+    private void requireOpenMode() {
+        if (!openSelected) {
+            throw new IllegalStateException("Open task stage has not been selected");
         }
     }
 

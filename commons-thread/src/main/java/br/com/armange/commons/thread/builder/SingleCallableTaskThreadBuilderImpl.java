@@ -16,6 +16,7 @@
 package br.com.armange.commons.thread.builder;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -83,10 +84,10 @@ final class SingleCallableTaskThreadBuilderImpl<S> implements SingleCallableTask
     }
 
     @Override
-    public SingleCallableTaskThreadBuilder<S> keepExecutorOpen() {
+    public OpenSingleCallableTaskThreadBuilder<S> keepExecutorOpen() {
         state.keepExecutorOpenSingle();
 
-        return this;
+        return new OpenSingleCallableTaskThreadBuilderImpl<>(state, delegate);
     }
 
     @Override
@@ -97,7 +98,8 @@ final class SingleCallableTaskThreadBuilderImpl<S> implements SingleCallableTask
     }
 
     @Override
-    public SingleTaskExecutorResult<S> start() {
-        return state.startSingle();
+    public Future<S> start() {
+        return state.startSingle()
+                .getFuture();
     }
 }

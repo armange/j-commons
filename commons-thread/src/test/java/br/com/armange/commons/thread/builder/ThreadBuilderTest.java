@@ -90,23 +90,26 @@ public class ThreadBuilderTest {
         final SingleTaskExecutorResult<?> result = ThreadBuilder
                 .newBuilder(corePoolSize)
                 .setExecution(() -> ThreadUtil.sleepUnchecked(10000))
+                .keepExecutorOpen()
                 .start();
-
-        assertThat(result.getExecutorService(), instanceOf(ScheduledThreadBuilderExecutor.class));
 
         final ScheduledThreadBuilderExecutor executor = (ScheduledThreadBuilderExecutor) result
                 .getExecutorService();
+        try {
+            assertThat(executor, instanceOf(ScheduledThreadBuilderExecutor.class));
+            assertEquals(corePoolSize, executor.getActiveCount());
 
-        assertEquals(corePoolSize, executor.getActiveCount());
+            ThreadUtil.sleepUnchecked(1500);
 
-        ThreadUtil.sleepUnchecked(1500);
+            final int activeCountAfterTest = Thread.activeCount();
+            final int newThreadsCount = activeCountAfterTest - activeCountBeforeTest;
 
-        final int activeCountAfterTest = Thread.activeCount();
-        final int newThreadsCount = activeCountAfterTest - activeCountBeforeTest;
+            out.println(String.format(ACTIVE_THREADS, newThreadsCount));
 
-        out.println(String.format(ACTIVE_THREADS, newThreadsCount));
-
-        assertThat(newThreadsCount, lessThanOrEqualTo(1));
+            assertThat(newThreadsCount, lessThanOrEqualTo(1));
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Test

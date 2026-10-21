@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -25,9 +27,8 @@ import java.util.function.Supplier;
  * same executor. Starting this state returns an immutable snapshot of the
  * current batch's futures in submission order. This state cannot be reused
  * after {@code start()}. By default, that start requests orderly executor
- * shutdown and makes the single-task alias terminal. With
- * {@link #keepExecutorOpen()}, the caller owns shutdown and can use the alias
- * to begin another batch on the same executor.
+ * shutdown and makes the single-task alias terminal. {@link #keepExecutorOpen()}
+ * selects a distinct stage that transfers shutdown responsibility to the caller.
  *
  * @param <S> the task result type, or {@link Void} for a {@link Runnable}
  * @param <T> the task type, either {@link Runnable} or {@link java.util.concurrent.Callable}
@@ -50,13 +51,12 @@ public sealed interface MultipleTaskThreadBuilder<S, T>
     MultipleTaskThreadBuilder<S, T> setSilentInterruption(final boolean flag);
 
     /**
-     * Keeps the shared executor open after the final {@code start()} and
-     * transfers responsibility for its shutdown to the caller. The policy
-     * persists for later batches. Call this before the final start.
+     * Selects the open-executor stage before the final {@code start()}.
+     * Default-stage aliases then become invalid.
      *
-     * @return this multiple-task stage
+     * @return the open multiple-task stage
      */
-    MultipleTaskThreadBuilder<S, T> keepExecutorOpen();
+    OpenMultipleTaskThreadBuilder<S, T> keepExecutorOpen();
 
     /**
      * Submits the configured task and remains in the multiple-task state.
@@ -69,10 +69,9 @@ public sealed interface MultipleTaskThreadBuilder<S, T>
      * Submits the configured task.
      *
      * The default policy requests orderly executor shutdown before returning,
-     * without waiting for or interrupting accepted tasks. With
-     * {@link #keepExecutorOpen()}, the caller owns the shared executor.
+     * without waiting for or interrupting accepted tasks.
      *
-     * @return this batch's task futures and their shared executor
+     * @return immutable futures for this batch, in submission order
      */
-    MultipleTaskExecutorResult<S> start();
+    List<Future<S>> start();
 }

@@ -15,6 +15,7 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -25,8 +26,8 @@ import java.util.function.Supplier;
  * the result of one task; submitting it while building another task moves to
  * the multiple-task state. This alias cannot be used while that multiple-task
  * state is active. By default, the final {@code start()} requests orderly
- * shutdown and makes this alias terminal. With {@link #keepExecutorOpen()},
- * the caller owns shutdown and can reuse this alias for another batch.
+ * shutdown and makes this alias terminal. {@link #keepExecutorOpen()} selects
+ * a distinct stage whose result transfers shutdown responsibility to the caller.
  *
  * @param <S> the task result type, or {@link Void} for a {@link Runnable}
  * @param <T> the task type, either {@link Runnable} or {@link java.util.concurrent.Callable}
@@ -49,13 +50,13 @@ public sealed interface SingleTaskThreadBuilder<S, T>
     SingleTaskThreadBuilder<S, T> setSilentInterruption(final boolean flag);
 
     /**
-     * Keeps the executor open after the final {@code start()} and transfers
-     * responsibility for its shutdown to the caller. The policy persists for
-     * later batches using this builder. Call this before the final start.
+     * Selects the open-executor stage before the final {@code start()}.
+     * The default-stage alias then becomes invalid. After an open multiple-task
+     * batch completes, this method can convert a retained single-task alias.
      *
-     * @return this single-task stage
+     * @return the open single-task stage
      */
-    SingleTaskThreadBuilder<S, T> keepExecutorOpen();
+    OpenSingleTaskThreadBuilder<S, T> keepExecutorOpen();
 
     /**
      * Submits the configured task and returns the state for another submission.
@@ -68,10 +69,9 @@ public sealed interface SingleTaskThreadBuilder<S, T>
      * Submits the configured task.
      *
      * The default policy requests orderly executor shutdown before returning,
-     * without waiting for or interrupting a running task. With
-     * {@link #keepExecutorOpen()}, the caller owns the executor.
+     * without waiting for or interrupting a running task.
      *
-     * @return the future of this submission and its executor
+     * @return the future of this submission
      */
-    SingleTaskExecutorResult<S> start();
+    Future<S> start();
 }

@@ -20,10 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
- * Exposes an immutable snapshot of a batch's futures in submission order.
- * By default the builder has requested orderly executor shutdown before this
- * result is returned. With {@code keepExecutorOpen()}, the caller owns its
- * shutdown. Accepted tasks may still be running when the result is returned.
+ * Exposes an immutable snapshot of an open-stage batch's futures in submission
+ * order. The caller owns executor shutdown. Accepted tasks may still be
+ * running when this result is returned.
  *
  * @param <T> the task result type, or {@link Void} for {@link Runnable} tasks
  */
@@ -47,7 +46,7 @@ public sealed interface MultipleTaskExecutorResult<T> permits MultipleTaskResult
     }
 
     /**
-     * @return the executor that accepted the tasks, possibly already shut down
+     * @return the caller-owned executor that accepted the tasks
      */
     ExecutorService getExecutorService();
 }

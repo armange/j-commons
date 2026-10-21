@@ -15,6 +15,8 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -78,10 +80,10 @@ final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuild
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder keepExecutorOpen() {
+    public OpenMultipleTaskThreadBuilder<Void, Runnable> keepExecutorOpen() {
         state.keepExecutorOpenMultiple(batchId);
 
-        return this;
+        return new OpenMultipleRunnableTaskThreadBuilder(state, delegate, batchId);
     }
 
     @Override
@@ -92,7 +94,8 @@ final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuild
     }
 
     @Override
-    public MultipleTaskExecutorResult<Void> start() {
-        return state.finishMultiple(batchId);
+    public List<Future<Void>> start() {
+        return state.finishMultiple(batchId)
+                .getFutures();
     }
 }

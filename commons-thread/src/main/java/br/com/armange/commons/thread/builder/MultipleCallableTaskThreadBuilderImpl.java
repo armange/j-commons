@@ -16,6 +16,8 @@
 package br.com.armange.commons.thread.builder;
 
 import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -86,10 +88,10 @@ final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallable
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> keepExecutorOpen() {
+    public OpenMultipleCallableTaskThreadBuilder<S> keepExecutorOpen() {
         state.keepExecutorOpenMultiple(batchId);
 
-        return this;
+        return new OpenMultipleCallableTaskThreadBuilderImpl<>(state, delegate, batchId);
     }
 
     @Override
@@ -100,7 +102,8 @@ final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallable
     }
 
     @Override
-    public MultipleTaskExecutorResult<S> start() {
-        return state.finishMultiple(batchId);
+    public List<Future<S>> start() {
+        return state.finishMultiple(batchId)
+                .getFutures();
     }
 }

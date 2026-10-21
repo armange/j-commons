@@ -21,8 +21,10 @@ import java.util.concurrent.Callable;
  * Entry point for platform-thread task builders. Each started builder uses a
  * {@code ScheduledThreadBuilderExecutor}; a pool size configures worker
  * capacity, not the number of tasks submitted. For tasks without scheduling,
- * the final {@code start()} requests orderly executor shutdown by default;
- * {@code keepExecutorOpen()} transfers shutdown responsibility to the caller.
+ * the final {@code start()} returns a {@code Future} or immutable list and
+ * requests orderly executor shutdown by default. Selecting
+ * {@code keepExecutorOpen()} returns an open stage whose result exposes the
+ * executor and transfers shutdown responsibility to the caller.
  * Scheduled tasks expose their executor and any separate timeout executor
  * for the caller to close. Tasks without scheduling use single and multiple task stages;
  * scheduled tasks retain their timing builders. The four task forms are:
