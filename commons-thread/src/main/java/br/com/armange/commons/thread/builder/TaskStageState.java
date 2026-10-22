@@ -72,21 +72,21 @@ final class TaskStageState<S> {
         openMultipleCompleted = false;
     }
 
-    synchronized SingleTaskExecutorResult<S> startSingle() {
+    synchronized SingleThreadExecutorResult<S> startSingle() {
         requireDefaultSingle();
         return submitSingle();
     }
 
-    synchronized SingleTaskExecutorResult<S> startOpenSingle() {
+    synchronized SingleThreadExecutorResult<S> startOpenSingle() {
         requireOpenSingle();
         return submitSingle();
     }
 
-    private SingleTaskExecutorResult<S> submitSingle() {
+    private SingleThreadExecutorResult<S> submitSingle() {
         try {
             final ExecutorResult<S> result = builder.start();
             final List<Future<S>> futures = result.getFutures();
-            final SingleTaskExecutorResult<S> snapshot = new SingleTaskResultSnapshot<>(
+            final SingleThreadExecutorResult<S> snapshot = new SingleThreadResultSnapshot<>(
                     futures.get(futures.size() - 1), result.getExecutorService());
             completeFinalStart(result.getExecutorService());
 
@@ -143,26 +143,26 @@ final class TaskStageState<S> {
         }
     }
 
-    synchronized MultipleTaskExecutorResult<S> finishMultiple(final long expectedBatchId) {
+    synchronized MultipleThreadExecutorResult<S> finishMultiple(final long expectedBatchId) {
         requireDefaultMultiple(expectedBatchId);
         return submitFinalMultiple();
     }
 
-    synchronized MultipleTaskExecutorResult<S> finishOpenMultiple(final long expectedBatchId) {
+    synchronized MultipleThreadExecutorResult<S> finishOpenMultiple(final long expectedBatchId) {
         requireOpenMultiple(expectedBatchId);
-        final MultipleTaskExecutorResult<S> result = submitFinalMultiple();
+        final MultipleThreadExecutorResult<S> result = submitFinalMultiple();
         openMultipleCompleted = true;
 
         return result;
     }
 
-    private MultipleTaskExecutorResult<S> submitFinalMultiple() {
+    private MultipleThreadExecutorResult<S> submitFinalMultiple() {
         try {
             final ExecutorResult<S> result = builder.start();
             final List<Future<S>> futures = result.getFutures();
             final List<Future<S>> batchFutures = List.copyOf(
                     futures.subList(batchStart, futures.size()));
-            final MultipleTaskExecutorResult<S> snapshot = new MultipleTaskResultSnapshot<>(
+            final MultipleThreadExecutorResult<S> snapshot = new MultipleThreadResultSnapshot<>(
                     batchFutures, result.getExecutorService());
             completeFinalStart(result.getExecutorService());
 

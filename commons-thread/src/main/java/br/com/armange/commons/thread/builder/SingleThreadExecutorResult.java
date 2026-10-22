@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
  *
  * @param <T> the task result type, or {@link Void} for a {@link Runnable}
  */
-public sealed interface SingleTaskExecutorResult<T> permits SingleTaskResultSnapshot {
+public sealed interface SingleThreadExecutorResult<T> permits SingleThreadResultSnapshot {
 
     /**
      * @return the future of the submitted task

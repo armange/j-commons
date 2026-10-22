@@ -20,10 +20,10 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-record SingleTaskResultSnapshot<T>(Future<T> future, ExecutorService executorService)
-        implements SingleTaskExecutorResult<T> {
+record SingleThreadResultSnapshot<T>(Future<T> future, ExecutorService executorService)
+        implements SingleThreadExecutorResult<T> {
 
-    SingleTaskResultSnapshot {
+    SingleThreadResultSnapshot {
         Objects.requireNonNull(future);
         Objects.requireNonNull(executorService);
     }
@@ -39,10 +39,10 @@ record SingleTaskResultSnapshot<T>(Future<T> future, ExecutorService executorSer
     }
 }
 
-record MultipleTaskResultSnapshot<T>(List<Future<T>> futures, ExecutorService executorService)
-        implements MultipleTaskExecutorResult<T> {
+record MultipleThreadResultSnapshot<T>(List<Future<T>> futures, ExecutorService executorService)
+        implements MultipleThreadExecutorResult<T> {
 
-    MultipleTaskResultSnapshot {
+    MultipleThreadResultSnapshot {
         futures = List.copyOf(futures);
         Objects.requireNonNull(executorService);
     }

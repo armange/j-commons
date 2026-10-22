@@ -87,7 +87,7 @@ public class ThreadBuilderTest {
 
         out.println(String.format(ACTIVE_THREADS_BEFORE_THREADS, activeCountBeforeTest));
 
-        final SingleTaskExecutorResult<?> result = ThreadBuilder
+        final SingleThreadExecutorResult<?> result = ThreadBuilder
                 .newBuilder(corePoolSize)
                 .setExecution(() -> ThreadUtil.sleepUnchecked(10000))
                 .keepExecutorOpen()

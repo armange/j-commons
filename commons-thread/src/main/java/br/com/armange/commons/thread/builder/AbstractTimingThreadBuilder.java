@@ -207,7 +207,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     private void runWithNoSchedule() {
         final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
         futureHolder.set(submit());
         newExecutorResultIfNull();
         executorResult.getFutures().add(futureHolder.get());
@@ -216,7 +216,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     private void runWithDelay() {
         final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
         futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
         executorResult.getFutures().add(futureHolder.get());
@@ -225,7 +225,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     private void runWithDelayAndTimeout() {
         final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
         futureHolder.set(schedule(handleDelay(), TimeUnit.MILLISECONDS));
 
         final ExecutorResult<S> timeoutExecutorResult = handleInterruption(futureHolder);
@@ -238,7 +238,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     private void runWithDelayAndInterval() {
         final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
         futureHolder.set(scheduleAtFixedRate(handleDelay(),
                 interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
         newExecutorResultIfNull();
@@ -248,7 +248,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
     private void runWithAllTimesControls() {
         final Holder<ScheduledFuture<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
         futureHolder.set(scheduleAtFixedRate(handleDelay(),
                 interval.orElse(Duration.ofMillis(0)).toMillis(), TimeUnit.MILLISECONDS));
 
@@ -326,7 +326,7 @@ public abstract class AbstractTimingThreadBuilder<S, T, U extends AbstractTiming
         final ScheduledFuture<S> scheduledFuture = futureHolder.get();
         final ScheduledThreadBuilderExecutor localExec = new ScheduledThreadBuilderExecutor(1);
 
-        localExec.addAfterExecuteConsumer(handleException(futureHolder));
+//        localExec.addAfterExecuteConsumer(handleException(futureHolder));
         localExec.schedule(cancelFuture(scheduledFuture), timeout
                         .orElse(Duration.ofMillis(0)).toMillis(),
                 TimeUnit.MILLISECONDS);

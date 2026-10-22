@@ -94,8 +94,8 @@ public final class ThreadBuilder {
      *                  define a method of no arguments called run.
      * @return the single-task stage for this runnable
      */
-    public SingleTaskThreadBuilder<Void, Runnable> setExecution(final Runnable execution) {
-        return new SingleRunnableTaskThreadBuilder(corePoolSize, execution);
+    public SingleThreadBuilder<Void, Runnable> setExecution(final Runnable execution) {
+        return new SingleRunnableBuilder(corePoolSize, execution);
     }
 
     /**
@@ -105,8 +105,8 @@ public final class ThreadBuilder {
      * @param <S>       the type of the object resulting from the execution of the thread.
      * @return the single-task stage for this callable
      */
-    public <S> SingleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution) {
-        return new SingleCallableTaskThreadBuilderImpl<>(corePoolSize, execution);
+    public <S> SingleCallableBuilder<S> setExecution(final Callable<S> execution) {
+        return new SingleCallableBuilderImpl<>(corePoolSize, execution);
     }
 
     /**
@@ -118,8 +118,8 @@ public final class ThreadBuilder {
      *                  define a method of no arguments called run.
      * @return a thread builder with scheduling settings options.
      */
-    public TimingRunnableThreadBuilder setScheduling(final Runnable execution) {
-        final TimingRunnableThreadBuilder builder = TimingRunnableThreadBuilder
+    public TimingRunnableBuilder setScheduling(final Runnable execution) {
+        final TimingRunnableBuilder builder = TimingRunnableBuilder
                 .newBuilder(corePoolSize);
 
         return builder.setScheduling(execution);
@@ -134,8 +134,8 @@ public final class ThreadBuilder {
      * @param <S>       the type of the object resulting from the execution of the thread.
      * @return a thread builder with scheduling settings options.
      */
-    public <S> TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
-        final TimingCallableThreadBuilder<S> builder = TimingCallableThreadBuilder
+    public <S> TimingCallableBuilder<S> setScheduling(final Callable<S> execution) {
+        final TimingCallableBuilder<S> builder = TimingCallableBuilder
                 .newBuilder(corePoolSize);
 
         return builder.setScheduling(execution);

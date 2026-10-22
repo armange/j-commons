@@ -27,24 +27,24 @@ import java.util.function.Supplier;
  * A failure before the first result closes the executor; after ownership has
  * transferred, a later failure leaves shutdown to the caller.
  */
-public sealed interface OpenSingleTaskThreadBuilder<S, T>
-        permits OpenSingleRunnableTaskThreadBuilder, OpenSingleCallableTaskThreadBuilder {
+public sealed interface OpenSingleBuilder<S, T>
+        permits OpenSingleRunnableBuilder, OpenSingleCallableBuilder {
 
-    OpenSingleTaskThreadBuilder<S, T> setExecution(final T execution);
+    OpenSingleBuilder<S, T> setExecution(final T execution);
 
-    OpenSingleTaskThreadBuilder<S, T> setAfterExecuteConsumer(
+    OpenSingleBuilder<S, T> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> afterExecuteConsumer);
 
-    OpenSingleTaskThreadBuilder<S, T> setUncaughtExceptionConsumer(
+    OpenSingleBuilder<S, T> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> uncaughtExceptionConsumer);
 
-    OpenSingleTaskThreadBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
+    OpenSingleBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
 
-    OpenSingleTaskThreadBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
+    OpenSingleBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
 
-    OpenSingleTaskThreadBuilder<S, T> setSilentInterruption(final boolean flag);
+    OpenSingleBuilder<S, T> setSilentInterruption(final boolean flag);
 
-    OpenMultipleTaskThreadBuilder<S, T> startAndBuildOther();
+    OpenMultipleBuilder<S, T> startAndBuildOther();
 
     /**
      * Submits one task without waiting for it to finish and returns the
@@ -52,5 +52,5 @@ public sealed interface OpenSingleTaskThreadBuilder<S, T>
      *
      * @return the task future and its shared executor
      */
-    SingleTaskExecutorResult<S> start();
+    SingleThreadExecutorResult<S> start();
 }

@@ -22,13 +22,13 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuilder<Void, Runnable> {
+final class MultipleRunnableBuilder implements MultipleThreadBuilder<Void, Runnable> {
     private final TaskStageState<Void> state;
-    private final CommonRunnableThreadBuilder delegate;
+    private final CommonRunnableBuilder delegate;
     private final long batchId;
 
-    MultipleRunnableTaskThreadBuilder(final TaskStageState<Void> state,
-                                      final CommonRunnableThreadBuilder delegate,
+    MultipleRunnableBuilder(final TaskStageState<Void> state,
+                                      final CommonRunnableBuilder delegate,
                                       final long batchId) {
         this.state = state;
         this.delegate = delegate;
@@ -36,14 +36,14 @@ final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuild
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setExecution(final Runnable execution) {
+    public MultipleRunnableBuilder setExecution(final Runnable execution) {
         state.configureMultiple(batchId, () -> delegate.setExecution(execution));
 
         return this;
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setAfterExecuteConsumer(
+    public MultipleRunnableBuilder setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> consumer) {
         state.configureMultiple(batchId, () -> delegate.setAfterExecuteConsumer(consumer));
 
@@ -51,7 +51,7 @@ final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuild
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setUncaughtExceptionConsumer(
+    public MultipleRunnableBuilder setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> consumer) {
         state.configureMultiple(batchId, () -> delegate.setUncaughtExceptionConsumer(consumer));
 
@@ -59,35 +59,35 @@ final class MultipleRunnableTaskThreadBuilder implements MultipleTaskThreadBuild
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setThreadNameSupplier(final Supplier<String> supplier) {
+    public MultipleRunnableBuilder setThreadNameSupplier(final Supplier<String> supplier) {
         state.configureMultiple(batchId, () -> delegate.setThreadNameSupplier(supplier));
 
         return this;
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setThreadPrioritySupplier(final IntSupplier supplier) {
+    public MultipleRunnableBuilder setThreadPrioritySupplier(final IntSupplier supplier) {
         state.configureMultiple(batchId, () -> delegate.setThreadPrioritySupplier(supplier));
 
         return this;
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder setSilentInterruption(final boolean flag) {
+    public MultipleRunnableBuilder setSilentInterruption(final boolean flag) {
         state.configureMultiple(batchId, () -> delegate.setSilentInterruption(flag));
 
         return this;
     }
 
     @Override
-    public OpenMultipleTaskThreadBuilder<Void, Runnable> keepExecutorOpen() {
+    public OpenMultipleThreadBuilder<Void, Runnable> keepExecutorOpen() {
         state.keepExecutorOpenMultiple(batchId);
 
-        return new OpenMultipleRunnableTaskThreadBuilder(state, delegate, batchId);
+        return new OpenMultipleRunnableBuilder(state, delegate, batchId);
     }
 
     @Override
-    public MultipleRunnableTaskThreadBuilder startAndBuildOther() {
+    public MultipleRunnableBuilder startAndBuildOther() {
         state.submitMultiple(batchId);
 
         return this;

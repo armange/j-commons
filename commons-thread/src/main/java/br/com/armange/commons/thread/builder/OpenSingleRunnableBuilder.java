@@ -15,30 +15,29 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-final class OpenSingleCallableTaskThreadBuilderImpl<S> implements OpenSingleCallableTaskThreadBuilder<S> {
-    private final CommonCallableThreadBuilder<S> delegate;
-    private final TaskStageState<S> state;
+final class OpenSingleRunnableBuilder implements OpenSingleThreadBuilder<Void, Runnable> {
+    private final CommonRunnableBuilder delegate;
+    private final TaskStageState<Void> state;
 
-    OpenSingleCallableTaskThreadBuilderImpl(final TaskStageState<S> state, final CommonCallableThreadBuilder<S> delegate) {
+    OpenSingleRunnableBuilder(final TaskStageState<Void> state, final CommonRunnableBuilder delegate) {
         this.state = state;
         this.delegate = delegate;
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution) {
+    public OpenSingleRunnableBuilder setExecution(final Runnable execution) {
         state.configureOpenSingle(() -> delegate.setExecution(execution));
 
         return this;
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setAfterExecuteConsumer(
+    public OpenSingleRunnableBuilder setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> consumer) {
         state.configureOpenSingle(() -> delegate.setAfterExecuteConsumer(consumer));
 
@@ -46,7 +45,7 @@ final class OpenSingleCallableTaskThreadBuilderImpl<S> implements OpenSingleCall
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setUncaughtExceptionConsumer(
+    public OpenSingleRunnableBuilder setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> consumer) {
         state.configureOpenSingle(() -> delegate.setUncaughtExceptionConsumer(consumer));
 
@@ -54,42 +53,35 @@ final class OpenSingleCallableTaskThreadBuilderImpl<S> implements OpenSingleCall
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setThreadNameSupplier(final Supplier<String> supplier) {
+    public OpenSingleRunnableBuilder setThreadNameSupplier(final Supplier<String> supplier) {
         state.configureOpenSingle(() -> delegate.setThreadNameSupplier(supplier));
 
         return this;
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setThreadPrioritySupplier(final IntSupplier supplier) {
+    public OpenSingleRunnableBuilder setThreadPrioritySupplier(final IntSupplier supplier) {
         state.configureOpenSingle(() -> delegate.setThreadPrioritySupplier(supplier));
 
         return this;
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setSilentInterruption(final boolean flag) {
+    public OpenSingleRunnableBuilder setSilentInterruption(final boolean flag) {
         state.configureOpenSingle(() -> delegate.setSilentInterruption(flag));
 
         return this;
     }
 
     @Override
-    public OpenSingleCallableTaskThreadBuilder<S> setThreadResultConsumer(final Consumer<S> consumer) {
-        state.configureOpenSingle(() -> delegate.setThreadResultConsumer(consumer));
-
-        return this;
-    }
-
-    @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> startAndBuildOther() {
+    public OpenMultipleThreadBuilder<Void, Runnable> startAndBuildOther() {
         final long batchId = state.beginOpenMultiple();
 
-        return new OpenMultipleCallableTaskThreadBuilderImpl<>(state, delegate, batchId);
+        return new OpenMultipleRunnableBuilder(state, delegate, batchId);
     }
 
     @Override
-    public SingleTaskExecutorResult<S> start() {
+    public SingleThreadExecutorResult<Void> start() {
         return state.startOpenSingle();
     }
 }

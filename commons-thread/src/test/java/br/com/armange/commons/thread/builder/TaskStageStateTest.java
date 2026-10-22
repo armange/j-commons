@@ -34,7 +34,7 @@ class TaskStageStateTest {
         final FailingBuilder builder = new FailingBuilder(100);
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
-        final SingleTaskExecutorResult<Void> result = state.startSingle();
+        final SingleThreadExecutorResult<Void> result = state.startSingle();
 
         assertTrue(result.getExecutorService()
                 .isShutdown());
@@ -51,7 +51,7 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
         final long batchId = state.beginMultiple();
 
-        final MultipleTaskExecutorResult<Void> result = state.finishMultiple(batchId);
+        final MultipleThreadExecutorResult<Void> result = state.finishMultiple(batchId);
 
         assertTrue(result.getExecutorService()
                 .isShutdown());
@@ -119,7 +119,7 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final SingleTaskExecutorResult<Void> first = state.startOpenSingle();
+        final SingleThreadExecutorResult<Void> first = state.startOpenSingle();
 
         try {
             assertFalse(first.getExecutorService()
@@ -146,7 +146,7 @@ class TaskStageStateTest {
         final TaskStageState<Void> state = new TaskStageState<>(builder);
 
         state.keepExecutorOpenSingle();
-        final SingleTaskExecutorResult<Void> first = state.startOpenSingle();
+        final SingleThreadExecutorResult<Void> first = state.startOpenSingle();
 
         try {
             final long batchId = state.beginOpenMultiple();

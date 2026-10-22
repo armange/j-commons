@@ -329,7 +329,7 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     protected void runThread() {
         final Holder<Future<S>> futureHolder = Holder.empty();
 
-        executor.addAfterExecuteConsumer(handleException(futureHolder));
+//        executor.addAfterExecuteConsumer(handleException(futureHolder));
 
         afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
 

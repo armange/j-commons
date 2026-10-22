@@ -15,31 +15,32 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-final class SingleRunnableTaskThreadBuilder implements SingleTaskThreadBuilder<Void, Runnable> {
-    private final CommonRunnableThreadBuilder delegate;
-    private final TaskStageState<Void> state;
+final class SingleCallableBuilderImpl<S> implements SingleCallableBuilder<S> {
+    private final CommonCallableBuilder<S> delegate;
+    private final TaskStageState<S> state;
 
-    SingleRunnableTaskThreadBuilder(final int corePoolSize, final Runnable execution) {
-        delegate = CommonRunnableThreadBuilder.newBuilder(corePoolSize);
+    SingleCallableBuilderImpl(final int corePoolSize, final Callable<S> execution) {
+        delegate = CommonCallableBuilder.newBuilder(corePoolSize);
         state = new TaskStageState<>(delegate);
         setExecution(execution);
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setExecution(final Runnable execution) {
+    public SingleCallableBuilder<S> setExecution(final Callable<S> execution) {
         state.configureSingle(() -> delegate.setExecution(execution));
 
         return this;
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setAfterExecuteConsumer(
+    public SingleCallableBuilder<S> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> consumer) {
         state.configureSingle(() -> delegate.setAfterExecuteConsumer(consumer));
 
@@ -47,7 +48,7 @@ final class SingleRunnableTaskThreadBuilder implements SingleTaskThreadBuilder<V
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setUncaughtExceptionConsumer(
+    public SingleCallableBuilder<S> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> consumer) {
         state.configureSingle(() -> delegate.setUncaughtExceptionConsumer(consumer));
 
@@ -55,42 +56,49 @@ final class SingleRunnableTaskThreadBuilder implements SingleTaskThreadBuilder<V
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setThreadNameSupplier(final Supplier<String> supplier) {
+    public SingleCallableBuilder<S> setThreadNameSupplier(final Supplier<String> supplier) {
         state.configureSingle(() -> delegate.setThreadNameSupplier(supplier));
 
         return this;
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setThreadPrioritySupplier(final IntSupplier supplier) {
+    public SingleCallableBuilder<S> setThreadPrioritySupplier(final IntSupplier supplier) {
         state.configureSingle(() -> delegate.setThreadPrioritySupplier(supplier));
 
         return this;
     }
 
     @Override
-    public SingleRunnableTaskThreadBuilder setSilentInterruption(final boolean flag) {
+    public SingleCallableBuilder<S> setSilentInterruption(final boolean flag) {
         state.configureSingle(() -> delegate.setSilentInterruption(flag));
 
         return this;
     }
 
     @Override
-    public OpenSingleTaskThreadBuilder<Void, Runnable> keepExecutorOpen() {
+    public SingleCallableBuilder<S> setThreadResultConsumer(final Consumer<S> consumer) {
+        state.configureSingle(() -> delegate.setThreadResultConsumer(consumer));
+
+        return this;
+    }
+
+    @Override
+    public OpenSingleCallableBuilder<S> keepExecutorOpen() {
         state.keepExecutorOpenSingle();
 
-        return new OpenSingleRunnableTaskThreadBuilder(state, delegate);
+        return new OpenSingleCallableBuilderImpl<>(state, delegate);
     }
 
     @Override
-    public MultipleTaskThreadBuilder<Void, Runnable> startAndBuildOther() {
+    public MultipleCallableBuilder<S> startAndBuildOther() {
         final long batchId = state.beginMultiple();
 
-        return new MultipleRunnableTaskThreadBuilder(state, delegate, batchId);
+        return new MultipleCallableBuilderImpl<>(state, delegate, batchId);
     }
 
     @Override
-    public Future<Void> start() {
+    public Future<S> start() {
         return state.startSingle()
                 .getFuture();
     }

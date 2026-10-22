@@ -23,13 +23,13 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallableTaskThreadBuilder<S> {
+final class MultipleCallableBuilderImpl<S> implements MultipleCallableBuilder<S> {
     private final TaskStageState<S> state;
-    private final CommonCallableThreadBuilder<S> delegate;
+    private final CommonCallableBuilder<S> delegate;
     private final long batchId;
 
-    MultipleCallableTaskThreadBuilderImpl(final TaskStageState<S> state,
-                                          final CommonCallableThreadBuilder<S> delegate,
+    MultipleCallableBuilderImpl(final TaskStageState<S> state,
+                                          final CommonCallableBuilder<S> delegate,
                                           final long batchId) {
         this.state = state;
         this.delegate = delegate;
@@ -37,14 +37,14 @@ final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallable
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution) {
+    public MultipleCallableBuilder<S> setExecution(final Callable<S> execution) {
         state.configureMultiple(batchId, () -> delegate.setExecution(execution));
 
         return this;
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setAfterExecuteConsumer(
+    public MultipleCallableBuilder<S> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> consumer) {
         state.configureMultiple(batchId, () -> delegate.setAfterExecuteConsumer(consumer));
 
@@ -52,7 +52,7 @@ final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallable
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setUncaughtExceptionConsumer(
+    public MultipleCallableBuilder<S> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> consumer) {
         state.configureMultiple(batchId, () -> delegate.setUncaughtExceptionConsumer(consumer));
 
@@ -60,42 +60,42 @@ final class MultipleCallableTaskThreadBuilderImpl<S> implements MultipleCallable
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setThreadNameSupplier(final Supplier<String> supplier) {
+    public MultipleCallableBuilder<S> setThreadNameSupplier(final Supplier<String> supplier) {
         state.configureMultiple(batchId, () -> delegate.setThreadNameSupplier(supplier));
 
         return this;
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setThreadPrioritySupplier(final IntSupplier supplier) {
+    public MultipleCallableBuilder<S> setThreadPrioritySupplier(final IntSupplier supplier) {
         state.configureMultiple(batchId, () -> delegate.setThreadPrioritySupplier(supplier));
 
         return this;
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setSilentInterruption(final boolean flag) {
+    public MultipleCallableBuilder<S> setSilentInterruption(final boolean flag) {
         state.configureMultiple(batchId, () -> delegate.setSilentInterruption(flag));
 
         return this;
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> setThreadResultConsumer(final Consumer<S> consumer) {
+    public MultipleCallableBuilder<S> setThreadResultConsumer(final Consumer<S> consumer) {
         state.configureMultiple(batchId, () -> delegate.setThreadResultConsumer(consumer));
 
         return this;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> keepExecutorOpen() {
+    public OpenMultipleCallableBuilder<S> keepExecutorOpen() {
         state.keepExecutorOpenMultiple(batchId);
 
-        return new OpenMultipleCallableTaskThreadBuilderImpl<>(state, delegate, batchId);
+        return new OpenMultipleCallableBuilderImpl<>(state, delegate, batchId);
     }
 
     @Override
-    public MultipleCallableTaskThreadBuilder<S> startAndBuildOther() {
+    public MultipleCallableBuilder<S> startAndBuildOther() {
         state.submitMultiple(batchId);
 
         return this;

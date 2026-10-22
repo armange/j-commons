@@ -19,22 +19,18 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
- * Builder for a one-shot {@link Callable} with optional delay and timeout.
- * {@code setInterval()} is inherited but a periodic callable is unsupported:
- * calling {@code start()} with an interval throws
- * {@code UnsupportedOperationException}.
+ * Class responsible for simplifying and speeding up the creation and configuration of threads.
  *
  * @param <S> the result type of method call.
  * @author Diego Armange Costa
- * @see java.util.concurrent.ScheduledThreadPoolExecutor
  * @see br.com.armange.commons.thread.builder.ThreadBuilder
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
 @SuppressWarnings("rawtypes")
-public class TimingCallableThreadBuilder<S>
-        extends AbstractTimingThreadBuilder<S, Callable, TimingCallableThreadBuilder<S>> {
+public class CommonCallableBuilder<S> extends
+        AbstractThreadBuilder<S, Callable, CommonCallableBuilder<S>> {
 
-    private TimingCallableThreadBuilder(final int corePoolSize) {
+    private CommonCallableBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
 
@@ -46,8 +42,8 @@ public class TimingCallableThreadBuilder<S>
      * @param <T>          the type of the object resulting from the execution of the thread.
      * @return a new thread builder
      */
-    protected static <T> TimingCallableThreadBuilder<T> newBuilder(final int corePoolSize) {
-        return new TimingCallableThreadBuilder<>(corePoolSize);
+    protected static <T> CommonCallableBuilder<T> newBuilder(final int corePoolSize) {
+        return new CommonCallableBuilder<>(corePoolSize);
     }
 
     /**
@@ -57,13 +53,11 @@ public class TimingCallableThreadBuilder<S>
      * @return the current thread builder.
      */
     @Override
-    public TimingCallableThreadBuilder setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
+    public CommonCallableBuilder<S> setThreadResultConsumer(
+            final Consumer<S> threadResultConsumer) {
         return super.setThreadResultConsumer(threadResultConsumer);
     }
 
-    /**
-     * @return the type of the thread implementation.
-     */
     @Override
     Class<Callable> getExecutionClass() {
         return Callable.class;
@@ -75,7 +69,8 @@ public class TimingCallableThreadBuilder<S>
      * @param execution a task that returns a result and may throw an exception.
      * @return the current thread builder.
      */
-    protected TimingCallableThreadBuilder<S> setScheduling(final Callable<S> execution) {
+    @Override
+    public CommonCallableBuilder<S> setExecution(final Callable execution) {
         return super.setExecution(execution);
     }
 }

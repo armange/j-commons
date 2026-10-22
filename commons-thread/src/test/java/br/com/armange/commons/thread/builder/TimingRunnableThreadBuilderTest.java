@@ -38,7 +38,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void noSchedule() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .start();
@@ -55,7 +55,7 @@ public class TimingRunnableThreadBuilderTest {
     public void noScheduleCaughtException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setSilentInterruption(true)
@@ -74,7 +74,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useDelay() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setScheduling(localRunnable)
                 .setDelay(1000)
@@ -96,7 +96,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useDelayCaughtException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setDelay(1000)
@@ -120,7 +120,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void cancelByTimeout() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1).setExecution(() -> {
                     sleepUnchecked(1000);
                     localRunnable.run();
@@ -149,7 +149,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void runBeforeTimeout() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setTimeout(1500)
@@ -173,7 +173,7 @@ public class TimingRunnableThreadBuilderTest {
     public void runBeforeTimeoutCaughtException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setTimeout(1500)
@@ -198,7 +198,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useInterval() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setInterval(1000)
@@ -227,7 +227,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useIntervalCaughtException() {
         final LazyRunnableWithException lazyRunnableWithException = spy(new LazyRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(lazyRunnableWithException)
                 .setInterval(1000)
@@ -256,7 +256,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useIntervalAndDelay() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setDelay(500)
@@ -286,7 +286,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useIntervalAndDelayAndCaughtException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setDelay(500)
@@ -311,7 +311,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useTimeoutAndInterval() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setTimeout(3000)
@@ -344,7 +344,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void cancelByTimeoutUsingInterval() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(() -> {
                     sleepUnchecked(3000);
@@ -376,7 +376,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useTimeoutAndIntervalCaughtException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setTimeout(1500)
@@ -406,7 +406,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useAllDelayAndTimeout() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder
+        final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setDelay(500)
@@ -438,7 +438,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useAllTimeControlsAndCaughtException() {
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1)
                 .setExecution(localRunnableWithException).setDelay(1000).setTimeout(4000).setInterval(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer).setMayInterruptIfRunning(true)
                 .setSilentInterruption(true).start();
@@ -464,7 +464,7 @@ public class TimingRunnableThreadBuilderTest {
     public void useAllTimeControls() {
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1).setExecution(localRunnable)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setDelay(1000).setTimeout(4000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
                 .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
@@ -493,7 +493,7 @@ public class TimingRunnableThreadBuilderTest {
     public void silentCancellationException() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(2).setExecution(localRunnableWithException)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(2).setExecution(localRunnableWithException)
                 .setDelay(5000).setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
 
         result.getExecutorService().shutdownNow();
@@ -509,7 +509,7 @@ public class TimingRunnableThreadBuilderTest {
     public void throwingInterruptedException() {
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(2).setExecution(() -> sleepUnchecked(5000))
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(2).setExecution(() -> sleepUnchecked(5000))
                 .setUncaughtExceptionConsumer(throwableConsumer).start();
 
         sleepUnchecked(1100);
@@ -528,7 +528,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void throwingCancellationException() {
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1)
                 .setExecution(() -> sleepUnchecked(5000)).setTimeout(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer).start();
 
@@ -548,7 +548,7 @@ public class TimingRunnableThreadBuilderTest {
     public void callingAfterExecutionConsumer() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
         final AfterExecuteConsumer afterExecuteConsumer = spy(new AfterExecuteConsumer());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1).setExecution(localRunnable)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setAfterExecuteConsumer(afterExecuteConsumer).start();
 
         sleepUnchecked(1100);
@@ -568,7 +568,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void useIntervalForFiveTimes() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1).setExecution(localRunnable)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setTimeout(500).setInterval(100).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
 
         sleepUnchecked(410);
@@ -590,7 +590,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void buildTwoThreadsUsingTheSameBuilder() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1).setExecution(localRunnable)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setTimeout(1000).startAndBuildOther().setTimeout(1000).setExecution(localRunnable).start();
 
         sleepUnchecked(1000);
@@ -608,7 +608,7 @@ public class TimingRunnableThreadBuilderTest {
     @Test
     public void cancelDelayBeforeExecution() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
-        final ExecutorResult<?> result = TimingRunnableThreadBuilder.newBuilder(1).setExecution(localRunnable)
+        final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setDelay(3000).start();
 
         sleepUnchecked(1000);

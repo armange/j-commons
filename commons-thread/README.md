@@ -9,9 +9,10 @@ define como obter o resultado e observar falhas por meio de um `Future`.
 
 Na versão de trabalho `3.0.0-SNAPSHOT`, os builders do pacote `builder` mantêm
 as doze facilidades descritas abaixo. `TryAsyncBuilder` também continua
-disponível. A remoção atinge somente seis classes anteriormente marcadas para
-remoção no pacote raiz; a [seção de migração](#6-migração-das-seis-classes-removidas)
-lista cada uma. As receitas diretas do JDK 25 são uma opção de composição.
+disponível. Seis classes anteriormente marcadas para remoção saíram do pacote
+raiz, e os nomes dos estágios sem agendamento do pacote `builder` foram
+simplificados; a [seção de migração](#6-migração-das-seis-classes-removidas)
+descreve as mudanças. As receitas diretas do JDK 25 são uma opção de composição.
 
 [Voltar ao README principal](../README.md)
 
@@ -430,8 +431,8 @@ try (var worker = result.getExecutorService();
 
 `br.com.armange.commons.thread.builder.ThreadBuilder.setExecution(...)`
 continua disponível para `Runnable` e `Callable`. A entrada devolve um estágio
-`SingleTaskThreadBuilder`; `startAndBuildOther()` envia a primeira tarefa e
-devolve um estágio `MultipleTaskThreadBuilder`. Cada lote compartilha um
+`SingleThreadBuilder`; `startAndBuildOther()` envia a primeira tarefa e
+devolve um estágio `MultipleThreadBuilder`. Cada lote compartilha um
 `ScheduledThreadBuilderExecutor`. A escolha de `keepExecutorOpen()` muda o
 tipo do estágio e o contrato de retorno:
 
@@ -439,12 +440,12 @@ tipo do estágio e o contrato de retorno:
 | --- | --- | --- |
 | Single padrão | `Future<S>` da tarefa | O builder solicita `shutdown()` antes de retornar. |
 | Multiple padrão | `List<Future<S>>` imutável do lote, em ordem de submissão | O builder solicita `shutdown()` antes de retornar. |
-| `OpenSingleTaskThreadBuilder` | `SingleTaskExecutorResult<S>` com `getFuture()` e `getExecutorService()` | O chamador fecha o executor recebido. |
-| `OpenMultipleTaskThreadBuilder` | `MultipleTaskExecutorResult<S>` com lista imutável em `getFutures()` e executor | O chamador fecha o executor recebido. |
+| `OpenSingleThreadBuilder` | `SingleTaskExecutorResult<S>` com `getFuture()` e `getExecutorService()` | O chamador fecha o executor recebido. |
+| `OpenMultipleThreadBuilder` | `MultipleTaskExecutorResult<S>` com lista imutável em `getFutures()` e executor | O chamador fecha o executor recebido. |
 
-Os estágios especializados `SingleCallableTaskThreadBuilder`,
-`MultipleCallableTaskThreadBuilder`, `OpenSingleCallableTaskThreadBuilder` e
-`OpenMultipleCallableTaskThreadBuilder` conservam a fluência de
+Os estágios especializados `SingleCallableBuilder`,
+`MultipleCallableBuilder`, `OpenSingleCallableBuilder` e
+`OpenMultipleCallableBuilder` conservam a fluência de
 `setThreadResultConsumer(...)`. `start()` final retorna sem esperar as tarefas
 ou interrompê-las; consulte os `Future`s para resultado ou falha.
 `startAndBuildOther()` apenas envia a tarefa intermediária e não fecha o
@@ -461,13 +462,13 @@ uma vez por `keepExecutorOpen()` após o fim desse lote. A opção de manter o
 executor aberto persiste para os lotes seguintes. Cada resultado Multiple
 conserva o snapshot dos `Future`s do seu próprio lote.
 
-`setScheduling(...)` continua devolvendo `TimingRunnableThreadBuilder` ou
-`TimingCallableThreadBuilder` e `ExecutorResult` com a lista de `Future`s, sem
+`setScheduling(...)` continua devolvendo `TimingRunnableBuilder` ou
+`TimingCallableBuilder` e `ExecutorResult` com a lista de `Future`s, sem
 mudança no fluxo de agendamento. Timeout e as demais facilidades dos builders
 continuam disponíveis. Para quem prefere compor executores diretamente, a
 [seção 5](#5-composição-direta-com-o-jdk) mostra alternativas do JDK.
 `setInterval()` usa taxa fixa, embora sua descrição antiga possa sugerir atraso após cada
-conclusão. `TimingCallableThreadBuilder` aceita configurar um intervalo, mas
+conclusão. `TimingCallableBuilder` aceita configurar um intervalo, mas
 `start()` lança `UnsupportedOperationException` nessa combinação.
 
 `setSilentInterruption(boolean)` também permanece: quando ativado, evita
@@ -1580,7 +1581,7 @@ as threads de trabalho são de plataforma. Se a tarefa ignorar interrupção,
 
 [Voltar ao sumário](#sumário)
 
-A versão de trabalho `3.0.0-SNAPSHOT` remove somente seis classes públicas
+A versão de trabalho `3.0.0-SNAPSHOT` remove seis classes públicas
 marcadas `@Deprecated(since="2.0.0", forRemoval=true)` no pacote
 `br.com.armange.commons.thread` da versão estável `2.0.0`.
 Consumidores dessas classes precisam atualizar o código fonte e recompilar:
@@ -1591,19 +1592,28 @@ em outros pacotes continuam disponíveis.
 
 Há também uma mudança de assinatura nos builders sem agendamento entre 2.0.0
 e esta versão de trabalho: `ThreadBuilder.setExecution(Runnable/Callable)`
-deixa de retornar `CommonRunnableThreadBuilder`/`CommonCallableThreadBuilder`
-e passa a retornar o estágio `SingleTaskThreadBuilder` ou
-`SingleCallableTaskThreadBuilder`. Seu `start()` padrão retorna diretamente
+deixa de retornar `CommonRunnableBuilder`/`CommonCallableBuilder`
+e passa a retornar o estágio `SingleThreadBuilder` ou
+`SingleCallableBuilder`. Seu `start()` padrão retorna diretamente
 `Future<S>`: substitua `getFutures().get(0)` pelo `Future` devolvido.
-Após `startAndBuildOther()`, use `MultipleTaskThreadBuilder` ou
-`MultipleCallableTaskThreadBuilder`; o `start()` padrão desse estágio retorna
+Após `startAndBuildOther()`, use `MultipleThreadBuilder` ou
+`MultipleCallableBuilder`; o `start()` padrão desse estágio retorna
 `List<Future<S>>` imutável. Para receber também o executor, chame
 `keepExecutorOpen()` antes de `start()`: os estágios `OpenSingle` e
-`OpenMultiple` retornam, respectivamente, `SingleTaskExecutorResult` com
-`getFuture()` e `MultipleTaskExecutorResult` com `getFutures()`. Atualize
+`OpenMultiple` retornam, respectivamente, `SingleThreadExecutorResult` com
+`getFuture()` e `MultipleThreadExecutorResult` com `getFutures()`. Atualize
 variáveis com tipos explícitos e recompile os consumidores, pois os descritores
 binários dos métodos mudaram. O caminho `setScheduling(...)` conserva seus
 tipos e `ExecutorResult`.
+
+Os nomes dos estágios sem agendamento foram simplificados nesta versão de
+trabalho: `SingleTaskThreadBuilder` virou `SingleThreadBuilder`,
+`MultipleTaskThreadBuilder` virou `MultipleThreadBuilder`,
+`OpenSingleTaskThreadBuilder` virou `OpenSingleThreadBuilder` e
+`OpenMultipleTaskThreadBuilder` virou `OpenMultipleThreadBuilder`. As quatro variantes
+`Callable` seguem a mesma regra: por exemplo,
+`SingleCallableTaskThreadBuilder` virou `SingleCallableBuilder`. Atualize
+declarações e imports explícitos que usavam os nomes anteriores.
 
 Nos estágios sem agendamento, o `start()` final desta versão solicita
 `shutdown()` por padrão. Para continuar enviando tarefas ao executor após
@@ -1620,7 +1630,7 @@ consumidores da versão 2.0.0.
 | Classe removida do pacote raiz | Caminho atual na biblioteca | Alternativa direta do JDK |
 | --- | --- | --- |
 | `ThreadBuilder` | `builder.ThreadBuilder` mantém `setExecution(...)`, `setScheduling(...)`, atraso, intervalo, timeout e callbacks; veja [builders](#2-builders-de-plataforma). | `ExecutorService.submit(...)` ou `ScheduledExecutorService`, conforme a [seção 5](#5-composição-direta-com-o-jdk). |
-| `ExecutorResult` | `builder.ExecutorResult` atende aos builders agendados. O `start()` padrão sem agendamento devolve `Future` ou `List<Future>` imutável; após `keepExecutorOpen()`, `SingleTaskExecutorResult` e `MultipleTaskExecutorResult` também expõem o executor. | Retenha os `Future`s; no fluxo padrão sem agendamento, o builder solicita `shutdown()`. No fluxo `Open` ou agendado, feche os executores recebidos. |
+| `ExecutorResult` | `builder.ExecutorResult` atende aos builders agendados. O `start()` padrão sem agendamento devolve `Future` ou `List<Future>` imutável; após `keepExecutorOpen()`, `SingleThreadExecutorResult` e `MultipleThreadExecutorResult` também expõem o executor. | Retenha os `Future`s; no fluxo padrão sem agendamento, o builder solicita `shutdown()`. No fluxo `Open` ou agendado, feche os executores recebidos. |
 | `CaughtExecutorThreadFactory` | `core.ExceptionCatcherThreadFactory` configura nome fixo, prioridade e handler de threads de plataforma. | `Thread.ofPlatform()` com `ThreadFactory` própria quando precisar de nome por criação. |
 | `ScheduledCaughtExecutorService` | `core.ScheduledThreadBuilderExecutor` mantém `addAfterExecuteConsumer(...)` e aceita `ThreadFactory` fornecida. | `ScheduledExecutorService` ou `ScheduledThreadPoolExecutor` com observação explícita. |
 | `ThreadUtil` | `util.ThreadUtil` mantém os métodos de sono e acesso a recursos. | `Thread.sleep(...)` e métodos do classloader de contexto. |

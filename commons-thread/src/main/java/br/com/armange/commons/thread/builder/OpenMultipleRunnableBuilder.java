@@ -15,34 +15,33 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-final class OpenMultipleCallableTaskThreadBuilderImpl<S> implements OpenMultipleCallableTaskThreadBuilder<S> {
-    private final TaskStageState<S> state;
-    private final CommonCallableThreadBuilder<S> delegate;
+final class OpenMultipleRunnableBuilder implements OpenMultipleThreadBuilder<Void, Runnable> {
+    private final TaskStageState<Void> state;
+    private final CommonRunnableBuilder delegate;
     private final long batchId;
 
-    OpenMultipleCallableTaskThreadBuilderImpl(final TaskStageState<S> state,
-                                          final CommonCallableThreadBuilder<S> delegate,
-                                          final long batchId) {
+    OpenMultipleRunnableBuilder(final TaskStageState<Void> state,
+                                      final CommonRunnableBuilder delegate,
+                                      final long batchId) {
         this.state = state;
         this.delegate = delegate;
         this.batchId = batchId;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution) {
+    public OpenMultipleRunnableBuilder setExecution(final Runnable execution) {
         state.configureOpenMultiple(batchId, () -> delegate.setExecution(execution));
 
         return this;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setAfterExecuteConsumer(
+    public OpenMultipleRunnableBuilder setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> consumer) {
         state.configureOpenMultiple(batchId, () -> delegate.setAfterExecuteConsumer(consumer));
 
@@ -50,7 +49,7 @@ final class OpenMultipleCallableTaskThreadBuilderImpl<S> implements OpenMultiple
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setUncaughtExceptionConsumer(
+    public OpenMultipleRunnableBuilder setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> consumer) {
         state.configureOpenMultiple(batchId, () -> delegate.setUncaughtExceptionConsumer(consumer));
 
@@ -58,42 +57,35 @@ final class OpenMultipleCallableTaskThreadBuilderImpl<S> implements OpenMultiple
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setThreadNameSupplier(final Supplier<String> supplier) {
+    public OpenMultipleRunnableBuilder setThreadNameSupplier(final Supplier<String> supplier) {
         state.configureOpenMultiple(batchId, () -> delegate.setThreadNameSupplier(supplier));
 
         return this;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setThreadPrioritySupplier(final IntSupplier supplier) {
+    public OpenMultipleRunnableBuilder setThreadPrioritySupplier(final IntSupplier supplier) {
         state.configureOpenMultiple(batchId, () -> delegate.setThreadPrioritySupplier(supplier));
 
         return this;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setSilentInterruption(final boolean flag) {
+    public OpenMultipleRunnableBuilder setSilentInterruption(final boolean flag) {
         state.configureOpenMultiple(batchId, () -> delegate.setSilentInterruption(flag));
 
         return this;
     }
 
     @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> setThreadResultConsumer(final Consumer<S> consumer) {
-        state.configureOpenMultiple(batchId, () -> delegate.setThreadResultConsumer(consumer));
-
-        return this;
-    }
-
-    @Override
-    public OpenMultipleCallableTaskThreadBuilder<S> startAndBuildOther() {
+    public OpenMultipleRunnableBuilder startAndBuildOther() {
         state.submitOpenMultiple(batchId);
 
         return this;
     }
 
     @Override
-    public MultipleTaskExecutorResult<S> start() {
+    public MultipleThreadExecutorResult<Void> start() {
         return state.finishOpenMultiple(batchId);
     }
 }

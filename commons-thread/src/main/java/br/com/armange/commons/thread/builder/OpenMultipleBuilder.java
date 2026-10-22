@@ -27,24 +27,24 @@ import java.util.function.Supplier;
  * result closes the executor; after ownership transfers, a later failure
  * leaves shutdown to the caller.
  */
-public sealed interface OpenMultipleTaskThreadBuilder<S, T>
-        permits OpenMultipleRunnableTaskThreadBuilder, OpenMultipleCallableTaskThreadBuilder {
+public sealed interface OpenMultipleBuilder<S, T>
+        permits OpenMultipleRunnableBuilder, OpenMultipleCallableBuilder {
 
-    OpenMultipleTaskThreadBuilder<S, T> setExecution(final T execution);
+    OpenMultipleBuilder<S, T> setExecution(final T execution);
 
-    OpenMultipleTaskThreadBuilder<S, T> setAfterExecuteConsumer(
+    OpenMultipleBuilder<S, T> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> afterExecuteConsumer);
 
-    OpenMultipleTaskThreadBuilder<S, T> setUncaughtExceptionConsumer(
+    OpenMultipleBuilder<S, T> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> uncaughtExceptionConsumer);
 
-    OpenMultipleTaskThreadBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
+    OpenMultipleBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
 
-    OpenMultipleTaskThreadBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
+    OpenMultipleBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
 
-    OpenMultipleTaskThreadBuilder<S, T> setSilentInterruption(final boolean flag);
+    OpenMultipleBuilder<S, T> setSilentInterruption(final boolean flag);
 
-    OpenMultipleTaskThreadBuilder<S, T> startAndBuildOther();
+    OpenMultipleBuilder<S, T> startAndBuildOther();
 
     /**
      * Submits the final task without waiting for completion and returns this
@@ -52,5 +52,5 @@ public sealed interface OpenMultipleTaskThreadBuilder<S, T>
      *
      * @return this batch's futures and caller-owned executor
      */
-    MultipleTaskExecutorResult<S> start();
+    MultipleThreadExecutorResult<S> start();
 }

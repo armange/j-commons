@@ -33,22 +33,22 @@ import java.util.function.Supplier;
  * @param <S> the task result type, or {@link Void} for a {@link Runnable}
  * @param <T> the task type, either {@link Runnable} or {@link java.util.concurrent.Callable}
  */
-public sealed interface MultipleTaskThreadBuilder<S, T>
-        permits MultipleRunnableTaskThreadBuilder, MultipleCallableTaskThreadBuilder {
+public sealed interface MultipleBuilder<S, T>
+        permits MultipleRunnableBuilder, MultipleCallableBuilder {
 
-    MultipleTaskThreadBuilder<S, T> setExecution(final T execution);
+    MultipleBuilder<S, T> setExecution(final T execution);
 
-    MultipleTaskThreadBuilder<S, T> setAfterExecuteConsumer(
+    MultipleBuilder<S, T> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> afterExecuteConsumer);
 
-    MultipleTaskThreadBuilder<S, T> setUncaughtExceptionConsumer(
+    MultipleBuilder<S, T> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> uncaughtExceptionConsumer);
 
-    MultipleTaskThreadBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
+    MultipleBuilder<S, T> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
 
-    MultipleTaskThreadBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
+    MultipleBuilder<S, T> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
 
-    MultipleTaskThreadBuilder<S, T> setSilentInterruption(final boolean flag);
+    MultipleBuilder<S, T> setSilentInterruption(final boolean flag);
 
     /**
      * Selects the open-executor stage before the final {@code start()}.
@@ -56,14 +56,14 @@ public sealed interface MultipleTaskThreadBuilder<S, T>
      *
      * @return the open multiple-task stage
      */
-    OpenMultipleTaskThreadBuilder<S, T> keepExecutorOpen();
+    OpenMultipleBuilder<S, T> keepExecutorOpen();
 
     /**
      * Submits the configured task and remains in the multiple-task state.
      *
      * @return this multiple-task state
      */
-    MultipleTaskThreadBuilder<S, T> startAndBuildOther();
+    MultipleBuilder<S, T> startAndBuildOther();
 
     /**
      * Submits the configured task.

@@ -36,7 +36,7 @@ public class TimingCallableThreadBuilderTest {
         final ThreadResultStringConsumer threadResultStringConsumer = spy(new ThreadResultStringConsumer());
 
         // @formatter:off
-        TimingCallableThreadBuilder
+        TimingCallableBuilder
                 .<String>newBuilder(1)
                 .setScheduling(localCallableString)
                 .setThreadResultConsumer(threadResultStringConsumer)

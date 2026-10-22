@@ -50,7 +50,7 @@ class ThreadBuilderStageTest {
         final CountDownLatch started = new CountDownLatch(1);
         final CountDownLatch release = new CountDownLatch(1);
         final AtomicBoolean interrupted = new AtomicBoolean();
-        final SingleTaskThreadBuilder<Void, Runnable> single = ThreadBuilder
+        final SingleThreadBuilder<Void, Runnable> single = ThreadBuilder
                 .newBuilder()
                 .setExecution((Runnable) () -> {
                     started.countDown();
@@ -85,7 +85,7 @@ class ThreadBuilderStageTest {
         final CountDownLatch firstStarted = new CountDownLatch(1);
         final CountDownLatch releaseFirst = new CountDownLatch(1);
         final AtomicInteger calls = new AtomicInteger();
-        final SingleTaskThreadBuilder<Void, Runnable> single = ThreadBuilder
+        final SingleThreadBuilder<Void, Runnable> single = ThreadBuilder
                 .newBuilder(1)
                 .setExecution((Runnable) () -> {
                     firstStarted.countDown();
@@ -101,7 +101,7 @@ class ThreadBuilderStageTest {
 
                     calls.incrementAndGet();
                 });
-        final MultipleTaskThreadBuilder<Void, Runnable> multiple = single.startAndBuildOther();
+        final MultipleThreadBuilder<Void, Runnable> multiple = single.startAndBuildOther();
 
         assertTrue(firstStarted.await(5, TimeUnit.SECONDS));
 
@@ -135,11 +135,11 @@ class ThreadBuilderStageTest {
     @Test
     void multipleRunnableResultIsBatchSnapshotAndSingleAliasCanStartNextBatch() throws Exception {
         final AtomicInteger calls = new AtomicInteger();
-        final SingleTaskThreadBuilder<Void, Runnable> single = ThreadBuilder
+        final SingleThreadBuilder<Void, Runnable> single = ThreadBuilder
                 .newBuilder(2)
                 .setExecution((Runnable) calls::incrementAndGet);
-        final OpenSingleTaskThreadBuilder<Void, Runnable> open = single.keepExecutorOpen();
-        final OpenMultipleTaskThreadBuilder<Void, Runnable> multiple = open.startAndBuildOther();
+        final OpenSingleThreadBuilder<Void, Runnable> open = single.keepExecutorOpen();
+        final OpenMultipleThreadBuilder<Void, Runnable> multiple = open.startAndBuildOther();
 
         assertThrows(IllegalStateException.class, single::start);
         assertThrows(IllegalStateException.class, single::keepExecutorOpen);
@@ -151,7 +151,7 @@ class ThreadBuilderStageTest {
                 .startAndBuildOther()
                 .setExecution(calls::incrementAndGet);
 
-        final MultipleTaskExecutorResult<Void> firstBatch = multiple.start();
+        final MultipleThreadExecutorResult<Void> firstBatch = multiple.start();
         final List<Future<Void>> firstFutures = firstBatch.getFutures();
 
         try (var executor = firstBatch.getExecutorService()) {
@@ -167,13 +167,13 @@ class ThreadBuilderStageTest {
             assertThrows(IllegalStateException.class, multiple::start);
             assertThrows(IllegalStateException.class, multiple::startAndBuildOther);
 
-            final OpenMultipleTaskThreadBuilder<Void, Runnable> nextBatch = open
+            final OpenMultipleThreadBuilder<Void, Runnable> nextBatch = open
                     .setExecution((Runnable) calls::incrementAndGet)
                     .startAndBuildOther();
 
             assertThrows(IllegalStateException.class, multiple::start);
 
-            final MultipleTaskExecutorResult<Void> secondBatch = nextBatch
+            final MultipleThreadExecutorResult<Void> secondBatch = nextBatch
                     .setExecution(calls::incrementAndGet)
                     .start();
 
@@ -194,11 +194,11 @@ class ThreadBuilderStageTest {
 
     @Test
     void keepExecutorOpenAfterIntermediateSubmissionTransfersOwnershipAndPersists() throws Exception {
-        final SingleTaskThreadBuilder<Void, Runnable> single = ThreadBuilder
+        final SingleThreadBuilder<Void, Runnable> single = ThreadBuilder
                 .newBuilder()
                 .setExecution((Runnable) () -> {
                 });
-        final MultipleTaskExecutorResult<Void> batch = single
+        final MultipleThreadExecutorResult<Void> batch = single
                 .startAndBuildOther()
                 .keepExecutorOpen()
                 .setExecution(() -> {
@@ -212,7 +212,7 @@ class ThreadBuilderStageTest {
                     () -> single.setExecution(() -> {
                     }));
 
-            final SingleTaskExecutorResult<Void> next = single
+            final SingleThreadExecutorResult<Void> next = single
                     .keepExecutorOpen()
                     .setExecution(() -> {
                     })
@@ -228,12 +228,12 @@ class ThreadBuilderStageTest {
 
     @Test
     void callableStagesKeepResultConsumerAndTypedFutures() throws Exception {
-        final SingleCallableTaskThreadBuilder<Integer> single = ThreadBuilder
+        final SingleCallableBuilder<Integer> single = ThreadBuilder
                 .newBuilder()
                 .setExecution((Callable<Integer>) () -> 11)
                 .setThreadResultConsumer(ignored -> {
                 });
-        final MultipleCallableTaskThreadBuilder<Integer> multiple = single
+        final MultipleCallableBuilder<Integer> multiple = single
                 .startAndBuildOther()
                 .setExecution(() -> 22)
                 .setThreadResultConsumer(ignored -> {
@@ -253,7 +253,7 @@ class ThreadBuilderStageTest {
     void callableMultipleStageKeepsResultConsumerAfterAnotherSubmission() throws Exception {
         final CountDownLatch thirdObserved = new CountDownLatch(1);
         final CountDownLatch releaseThird = new CountDownLatch(1);
-        final MultipleTaskExecutorResult<Integer> result = ThreadBuilder
+        final MultipleThreadExecutorResult<Integer> result = ThreadBuilder
                 .newBuilder()
                 .setExecution((Callable<Integer>) () -> 1)
                 .startAndBuildOther()
@@ -292,7 +292,7 @@ class ThreadBuilderStageTest {
     void callableOpenSingleKeepsFluentResultConsumerAndCallerOwnedExecutor() throws Exception {
         final CountDownLatch observed = new CountDownLatch(1);
         final CountDownLatch releaseTask = new CountDownLatch(1);
-        final SingleCallableTaskThreadBuilder<Integer> defaultStage = ThreadBuilder
+        final SingleCallableBuilder<Integer> defaultStage = ThreadBuilder
                 .newBuilder()
                 .setExecution((Callable<Integer>) () -> {
                     if (!releaseTask.await(5, TimeUnit.SECONDS)) {
@@ -301,7 +301,7 @@ class ThreadBuilderStageTest {
 
                     return 42;
                 });
-        final SingleTaskExecutorResult<Integer> result = defaultStage
+        final SingleThreadExecutorResult<Integer> result = defaultStage
                 .keepExecutorOpen()
                 .setThreadResultConsumer(ignored -> observed.countDown())
                 .start();

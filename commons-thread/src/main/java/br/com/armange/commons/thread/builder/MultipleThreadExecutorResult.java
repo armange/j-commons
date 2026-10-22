@@ -26,7 +26,7 @@ import java.util.concurrent.Future;
  *
  * @param <T> the task result type, or {@link Void} for {@link Runnable} tasks
  */
-public sealed interface MultipleTaskExecutorResult<T> permits MultipleTaskResultSnapshot {
+public sealed interface MultipleThreadExecutorResult<T> permits MultipleThreadResultSnapshot {
 
     /**
      * @return an immutable snapshot of this batch's futures, in submission order

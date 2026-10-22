@@ -21,33 +21,36 @@ import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-/** Open single Callable stage retaining its result callback across configuration. */
-public sealed interface OpenSingleCallableTaskThreadBuilder<S>
-        extends OpenSingleTaskThreadBuilder<S, Callable<S>>
-        permits OpenSingleCallableTaskThreadBuilderImpl {
+/** Multiple callable stage sharing the executor of its single task alias. */
+public sealed interface MultipleCallableBuilder<S>
+        extends MultipleThreadBuilder<S, Callable<S>>
+        permits MultipleCallableBuilderImpl {
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setExecution(final Callable<S> execution);
+    MultipleCallableBuilder<S> setExecution(final Callable<S> execution);
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setAfterExecuteConsumer(
+    MultipleCallableBuilder<S> setAfterExecuteConsumer(
             final BiConsumer<Runnable, Throwable> afterExecuteConsumer);
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setUncaughtExceptionConsumer(
+    MultipleCallableBuilder<S> setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> uncaughtExceptionConsumer);
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
+    MultipleCallableBuilder<S> setThreadNameSupplier(final Supplier<String> threadNameSupplier);
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
+    MultipleCallableBuilder<S> setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier);
 
     @Override
-    OpenSingleCallableTaskThreadBuilder<S> setSilentInterruption(final boolean flag);
+    MultipleCallableBuilder<S> setSilentInterruption(final boolean flag);
 
-    OpenSingleCallableTaskThreadBuilder<S> setThreadResultConsumer(final Consumer<S> threadResultConsumer);
+    MultipleCallableBuilder<S> setThreadResultConsumer(final Consumer<S> threadResultConsumer);
 
     @Override
-    OpenMultipleCallableTaskThreadBuilder<S> startAndBuildOther();
+    OpenMultipleCallableBuilder<S> keepExecutorOpen();
+
+    @Override
+    MultipleCallableBuilder<S> startAndBuildOther();
 }
