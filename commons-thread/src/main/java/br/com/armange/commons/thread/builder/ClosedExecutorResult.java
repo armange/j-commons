@@ -1,0 +1,46 @@
+/*
+ * Copyright [2026] [Diego Armange Costa]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * */
+package br.com.armange.commons.thread.builder;
+
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+/**
+ * A batch result whose executor already received an orderly shutdown request.
+ * Tasks and scheduled actions may still be pending; this result does not imply
+ * that the futures completed or the executor terminated.
+ */
+public final class ClosedExecutorResult<T> implements ExecutorResult<T> {
+    private final TaskBatch<T> batch;
+    private final List<Future<T>> futures;
+
+    ClosedExecutorResult(final TaskBatch<T> batch) {
+        this.batch = batch;
+        futures = batch.futures();
+    }
+
+    @Override
+    public List<Future<T>> getFutures() {
+        return futures;
+    }
+
+    @Override
+    public ExecutorService getExecutorService() {
+        return batch.executor();
+    }
+
+}

@@ -17,9 +17,6 @@ package br.com.armange.commons.thread.builder;
 
 import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
 import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -31,8 +28,12 @@ import java.util.function.Supplier;
 /**
  * Base for builders that submit tasks to a
  * {@link ScheduledThreadBuilderExecutor}. The builder creates the executor on
- * first start and reuses it on later starts. The caller owns its shutdown via
- * {@link ExecutorResult#getExecutorService()}.
+ * first start and reuses it on later open starts. A default nonperiodic final
+ * start requests orderly shutdown after submitting the batch, without waiting
+ * for task completion or executor termination. The caller owns shutdown after
+ * receiving an {@link OpenExecutorResult}. Each successful submission consumes
+ * an immutable task configuration; the next submission requires a new task.
+ * Executor and thread-factory settings remain shared by the builder.
  * <br>
  * <ul>
  *   <li>
@@ -52,25 +53,22 @@ import java.util.function.Supplier;
 public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilder<S, T, U>> {
 
     private static final String ILLEGAL_ARGUMENT_THREAD_EXECUTOR_TYPE = "Illegal executor-type \"{0}\".";
-    private static final Logger LOGGER = LogManager.getLogger();
-
     protected Optional<BiConsumer<Runnable, Throwable>> afterExecuteConsumer = Optional.empty();
     protected Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = Optional.empty();
     protected Optional<ExceptionCatcherThreadFactory> threadFactory = Optional.empty();
     protected Optional<Supplier<String>> threadNameSupplier = Optional.empty();
     protected Optional<IntSupplier> threadPrioritySupplier = Optional.empty();
-    protected Optional<Consumer<S>> threadResultConsumer = Optional.empty();
-
     protected ScheduledThreadBuilderExecutor executor;
     protected ExecutorResult<S> executorResult;
+    protected TaskBatch<S> batch;
 
-    protected T execution;
-
-    protected boolean mayInterruptIfRunning;
-    protected boolean silentInterruption;
-
+    TaskConfiguration<T> taskConfiguration = TaskConfiguration.empty();
     protected final ExecutionType executionType;
     protected final int corePoolSize;
+    private boolean openMode;
+    private boolean terminal;
+    private boolean periodicTaskSubmitted;
+    private boolean executorDelivered;
 
     /**
      * Constructs an abstract thread builder.
@@ -79,13 +77,16 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      *                     even if they are idle, unless {@code allowCoreThreadTimeOut} is set.
      */
     protected AbstractThreadBuilder(final int corePoolSize) {
-        this.corePoolSize = corePoolSize;
+        this.corePoolSize = Math.max(1, corePoolSize);
 
         executionType = ExecutionType.valueOf(getExecutionClass());
     }
 
     /**
-     * Registers a callback on the shared executor after task execution. It
+     * Adds a callback to the shared executor. Before the executor exists, the
+     * most recent configuration is registered when it is created. After that,
+     * each non-null call registers one global callback immediately. Passing
+     * {@code null} does not remove callbacks already registered. The callback
      * can receive events from other tasks using that executor. For submitted
      * tasks, {@code throwable} can be {@code null} even when their
      * {@code Future} contains a failure.
@@ -95,36 +96,43 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      * @see ScheduledThreadBuilderExecutor#afterExecute(Runnable, Throwable)
      */
     public U setAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteConsumer) {
+        requireActive();
         this.afterExecuteConsumer = Optional.ofNullable(afterExecuteConsumer);
+        if (executor != null) {
+            this.afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
+        }
 
         return getSelf();
     }
 
     /**
-     * Configures a consumer for two failure paths. An after-execution callback
-     * reads submitted tasks' {@code Future}s and typically passes an
-     * {@code ExecutionException} (or a cancellation exception), rather than
-     * the task's direct cause. The consumer is also installed as an
-     * {@code UncaughtExceptionHandler} on threads created by the configured
-     * factory; there it receives the original genuinely uncaught throwable.
-     * Failures captured by a submitted task's {@code Future} do not invoke
-     * that thread handler. On a reused executor, callbacks registered by
-     * earlier starts can also observe later tasks.
+     * Configures an {@code UncaughtExceptionHandler} for threads created by
+     * this builder's factory. It must be configured before the executor is
+     * created. Failures captured by submitted tasks remain in their
+     * {@code Future}s and do not invoke this handler.
      *
-     * @param uncaughtExceptionConsumer the consumer for observed task failures
-     *                                  and genuinely uncaught thread failures
+     * @param uncaughtExceptionConsumer the consumer for genuinely uncaught
+     *                                  thread failures
      * @return the current thread builder.
      */
     public U setUncaughtExceptionConsumer(
             final Consumer<? super Throwable> uncaughtExceptionConsumer) {
+        requireActive();
+        if (executor != null) {
+            throw new IllegalStateException("Uncaught exception handler must be configured before executor creation");
+        }
         this.uncaughtExceptionConsumer = Optional.ofNullable(uncaughtExceptionConsumer);
 
         return getSelf();
     }
 
     /**
-     * Sets the thread name supplier. The default thread factory consults this
-     * supplier once for each new thread. When an
+     * Sets the thread name supplier. The last supplier configured before the
+     * first {@link #start()} or {@link #startAndBuildOther()} is used when the
+     * executor and its thread factory are created. A later call is accepted
+     * but does not reconfigure that factory, rename existing threads, or
+     * change the names it gives to new threads. The default thread factory
+     * consults the selected supplier once for each new thread. When an
      * {@link ExceptionCatcherThreadFactory} is supplied, this builder consults
      * the supplier once while configuring the factory and passes the result to
      * {@link ExceptionCatcherThreadFactory#setThreadName(String)}. The supplied
@@ -136,71 +144,58 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      * @return the current thread builder.
      */
     public U setThreadNameSupplier(final Supplier<String> threadNameSupplier) {
+        requireActive();
         this.threadNameSupplier = Optional.ofNullable(threadNameSupplier);
 
         return getSelf();
     }
 
     /**
+     * Sets the thread name supplier and submits the configured task. The
+     * supplier is consulted when the thread factory creates a thread, not for
+     * each task. Equivalent to {@code setThreadNameSupplier(supplier).start()}.
+     * Before the executor is created, this supplier replaces an earlier name
+     * supplier. On a reused builder whose executor already exists, the task
+     * starts but the supplied name does not change its factory or worker names.
+     * The usual shutdown rule of {@link #start()} applies.
+     *
+     * @param threadNameSupplier the supplier for names of newly created threads
+     * @return the submitted task's result and executor
+     */
+    public ExecutorResult<S> startAs(final Supplier<String> threadNameSupplier) {
+        setThreadNameSupplier(threadNameSupplier);
+
+        return start();
+    }
+
+    /**
      * Sets a priority supplier for platform threads. The default factory
-     * consults it once when the executor is created; a supplied
+     * consults the last supplier configured before the first submission once
+     * when the executor is created; a supplied
      * {@link ExceptionCatcherThreadFactory} receives that value through its
-     * setter. Priority is not a configurable virtual-thread property.
+     * setter. A later call is accepted but does not change the existing
+     * factory or the priority of existing or future threads from that factory.
+     * Priority is not a configurable virtual-thread property.
      *
      * @param threadPrioritySupplier the thread priority supplier.
      * @return the current thread builder.
      */
     public U setThreadPrioritySupplier(final IntSupplier threadPrioritySupplier) {
+        requireActive();
         this.threadPrioritySupplier = Optional.ofNullable(threadPrioritySupplier);
 
         return getSelf();
     }
 
     /**
-     * Sets the thread execution.
+     * Sets the execution for the next task submission.
      *
-     * @param execution the thread execution({@link java.lang.Runnable})
+     * @param execution a {@link Runnable} or {@link Callable} task
      * @return the current thread builder.
      */
     protected U setExecution(final T execution) {
-        this.execution = execution;
-
-        requireExecutionNonNull();
-
-        return getSelf();
-    }
-
-    /**
-     * Controls handling of {@code CancellationException} observed through an
-     * internal {@code Future}. When true, cancellation is logged instead of
-     * sent to the configured exception consumer; other exceptions still reach
-     * that consumer. This does not suppress interruption of the task or make
-     * the executor silent.
-     *
-     * @param flag true if the Interruption/Cancellation exceptions should be ignored.
-     * @return the current thread builder.
-     * @see java.util.concurrent.Future#cancel(boolean)
-     * @see java.util.concurrent.CancellationException
-     * @see java.lang.InterruptedException
-     */
-    public U setSilentInterruption(final boolean flag) {
-        silentInterruption = flag;
-
-        return getSelf();
-    }
-
-    /**
-     * Sets the thread result consumer.<br>
-     * After successful {@code Callable} execution, an executor callback reads
-     * the {@code Future} and calls this consumer. A caller's
-     * {@code Future.get()} can return before the consumer finishes. A failed
-     * consumer is handled by the callback path, not stored in that future.
-     *
-     * @param threadResultConsumer the thread result consumer.
-     * @return the current thread builder.
-     */
-    protected U setThreadResultConsumer(final Consumer<S> threadResultConsumer) {
-        this.threadResultConsumer = Optional.ofNullable(threadResultConsumer);
+        requireActive();
+        taskConfiguration = taskConfiguration.withExecution(Objects.requireNonNull(execution));
 
         return getSelf();
     }
@@ -214,58 +209,139 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Creates or reuses the executor and submits the configured task. The
-     * returned result exposes task futures and the executor; the caller must
-     * shut down the executor when it is no longer needed.
+     * Creates or reuses the executor and submits the last task in a batch.
+     * The result exposes that batch's futures and the executor. A nonperiodic
+     * default batch receives orderly shutdown before this method returns;
+     * shutdown does not wait for the futures or the executor to terminate.
+     * After a successful open start, a new task must be configured before
+     * starting again. A missing task is rejected without closing the executor.
      *
      * @return the executor's result after starting thread.
      * @see ExecutorResult
      */
     public ExecutorResult<S> start() {
-        createExecutorAndRunThread();
+        requireActive();
+        requireExecutionNonNull();
 
-        return executorResult;
+        try {
+            createExecutorAndRunThread();
+
+            final TaskBatch<S> completedBatch = batch;
+            final ExecutorResult<S> result;
+
+            if (openMode || periodicTaskSubmitted) {
+                result = new OpenExecutorResult<>(completedBatch);
+                executorDelivered = true;
+            } else {
+                executor.shutdown();
+                result = new ClosedExecutorResult<>(completedBatch);
+                terminal = true;
+            }
+
+            executorResult = result;
+            batch = null;
+
+            return result;
+        } catch (final RuntimeException | Error failure) {
+            failStart(failure);
+
+            throw failure;
+        }
     }
 
     /**
      * Creates or reuses the executor, submits the task and returns this same
-     * builder for another submission. The pool size does not itself create
-     * multiple tasks.
+     * builder for another submission. The next task and its timing options
+     * start empty. The pool size does not itself create multiple tasks.
      *
      * @return the current thread builder to prepare another thread.
      */
     public U startAndBuildOther() {
-        createExecutorAndRunThread();
+        requireActive();
+        requireExecutionNonNull();
+
+        try {
+            createExecutorAndRunThread();
+        } catch (final RuntimeException | Error failure) {
+            failStart(failure);
+
+            throw failure;
+        }
 
         return getSelf();
     }
 
     /**
-     * Registers after-execution callbacks, submits one task and adds its
-     * future to the shared {@link ExecutorResult}. Repeated submissions on
-     * this executor also retain previously registered callbacks.
+     * Submits one task to the executor and adds its future to the current batch.
      */
     protected void createExecutorAndRunThread() {
         requireExecutionNonNull();
+        final TaskConfiguration<T> submittedTask = taskConfiguration;
 
         newExecutorServiceIfNull();
 
-        runThread();
+        runThread(submittedTask);
+        taskConfiguration = TaskConfiguration.empty();
     }
 
     /**
      * Creates the thread executor (if necessary).
      */
     protected void newExecutorServiceIfNull() {
-        executor = executor == null
-                ? new ScheduledThreadBuilderExecutor(corePoolSize, getThreadFactory()) : executor;
+        if (executor == null) {
+            executor = new ScheduledThreadBuilderExecutor(corePoolSize, getThreadFactory());
+            afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
+        }
     }
 
-    /**
-     * Throws {@link NullPointerException} if it has no thread execution implementation.
-     */
+    protected void requireActive() {
+        if (terminal) {
+            throw new IllegalStateException("Task builder is no longer active");
+        }
+    }
+
+    protected final boolean isOpenMode() {
+        return openMode;
+    }
+
+    protected final void markPeriodicTaskSubmitted() {
+        periodicTaskSubmitted = true;
+    }
+
+    protected final void copyToOpen(final AbstractThreadBuilder<S, T, ?> target) {
+        requireActive();
+        target.afterExecuteConsumer = afterExecuteConsumer;
+        target.uncaughtExceptionConsumer = uncaughtExceptionConsumer;
+        target.threadFactory = threadFactory;
+        target.threadNameSupplier = threadNameSupplier;
+        target.threadPrioritySupplier = threadPrioritySupplier;
+        target.executor = executor;
+        target.executorResult = executorResult;
+        target.batch = batch;
+        target.taskConfiguration = taskConfiguration;
+        target.openMode = true;
+        target.periodicTaskSubmitted = periodicTaskSubmitted;
+        target.executorDelivered = executorDelivered;
+        terminal = true;
+    }
+
+    private void failStart(final Throwable failure) {
+        terminal = true;
+
+        if (!executorDelivered && executor != null) {
+            try {
+                executor.shutdown();
+            } catch (final RuntimeException | Error shutdownFailure) {
+                failure.addSuppressed(shutdownFailure);
+            }
+        }
+    }
+
+    /** Requires an execution for the next submission. */
     protected void requireExecutionNonNull() {
-        Objects.requireNonNull(execution);
+        if (taskConfiguration.execution() == null) {
+            throw new IllegalStateException("Configure a task before starting it");
+        }
     }
 
     protected ThreadFactory getThreadFactory() {
@@ -326,16 +402,17 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     /**
      * Creates the thread executor (if necessary) and starts the thread.
      */
-    protected void runThread() {
-        final Holder<Future<S>> futureHolder = Holder.empty();
+    void runThread(final TaskConfiguration<T> submittedTask) {
+        submitToBatch(() -> submit(submittedTask));
+    }
 
-        afterExecuteConsumer.ifPresent(executor::addAfterExecuteConsumer);
-
-        futureHolder.set(submit());
-
+    protected <F extends Future<S>> F submitToBatch(final Supplier<F> submission) {
         newExecutorResultIfNull();
 
-        executorResult.getFutures().add(futureHolder.get());
+        final F future = submission.get();
+        batch.addFuture(future);
+
+        return future;
     }
 
     /**
@@ -345,17 +422,17 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
      * @see ScheduledThreadPoolExecutor#submit(java.util.concurrent.Callable)
      */
     @SuppressWarnings({"unchecked"})
-    protected Future<S> submit() {
+    Future<S> submit(final TaskConfiguration<T> submittedTask) {
         final Future<S> future;
 
         switch (executionType) {
             case CALLABLE:
-                future = executor.submit((Callable<S>) execution);
+                future = executor.submit((Callable<S>) submittedTask.execution());
 
                 break;
             case RUNNABLE:
             default:
-                future = (Future<S>) executor.submit((Runnable) execution);
+                future = (Future<S>) executor.submit((Runnable) submittedTask.execution());
 
                 break;
         }
@@ -364,81 +441,16 @@ public abstract class AbstractThreadBuilder<S, T, U extends AbstractThreadBuilde
     }
 
     /**
-     * Returns an after-execution callback that inspects the submitted
-     * {@code Future} when the executor supplies a null throwable. It reads a
-     * successful callable result or passes a caught failure to the configured
-     * consumer. {@code setSilentInterruption(true)} only bypasses that consumer
-     * for {@code CancellationException}; the cancellation is still logged.
-     *
-     * @param futureHolder the thread's Future object, encapsulated by a Holder object.
-     * @param <F>          the type of the object resulting from the execution of the thread.
-     * @return a consumer for exceptions caught within threads.
-     * @see Holder
-     * @see Future
-     * @see #setSilentInterruption(boolean)
-     */
-    protected <F extends Future<S>> BiConsumer<Runnable, Throwable> handleException(final Holder<F> futureHolder) {
-        return (runnable, throwable) -> {
-            final Future<S> future = futureHolder.get();
-
-            if (throwable == null) {
-                try {
-                    if (future.isDone()) {
-                        consumesFuture(future);
-                    }
-                } catch (final Exception e) {
-                    if (isNotSilentOrIsExecutionException(e)) {
-                        uncaughtExceptionConsumer.orElseGet(() -> LOGGER::error).accept(e);
-                    } else {
-                        LOGGER.error(e);
-                    }
-                }
-            }
-        };
-    }
-
-    /**
-     * For a {@link Callable}, stores the value in the shared
-     * {@link ExecutorResult} and invokes its result consumer. For a
-     * {@link Runnable}, calls {@code Future.get()} to observe failure.
-     * Callback execution follows future completion and is not awaited by
-     * another caller of that future.
-     *
-     * @param future the thread Future object.
-     * @throws InterruptedException if the thread was interrupted.
-     * @throws ExecutionException   if the thread fails.
-     */
-    protected void consumesFuture(final Future<S> future) throws InterruptedException, ExecutionException {
-        switch (executionType) {
-            case CALLABLE:
-                executorResult.setThreadResult(future.get());
-
-                threadResultConsumer.ifPresent(consumer -> consumer.accept(executorResult.getThreadResult()));
-
-                break;
-            case RUNNABLE:
-            default:
-                future.get();
-
-                break;
-        }
-    }
-
-    private boolean isNotSilentOrIsExecutionException(final Exception e) {
-        return !silentInterruption || !(e instanceof CancellationException);
-    }
-
-    /**
-     * Creates a new {@link ExecutorResult} if necessary.
+     * Creates mutable state for the current batch if necessary.
      */
     protected void newExecutorResultIfNull() {
-        executorResult = executorResult == null ? new ExecutorResult<>(executor) : executorResult;
+        batch = batch == null ? new TaskBatch<>(executor) : batch;
     }
 
     /**
      * @return the type of the thread implementation.
      */
-    abstract Class<T> getExecutionClass();
+    abstract Class<?> getExecutionClass();
 
     /**
      * Class that enumerates the types of thread implementations that are supported by this builder.

@@ -15,25 +15,30 @@
  * */
 package br.com.armange.commons.thread.builder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-/**
- * Exposes the future of a task submitted by an open stage and its executor.
- * The caller owns executor shutdown. Future completion can occur after this
- * result is returned.
- *
- * @param <T> the task result type, or {@link Void} for a {@link Runnable}
- */
-public sealed interface SingleThreadExecutorResult<T> permits SingleThreadResultSnapshot {
+/** Mutable submission state retained until the final start of a batch. */
+final class TaskBatch<T> {
+    private final ExecutorService executor;
+    private final List<Future<T>> futures = new ArrayList<>();
 
-    /**
-     * @return the future of the submitted task
-     */
-    Future<T> getFuture();
+    TaskBatch(final ExecutorService executor) {
+        this.executor = executor;
+    }
 
-    /**
-     * @return the caller-owned executor that accepted the task
-     */
-    ExecutorService getExecutorService();
+    ExecutorService executor() {
+        return executor;
+    }
+
+    void addFuture(final Future<T> future) {
+        futures.add(future);
+    }
+
+    List<Future<T>> futures() {
+        return List.copyOf(futures);
+    }
+
 }

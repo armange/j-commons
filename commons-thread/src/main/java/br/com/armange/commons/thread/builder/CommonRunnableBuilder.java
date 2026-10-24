@@ -25,7 +25,7 @@ package br.com.armange.commons.thread.builder;
 public class CommonRunnableBuilder
         extends AbstractThreadBuilder<Void, Runnable, CommonRunnableBuilder> {
 
-    private CommonRunnableBuilder(final int corePoolSize) {
+    protected CommonRunnableBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
 
@@ -38,6 +38,14 @@ public class CommonRunnableBuilder
      */
     protected static CommonRunnableBuilder newBuilder(final int corePoolSize) {
         return new CommonRunnableBuilder(corePoolSize);
+    }
+
+    /** Selects a stage whose executor remains owned by the caller. */
+    public OpenRunnableBuilder keepExecutorOpen() {
+        final OpenRunnableBuilder open = new OpenRunnableBuilder(corePoolSize);
+        copyToOpen(open);
+
+        return open;
     }
 
     @Override

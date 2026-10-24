@@ -16,35 +16,17 @@
 package br.com.armange.commons.thread.builder;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-record SingleThreadResultSnapshot<T>(Future<T> future, ExecutorService executorService)
-        implements SingleThreadExecutorResult<T> {
+/** A batch result whose executor remains open and must be closed by the caller. */
+public final class OpenExecutorResult<T> implements ExecutorResult<T> {
+    private final TaskBatch<T> batch;
+    private final List<Future<T>> futures;
 
-    SingleThreadResultSnapshot {
-        Objects.requireNonNull(future);
-        Objects.requireNonNull(executorService);
-    }
-
-    @Override
-    public Future<T> getFuture() {
-        return future;
-    }
-
-    @Override
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
-}
-
-record MultipleThreadResultSnapshot<T>(List<Future<T>> futures, ExecutorService executorService)
-        implements MultipleThreadExecutorResult<T> {
-
-    MultipleThreadResultSnapshot {
-        futures = List.copyOf(futures);
-        Objects.requireNonNull(executorService);
+    OpenExecutorResult(final TaskBatch<T> batch) {
+        this.batch = batch;
+        futures = batch.futures();
     }
 
     @Override
@@ -54,6 +36,7 @@ record MultipleThreadResultSnapshot<T>(List<Future<T>> futures, ExecutorService 
 
     @Override
     public ExecutorService getExecutorService() {
-        return executorService;
+        return batch.executor();
     }
+
 }

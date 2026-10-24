@@ -26,7 +26,7 @@ package br.com.armange.commons.thread.builder;
 public class TimingRunnableBuilder
         extends AbstractTimingThreadBuilder<Void, Runnable, TimingRunnableBuilder> {
 
-    private TimingRunnableBuilder(final int corePoolSize) {
+    protected TimingRunnableBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
 
@@ -39,6 +39,14 @@ public class TimingRunnableBuilder
      */
     protected static TimingRunnableBuilder newBuilder(final int corePoolSize) {
         return new TimingRunnableBuilder(corePoolSize);
+    }
+
+    /** Selects a scheduled stage whose executor remains owned by the caller. */
+    public OpenTimingRunnableBuilder keepExecutorOpen() {
+        final OpenTimingRunnableBuilder open = new OpenTimingRunnableBuilder(corePoolSize);
+        copyToOpen(open);
+
+        return open;
     }
 
     @Override
@@ -54,6 +62,32 @@ public class TimingRunnableBuilder
      */
     protected TimingRunnableBuilder setScheduling(final Runnable execution) {
         return super.setExecution(execution);
+    }
+
+    /**
+     * Sets the task for the next submission.
+     *
+     * @param execution the task to run
+     * @return the current builder
+     */
+    @Override
+    public TimingRunnableBuilder setExecution(final Runnable execution) {
+        return super.setExecution(execution);
+    }
+
+    /**
+     * Submits the configured {@code Runnable} at a fixed rate. Equivalent to
+     * {@code setInterval(milliseconds).start()}. The result owns an open
+     * executor; the caller must cancel the series and close the executor.
+     * Executions of one series do not overlap.
+     *
+     * @param milliseconds the period between planned starts, in milliseconds
+     * @return the periodic task's future and its open executor
+     */
+    public ExecutorResult<Void> repeatAtFixedRate(final long milliseconds) {
+        setInterval(milliseconds);
+
+        return start();
     }
 
 }

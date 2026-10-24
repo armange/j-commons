@@ -20,21 +20,24 @@ import java.util.concurrent.Callable;
 /**
  * Entry point for platform-thread task builders. Each started builder uses a
  * {@code ScheduledThreadBuilderExecutor}; a pool size configures worker
- * capacity, not the number of tasks submitted. For tasks without scheduling,
- * the final {@code start()} returns a {@code Future} or immutable list and
- * requests orderly executor shutdown by default. Selecting
- * {@code keepExecutorOpen()} returns an open stage whose result exposes the
- * executor and transfers shutdown responsibility to the caller.
- * Scheduled tasks expose their executor and any separate timeout executor
- * for the caller to close. Tasks without scheduling use single and multiple task stages;
- * scheduled tasks retain their timing builders. The four task forms are:
+ * capacity, not the number of tasks submitted. A final {@code start()} returns
+ * an {@link ExecutorResult} containing the futures of its batch and the
+ * executor. Nonperiodic tasks request orderly shutdown by default, without
+ * waiting for task completion or executor termination. An open stage selected
+ * by {@code keepExecutorOpen()}, or any periodic task, leaves shutdown to the
+ * caller. The caller chooses timing values according to the intended task
+ * behavior. A timeout uses the same executor and requires at least two workers;
+ * its scheduled action is not cancelled automatically when the task finishes
+ * earlier and can remain pending until the deadline. Each submission needs a
+ * task; timing settings return to their defaults after a successful submission.
+ * The four task forms are:
  * <ul>
  *     <li>
  *          <b>Runnable task stages:</b> For tasks without a return value.
  *          See {@link #setExecution(Runnable)}.
  *     </li>
  *     <li>
- *          <b>TimingRunnableThreadBuilder:</b> To implement threads that run tasks
+ *          <b>TimingRunnableBuilder:</b> To implement threads that run tasks
  *          but do not need to return values after execution. However, they can be configured
  *          with scheduling options such as delay, interval or timeout, for example.
  *          See {@link #setScheduling(Runnable)}
@@ -44,7 +47,7 @@ import java.util.concurrent.Callable;
  *          See {@link #setExecution(Callable)}.
  *     </li>
  *     <li>
- *          <b>TimingCallableThreadBuilder:</b> To implement threads that execute tasks
+ *          <b>TimingCallableBuilder:</b> To implement threads that execute tasks
  *          and return values after execution. However, they can be configured with
  *          scheduling options such as delay, interval or timeout, for example.
  *          See {@link #setScheduling(Callable)}
@@ -87,26 +90,116 @@ public final class ThreadBuilder {
     }
 
     /**
-     * Selects a runnable task without scheduling and returns its single-task stage.
+     * Selects a runnable task using the default pool configuration. Equivalent
+     * to {@code newBuilder().setExecution(execution)}. The task is submitted
+     * only when the returned builder is started; its usual result and executor
+     * shutdown rules apply.
+     *
+     * @param execution the runnable task
+     * @return a builder for one or more runnable tasks
+     */
+    public static CommonRunnableBuilder newExecution(final Runnable execution) {
+        return newBuilder()
+                .setExecution(execution);
+    }
+
+    /**
+     * Selects a callable task using the default pool configuration. Equivalent
+     * to {@code newBuilder().setExecution(execution)}. The task is submitted
+     * only when the returned builder is started; its usual result and executor
+     * shutdown rules apply.
+     *
+     * @param execution the callable task
+     * @param <S> the task result type
+     * @return a builder for one or more callable tasks
+     */
+    public static <S> CommonCallableBuilder<S> newExecution(final Callable<S> execution) {
+        return newBuilder()
+                .setExecution(execution);
+    }
+
+    /**
+     * Submits one runnable task using the default pool configuration.
+     * Equivalent to {@code newExecution(execution).start()}. Orderly executor
+     * shutdown is requested after submission, without waiting for completion.
+     *
+     * @param execution the runnable task
+     * @return the task future and its executor
+     */
+    public static ExecutorResult<Void> startExecution(final Runnable execution) {
+        return newExecution(execution)
+                .start();
+    }
+
+    /**
+     * Submits one callable task using the default pool configuration.
+     * Equivalent to {@code newExecution(execution).start()}. Orderly executor
+     * shutdown is requested after submission, without waiting for completion.
+     *
+     * @param execution the callable task
+     * @param <S> the task result type
+     * @return the task future and its executor
+     */
+    public static <S> ExecutorResult<S> startExecution(final Callable<S> execution) {
+        return newExecution(execution)
+                .start();
+    }
+
+    /**
+     * Selects a runnable task with optional timing settings using the default
+     * pool configuration. Equivalent to
+     * {@code newBuilder().setScheduling(execution)}. The task is submitted
+     * only when the returned builder is started; its usual result and executor
+     * shutdown rules apply.
+     *
+     * @param execution the runnable task
+     * @return a builder with delay, interval and timeout settings
+     */
+    public static TimingRunnableBuilder newScheduling(final Runnable execution) {
+        return newBuilder()
+                .setScheduling(execution);
+    }
+
+    /**
+     * Selects a callable task with optional timing settings using the default
+     * pool configuration. Equivalent to
+     * {@code newBuilder().setScheduling(execution)}. The task is submitted
+     * only when the returned builder is started. Periodic callables are
+     * unsupported: {@code setInterval(...)} throws immediately without
+     * creating an executor.
+     *
+     * @param execution the callable task
+     * @param <S> the task result type
+     * @return a builder with delay and timeout settings
+     */
+    public static <S> TimingCallableBuilder<S> newScheduling(final Callable<S> execution) {
+        return newBuilder()
+                .setScheduling(execution);
+    }
+
+    /**
+     * Selects a runnable task without scheduling.
      *
      * @param execution the Runnable interface should be implemented by any class whose
      *                  instances are intended to be executed by a thread. The class must
      *                  define a method of no arguments called run.
-     * @return the single-task stage for this runnable
+     * @return a builder for one or more runnable tasks
      */
-    public SingleThreadBuilder<Void, Runnable> setExecution(final Runnable execution) {
-        return new SingleRunnableBuilder(corePoolSize, execution);
+    public CommonRunnableBuilder setExecution(final Runnable execution) {
+        return CommonRunnableBuilder.newBuilder(corePoolSize)
+                .setExecution(execution);
     }
 
     /**
-     * Selects a callable task without scheduling and returns its single-task stage.
+     * Selects a callable task without scheduling.
      *
      * @param execution a task that returns a result and may throw an exception.
      * @param <S>       the type of the object resulting from the execution of the thread.
-     * @return the single-task stage for this callable
+     * @return a builder for one or more callable tasks
      */
-    public <S> SingleCallableBuilder<S> setExecution(final Callable<S> execution) {
-        return new SingleCallableBuilderImpl<>(corePoolSize, execution);
+    public <S> CommonCallableBuilder<S> setExecution(final Callable<S> execution) {
+        return CommonCallableBuilder.<S>newBuilder(corePoolSize)
+                .setExecution(execution);
     }
 
     /**
@@ -126,9 +219,9 @@ public final class ThreadBuilder {
     }
 
     /**
-     * Selects a callable task with delay or timeout. An interval can be set
-     * on the returned builder, but {@code start()} rejects a periodic callable
-     * with {@code UnsupportedOperationException}.
+     * Selects a callable task with delay or timeout. Periodic callables are
+     * unsupported: {@code setInterval(...)} on the returned builder throws
+     * immediately without creating an executor.
      *
      * @param execution a task that returns a result and may throw an exception.
      * @param <S>       the type of the object resulting from the execution of the thread.

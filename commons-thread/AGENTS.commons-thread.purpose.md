@@ -38,6 +38,18 @@ Java suportada pelo módulo.
 - Defina quem possui e encerra executores e recursos. Uma facilidade não deve
   criar threads ou executores duradouros sem um ciclo de vida compreensível para
   o consumidor, nem encerrar recursos que ele forneceu sem contrato explícito.
+- O consumidor escolhe atraso, timeout e periodicidade e responde pela
+  adequação desses valores ao objetivo da tarefa. Um timeout longo ou anterior
+  ao início agendado não caracteriza, por si só, defeito da biblioteca.
+- Quando a biblioteca prometer fechamento automático de um executor, explicite
+  se ela solicita `shutdown()` ou aguarda a terminação. `ClosedExecutorResult`
+  garante que `shutdown()` ordenado foi solicitado após as submissões do lote
+  sem periodicidade; não garante conclusão das tarefas, cancelamento dos
+  agendamentos pendentes, terminação imediata ou interrupção de threads.
+- Não cancele automaticamente a ação interna de timeout quando a tarefa
+  concluir antes do prazo escolhido pelo consumidor. O agendamento pode
+  permanecer pendente após `shutdown()`; essa retenção não altera a garantia
+  de fechamento ordenado nem transfere à biblioteca a escolha do prazo.
 - Prefira os tipos e contratos de concorrência do JDK quando expressarem o
   comportamento necessário. Uma abstração própria deve acrescentar uma
   conveniência verificável e preservar a possibilidade de customização nativa.

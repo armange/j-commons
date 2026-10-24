@@ -1,5 +1,5 @@
 /*
- * Copyright [2020] [Diego Armange Costa]
+ * Copyright [2026] [Diego Armange Costa]
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,78 +15,48 @@
  * */
 package br.com.armange.commons.thread.builder;
 
-import br.com.armange.commons.thread.core.ScheduledThreadBuilderExecutor;
-
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
- * Holds the builder's executor, task futures, optional timeout-executor
- * results and the latest callable value observed by an executor callback.
- * The lists are mutable and reused when the same builder submits more tasks.
- * The caller owns shutdown of the task executor and every separate timeout
- * executor; {@code Future.get()} does not await result consumers or other
- * after-execution callbacks.
- *
- * @author Diego Armange Costa
- * @see ScheduledThreadBuilderExecutor
- * @since 2020-06-22 V1.1.0 (JDK 1.8)
+ * The futures of one submission batch and the executor that accepted them.
+ * {@link ClosedExecutorResult} means orderly shutdown was requested, not that
+ * the futures completed or the executor terminated. The caller must shut down
+ * the executor returned by an {@link OpenExecutorResult}.
  */
-public class ExecutorResult<T> {
+public sealed interface ExecutorResult<T> permits OpenExecutorResult, ClosedExecutorResult {
 
-    private final ExecutorService executorService;
-    @SuppressWarnings("rawtypes")
-    private final List<Future<T>> futures = new LinkedList<>();
-    private final List<ExecutorResult<T>> timeoutExecutorResults = new LinkedList<>();
-    private T threadResult;
+    /** Returns the immutable futures of this batch in submission order. */
+    List<Future<T>> getFutures();
 
-    public ExecutorResult(final ExecutorService executorService) {
-        this.executorService = executorService;
+    /** Returns the future at its zero-based submission index. */
+    default Future<T> getFuture(final int index) {
+        return getFutures()
+                .get(index);
     }
 
     /**
-     * @return the task executor, which the caller must shut down
-     */
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
-
-    /**
-     * @return the mutable list of submitted task futures
-     */
-    @SuppressWarnings("rawtypes")
-    public List<Future<T>> getFutures() {
-        return futures;
-    }
-
-    /**
-     * Each task configured with a timeout adds a result holding its separate
-     * cancellation executor. Its future list contains the original task
-     * future, not a future for the cancellation action. The caller must shut
-     * down each cancellation executor, even when the task finishes early.
+     * Waits for and returns the result of the future at the zero-based index.
+     * Equivalent to {@code getFuture(index).get()}; it does not change the
+     * executor lifecycle. A runnable task returns {@code null}. An active
+     * periodic series does not normally complete, so this call may keep waiting.
      *
-     * @return the timeout thread's {@link ExecutorResult}s
+     * @param index the zero-based submission index
+     * @return the task result, or {@code null} for a runnable task
+     * @throws InterruptedException if interrupted while waiting
+     * @throws ExecutionException if the task failed
+     * @throws CancellationException if the future was cancelled
+     * @throws IndexOutOfBoundsException if the index does not identify a future
      */
-    public List<ExecutorResult<T>> getTimeoutExecutorResults() {
-        return timeoutExecutorResults;
+    default T getFutureResult(final int index) throws InterruptedException, ExecutionException {
+        return getFuture(index)
+                .get();
     }
 
-    /**
-     * @return the latest callable value stored by the after-execution callback;
-     *         it can still be unset when a task future has already completed
-     */
-    public T getThreadResult() {
-        return threadResult;
-    }
+    /** Returns the executor, including after orderly shutdown was requested. */
+    ExecutorService getExecutorService();
 
-    /**
-     * Sets the thread result object.
-     *
-     * @param threadResult the thread result object.
-     */
-    void setThreadResult(final T threadResult) {
-        this.threadResult = threadResult;
-    }
 }

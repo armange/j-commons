@@ -18,13 +18,12 @@ package br.com.armange.commons.thread.builder;
 import br.com.armange.commons.thread.core.ExceptionCatcherThreadFactory;
 import br.com.armange.commons.thread.util.ThreadUtil;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.io.PrintStream;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -182,11 +181,10 @@ public class AbstractThreadBuilderIntegrationTest {
         builder.setExecution(() -> {
         }).createExecutorAndRunThread();
 
-        assertNotNull(builder.executorResult);
+        assertNotNull(builder.batch);
         assertNotNull(builder.executor);
-        assertThat(builder.executor.getAfterExecuteConsumers(), hasSize(1));
-        assertThat(builder.executorResult.getFutures(), hasSize(1));
-        verify(builder).submit();
+        assertThat(builder.batch.futures(), hasSize(1));
+        verify(builder).submit(any());
         verify(builder).getSelf();
         verify(builder).getThreadFactory();
     }
@@ -196,9 +194,11 @@ public class AbstractThreadBuilderIntegrationTest {
         final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> {
-        }).createExecutorAndRunThread();
+        });
+        final TaskConfiguration<Runnable> task = builder.taskConfiguration;
+        builder.createExecutorAndRunThread();
 
-        final Future<?> submit = builder.submit();
+        final Future<?> submit = builder.submit(task);
 
         assertNotNull(submit);
     }
@@ -207,161 +207,39 @@ public class AbstractThreadBuilderIntegrationTest {
     public void submitCallableMethod() {
         final TimingCallableThreadBuilderTestArtifact<?> builder = spy(TimingCallableThreadBuilderTestArtifact.newBuilder());
 
-        builder.setExecution(() -> null).createExecutorAndRunThread();
+        builder.setExecution(() -> null);
+        final TaskConfiguration<Callable> task = builder.taskConfiguration;
+        builder.createExecutorAndRunThread();
 
-        final Future<?> submit = builder.submit();
+        final Future<?> submit = builder.submit(task);
 
         assertNotNull(submit);
     }
 
     @Test
-    public void handleExceptionMethodAndConsumesExceptionPrintingStacktrace() throws ExecutionException, InterruptedException {
-        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
-        // PrintStream spiedPrintStream = spy(System.err);
-
-        //System.setErr(spiedPrintStream);
-        builder.uncaughtExceptionConsumer = spy(Optional.empty());
-        builder.setSilentInterruption(false).setExecution(() -> ThreadUtil.sleepUnchecked(1000)).start();
-        builder.executorResult.getFutures().get(0).cancel(true);
-        ThreadUtil.sleepUnchecked(1000);
-
-        //final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-
-        //verify(spiedPrintStream, Mockito.atLeast(1)).println(captor.capture());
-
-        //final List<String> stringList = captor.getAllValues().stream().map(String::valueOf).collect(Collectors.toList());
-
-        //assertThat(stringList, hasItem(containsString(CancellationException.class.getName())));
-
-        final Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = builder.uncaughtExceptionConsumer;
-
-        assertFalse(uncaughtExceptionConsumer.isPresent());
-        verify(uncaughtExceptionConsumer).orElseGet(any());
-    }
-
-    @Test
-    public void handleExceptionMethodAndDoNotConsumesException() throws ExecutionException, InterruptedException {
-        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
-        //final PrintStream spiedPrintStream = spy(System.err);
-
-        //System.setErr(spiedPrintStream);
-        builder.uncaughtExceptionConsumer = spy(Optional.empty());
-        builder.setSilentInterruption(true).setExecution(() -> ThreadUtil.sleepUnchecked(1000)).start();
-        builder.executorResult.getFutures().get(0).cancel(true);
-        ThreadUtil.sleepUnchecked(1000);
-
-        //final ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
-
-        //verify(spiedPrintStream, Mockito.atLeast(1)).println(captor.capture());
-
-        //final List<String> stringList = captor.getAllValues().stream().map(String::valueOf).collect(Collectors.toList());
-
-        //assertThat(stringList, hasItem(containsString(CancellationException.class.getName())));
-
-        final Optional<Consumer<? super Throwable>> uncaughtExceptionConsumer = builder.uncaughtExceptionConsumer;
-
-        assertFalse(uncaughtExceptionConsumer.isPresent());
-        verify(uncaughtExceptionConsumer, never()).orElseGet(any());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void consumeFutureMethodWithRunnable() throws ExecutionException, InterruptedException {
-        final Future<Void> future = mock(Future.class);
-
-        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
-
-        builder.consumesFuture(future);
-
-        verify(future).get();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void consumeFutureMethodWithCallableWithoutResultConsumer() throws ExecutionException, InterruptedException {
-        final String futureResult = "futureResult";
-        final Future<String> future = mock(Future.class);
-        final TimingCallableThreadBuilderTestArtifact<String> builder = TimingCallableThreadBuilderTestArtifact.newBuilder();
-
-        doReturn(futureResult).when(future).get();
-        builder.executorResult = mock(ExecutorResult.class);
-        builder.threadResultConsumer = spy(builder.threadResultConsumer);
-
-        builder.consumesFuture(future);
-
-        verify(future).get();
-        verify(builder.executorResult).setThreadResult(futureResult);
-        verify(builder.threadResultConsumer).ifPresent(any());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void consumeFutureMethodWithCallableWithResultConsumer() throws ExecutionException, InterruptedException {
-        final PrintStream spiedOutPrintStream = spy(System.out);
-
-        System.setOut(spiedOutPrintStream);
-
-        final String futureResult = "futureResult";
-        final Future<String> future = mock(Future.class);
-        final ThreadResultConsumer threadResultConsumer = spy(new ThreadResultConsumer());
-        final TimingCallableThreadBuilderTestArtifact<String> builder = TimingCallableThreadBuilderTestArtifact
-                .<String>newBuilder()
-                .setThreadResultConsumer(threadResultConsumer);
-
-        doReturn(futureResult).when(future).get();
-        builder.executorResult = mock(ExecutorResult.class);
-        doReturn(futureResult).when(builder.executorResult).getThreadResult();
-        builder.threadResultConsumer = spy(builder.threadResultConsumer);
-
-        builder.consumesFuture(future);
-
-        verify(future).get();
-        verify(builder.executorResult).setThreadResult(futureResult);
-        verify(builder.threadResultConsumer).ifPresent(any());
-        verify(builder.executorResult).getThreadResult();
-        verify(threadResultConsumer).accept(futureResult);
-
-        final ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
-
-        verify(spiedOutPrintStream).println(stringCaptor.capture());
-        assertEquals(futureResult, stringCaptor.getValue());
-    }
-
-    @Test
-    public void theExecutorResultIsNotReplaced() {
+    public void finalStartRetainsItsResult() {
         final SimpleRunnableThreadBuilderTestArtifact builder = SimpleRunnableThreadBuilderTestArtifact.newBuilder();
-        final ExecutorResult<Void> executorResult = new ExecutorResult<>(builder.executor);
-
-        builder.executorResult = executorResult;
-        builder.setExecution(() -> {
+        final ExecutorResult<Void> executorResult = builder.setExecution(() -> {
         }).start();
 
         assertThat(executorResult, is(builder.executorResult));
     }
 
     @Test
-    public void theThreadRunsBeforeRegisteringAfterExecutionConsumer() {
+    public void submittedTaskFailureRemainsInFuture() {
         final EmptyUncaughtExceptionConsumer exceptionConsumer = spy(new EmptyUncaughtExceptionConsumer());
         final RuntimeException runtimeException = new RuntimeException();
-
-        SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact
-                .newBuilder());
-
-        doAnswer(invocation -> {
-            invocation.callRealMethod();
-
-            ThreadUtil.sleepUnchecked(1000);
-
-            return null;
-        }).when(builder).submit();
-
-        builder
+        final ExecutorResult<Void> result = SimpleRunnableThreadBuilderTestArtifact
+                .newBuilder()
                 .setExecution(() -> {
                     throw runtimeException;
                 }).setUncaughtExceptionConsumer(exceptionConsumer)
                 .start();
 
-        verify(exceptionConsumer).accept(any());
+        final ExecutionException failure = assertThrows(ExecutionException.class,
+                () -> result.getFuture(0).get(5, TimeUnit.SECONDS));
+        assertSame(runtimeException, failure.getCause());
+        verifyNoInteractions(exceptionConsumer);
     }
 
     private static class EmptyUncaughtExceptionConsumer implements Consumer<Throwable> {
@@ -371,10 +249,4 @@ public class AbstractThreadBuilderIntegrationTest {
         }
     }
 
-    private static class ThreadResultConsumer implements Consumer<String> {
-        @Override
-        public void accept(final String value) {
-            System.out.println(value);
-        }
-    }
 }

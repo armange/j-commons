@@ -16,7 +16,6 @@
 package br.com.armange.commons.thread.builder;
 
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 
 /**
  * Class responsible for simplifying and speeding up the creation and configuration of threads.
@@ -26,11 +25,10 @@ import java.util.function.Consumer;
  * @see br.com.armange.commons.thread.builder.ThreadBuilder
  * @since 2020-06-22 V1.1.0 (JDK 1.8)
  */
-@SuppressWarnings("rawtypes")
 public class CommonCallableBuilder<S> extends
-        AbstractThreadBuilder<S, Callable, CommonCallableBuilder<S>> {
+        AbstractThreadBuilder<S, Callable<S>, CommonCallableBuilder<S>> {
 
-    private CommonCallableBuilder(final int corePoolSize) {
+    protected CommonCallableBuilder(final int corePoolSize) {
         super(corePoolSize);
     }
 
@@ -46,20 +44,16 @@ public class CommonCallableBuilder<S> extends
         return new CommonCallableBuilder<>(corePoolSize);
     }
 
-    /**
-     * Sets a consumer for the thread's execution result.
-     *
-     * @param threadResultConsumer the consumer for the thread's execution result.
-     * @return the current thread builder.
-     */
-    @Override
-    public CommonCallableBuilder<S> setThreadResultConsumer(
-            final Consumer<S> threadResultConsumer) {
-        return super.setThreadResultConsumer(threadResultConsumer);
+    /** Selects a stage whose executor remains owned by the caller. */
+    public OpenCallableBuilder<S> keepExecutorOpen() {
+        final OpenCallableBuilder<S> open = new OpenCallableBuilder<>(corePoolSize);
+        copyToOpen(open);
+
+        return open;
     }
 
     @Override
-    Class<Callable> getExecutionClass() {
+    Class<?> getExecutionClass() {
         return Callable.class;
     }
 
@@ -70,7 +64,7 @@ public class CommonCallableBuilder<S> extends
      * @return the current thread builder.
      */
     @Override
-    public CommonCallableBuilder<S> setExecution(final Callable execution) {
+    public CommonCallableBuilder<S> setExecution(final Callable<S> execution) {
         return super.setExecution(execution);
     }
 }

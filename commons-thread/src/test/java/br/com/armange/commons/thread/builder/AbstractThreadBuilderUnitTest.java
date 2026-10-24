@@ -103,8 +103,7 @@ public class AbstractThreadBuilderUnitTest {
         final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
         final SimpleRunnableThreadBuilderTestArtifact result = builder.setExecution(execution);
 
-        assertNotNull(builder.execution);
-        verify(builder).requireExecutionNonNull();
+        assertSame(execution, builder.taskConfiguration.execution());
         assertEquals(builder, result);
         verify(builder).getSelf();
     }
@@ -116,31 +115,6 @@ public class AbstractThreadBuilderUnitTest {
         final SimpleRunnableThreadBuilderTestArtifact result = builder.setThreadNameSupplier(() -> "t1");
 
         assertTrue(builder.threadNameSupplier.isPresent());
-        assertEquals(builder, result);
-        verify(builder).getSelf();
-    }
-
-    @Test
-    public void setSilentInterruptionMethod() {
-        final boolean flag = false;
-        final SimpleRunnableThreadBuilderTestArtifact builder = spy(SimpleRunnableThreadBuilderTestArtifact.newBuilder());
-        final SimpleRunnableThreadBuilderTestArtifact result = builder.setSilentInterruption(flag);
-
-        assertFalse(builder.silentInterruption);
-        assertEquals(builder, result);
-        verify(builder).getSelf();
-    }
-
-    @Test
-    public void setThreadResultConsumerMethod() {
-        final Consumer<String> threadResultConsumer = a -> {
-        };
-        final SimpleCallableThreadBuilderTestArtifact<String> builder = spy(SimpleCallableThreadBuilderTestArtifact.newBuilder());
-        final SimpleCallableThreadBuilderTestArtifact<String> result = builder.setThreadResultConsumer(threadResultConsumer);
-
-        assertNotNull(builder.threadResultConsumer);
-        assertTrue(builder.threadResultConsumer.isPresent());
-        assertNotNull(builder.threadResultConsumer.get());
         assertEquals(builder, result);
         verify(builder).getSelf();
     }
@@ -187,9 +161,9 @@ public class AbstractThreadBuilderUnitTest {
 
         assertNotNull(builder.executor);
         assertThat(builder.executor, instanceOf(ScheduledThreadBuilderExecutor.class));
-        assertThat(builder.executor.getAfterExecuteConsumers(), hasSize(2));
-        verify(builder, times(2)).requireExecutionNonNull();
-        verify(builder).runThread();
+        assertThat(builder.executor.getAfterExecuteConsumers(), hasSize(1));
+        verify(builder).requireExecutionNonNull();
+        verify(builder).runThread(any());
         verify(builder, times(2)).getSelf();
         verify(builder).getThreadFactory();
     }

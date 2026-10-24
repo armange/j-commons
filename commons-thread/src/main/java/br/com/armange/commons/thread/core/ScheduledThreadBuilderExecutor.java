@@ -17,20 +17,27 @@ package br.com.armange.commons.thread.core;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.RunnableScheduledFuture;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
 /**
  * A {@link ScheduledThreadPoolExecutor} with callbacks invoked after each
- * execution, including exceptional completion. Callbacks are global to this
- * executor, not scoped to a submitted task. For tasks wrapped in a
+ * user task execution, including exceptional completion. Internal timeout
+ * cancellation actions are excluded. Callbacks are global to this executor,
+ * not scoped to a submitted task. For tasks wrapped in a
  * {@code Future}, the {@code throwable} argument can be {@code null} even when
  * the future contains a failure; callers must inspect that future separately.
- * The mutable callback list is not synchronized.
+ * The mutable callback list uses copy-on-write iteration.
  *
  * @author Diego Armange Costa
  * @see java.util.concurrent.ScheduledThreadPoolExecutor
@@ -41,7 +48,7 @@ import java.util.function.BiConsumer;
  */
 @Slf4j
 public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor {
-    private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new LinkedList<>();
+    private final List<BiConsumer<Runnable, Throwable>> afterExecuteConsumers = new CopyOnWriteArrayList<>();
 
     /**
      * Creates a new {@code ScheduledThreadPoolExecutor} with the
@@ -87,6 +94,11 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
     @Override
     public void afterExecute(final Runnable runnable, final Throwable throwable) {
         super.afterExecute(runnable, throwable);
+
+        if (runnable instanceof InternalScheduledTask<?>) {
+            return;
+        }
+
         afterExecuteConsumers.forEach(consumer -> {
             try {
                 consumer.accept(runnable, throwable);
@@ -97,8 +109,8 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
     }
 
     /**
-     * Returns the live mutable callback list shared by all tasks on this
-     * executor. Modifying it concurrently with execution is not synchronized.
+     * Returns the live copy-on-write callback list shared by all tasks on this
+     * executor. Changes made during iteration affect subsequent executions.
      *
      * @return the live list of after-execution callbacks
      * @see ScheduledThreadBuilderExecutor#afterExecute(java.lang.Runnable, java.lang.Throwable)
@@ -117,5 +129,77 @@ public class ScheduledThreadBuilderExecutor extends ScheduledThreadPoolExecutor 
      */
     public void addAfterExecuteConsumer(final BiConsumer<Runnable, Throwable> afterExecuteBiConsumer) {
         afterExecuteConsumers.add(afterExecuteBiConsumer);
+    }
+
+    /** Schedules an internal timeout action without reporting it as a user task. */
+    public ScheduledFuture<?> scheduleTimeout(final Runnable cancellation,
+                                              final long delay, final TimeUnit unit) {
+        return schedule(new TimeoutCancellation(cancellation), delay, unit);
+    }
+
+    @Override
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+            final Runnable runnable, final RunnableScheduledFuture<V> task) {
+        if (runnable instanceof TimeoutCancellation) {
+            return new InternalScheduledTask<>(task);
+        }
+
+        return task;
+    }
+
+    private record TimeoutCancellation(Runnable cancellation) implements Runnable {
+        @Override
+        public void run() {
+            cancellation.run();
+        }
+    }
+
+    private record InternalScheduledTask<V>(RunnableScheduledFuture<V> delegate)
+            implements RunnableScheduledFuture<V> {
+        @Override
+        public boolean isPeriodic() {
+            return delegate.isPeriodic();
+        }
+
+        @Override
+        public long getDelay(final TimeUnit unit) {
+            return delegate.getDelay(unit);
+        }
+
+        @Override
+        public int compareTo(final Delayed other) {
+            return delegate.compareTo(other);
+        }
+
+        @Override
+        public void run() {
+            delegate.run();
+        }
+
+        @Override
+        public boolean cancel(final boolean mayInterruptIfRunning) {
+            return delegate.cancel(mayInterruptIfRunning);
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return delegate.isCancelled();
+        }
+
+        @Override
+        public boolean isDone() {
+            return delegate.isDone();
+        }
+
+        @Override
+        public V get() throws InterruptedException, ExecutionException {
+            return delegate.get();
+        }
+
+        @Override
+        public V get(final long timeout, final TimeUnit unit)
+                throws InterruptedException, ExecutionException, TimeoutException {
+            return delegate.get(timeout, unit);
+        }
     }
 }

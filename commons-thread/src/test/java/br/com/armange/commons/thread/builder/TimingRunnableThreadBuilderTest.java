@@ -21,6 +21,8 @@ import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -28,6 +30,8 @@ import java.util.function.Consumer;
 import static br.com.armange.commons.thread.util.ThreadUtil.sleepUnchecked;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -48,7 +52,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(1)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -58,17 +61,17 @@ public class TimingRunnableThreadBuilderTest {
         final ExecutorResult<?> result = TimingRunnableBuilder
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
-                .setSilentInterruption(true)
+
                 .setUncaughtExceptionConsumer(throwableConsumer)
                 .start();
 
         sleepUnchecked(500);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -89,7 +92,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(1)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -100,7 +102,7 @@ public class TimingRunnableThreadBuilderTest {
                 .newBuilder(1)
                 .setExecution(localRunnableWithException)
                 .setDelay(1000)
-                .setSilentInterruption(true)
+
                 .setUncaughtExceptionConsumer(throwableConsumer)
                 .start();
 
@@ -111,10 +113,10 @@ public class TimingRunnableThreadBuilderTest {
         sleepUnchecked(1500);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -127,7 +129,7 @@ public class TimingRunnableThreadBuilderTest {
                 })
                 .setTimeout(500)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(1000);
@@ -139,11 +141,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(0)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -154,7 +151,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setExecution(localRunnable)
                 .setTimeout(1500)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(1000);
@@ -162,11 +159,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(1)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -178,21 +170,17 @@ public class TimingRunnableThreadBuilderTest {
                 .setExecution(localRunnableWithException)
                 .setTimeout(1500)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .setUncaughtExceptionConsumer(throwableConsumer)
                 .start();
 
         sleepUnchecked(1000);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -202,7 +190,7 @@ public class TimingRunnableThreadBuilderTest {
                 .newBuilder(1)
                 .setExecution(localRunnable)
                 .setInterval(1000)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(500);
@@ -220,7 +208,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(2)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -232,7 +219,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setExecution(lazyRunnableWithException)
                 .setInterval(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(500);
@@ -242,15 +229,16 @@ public class TimingRunnableThreadBuilderTest {
         sleepUnchecked(1000);
 
         verify(lazyRunnableWithException, times(2)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
 
         sleepUnchecked(1000);
 
         verify(lazyRunnableWithException, times(2)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -261,7 +249,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setExecution(localRunnable)
                 .setDelay(500)
                 .setInterval(1000)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(1000);
@@ -279,7 +267,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(2)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -292,7 +279,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setDelay(500)
                 .setInterval(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(1000);
@@ -302,10 +289,10 @@ public class TimingRunnableThreadBuilderTest {
         sleepUnchecked(1000);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -317,7 +304,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setTimeout(3000)
                 .setInterval(1000)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(500);
@@ -334,11 +321,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(2)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -353,7 +335,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setTimeout(1500)
                 .setInterval(100)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(500);
@@ -365,11 +347,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(0)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -383,7 +360,7 @@ public class TimingRunnableThreadBuilderTest {
                 .setInterval(500)
                 .setUncaughtExceptionConsumer(throwableConsumer)
                 .setMayInterruptIfRunning(true)
-                .setSilentInterruption(true)
+
                 .start();
 
         sleepUnchecked(600);
@@ -393,14 +370,10 @@ public class TimingRunnableThreadBuilderTest {
         sleepUnchecked(600);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -427,11 +400,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(1)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -441,7 +409,7 @@ public class TimingRunnableThreadBuilderTest {
         final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1)
                 .setExecution(localRunnableWithException).setDelay(1000).setTimeout(4000).setInterval(1000)
                 .setUncaughtExceptionConsumer(throwableConsumer).setMayInterruptIfRunning(true)
-                .setSilentInterruption(true).start();
+                .start();
 
         sleepUnchecked(2500);
 
@@ -450,14 +418,10 @@ public class TimingRunnableThreadBuilderTest {
         sleepUnchecked(1000);
 
         verify(localRunnableWithException, times(1)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertFailedFuture(result);
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -466,7 +430,7 @@ public class TimingRunnableThreadBuilderTest {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
         final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
                 .setDelay(1000).setTimeout(4000).setInterval(1000).setUncaughtExceptionConsumer(throwableConsumer)
-                .setMayInterruptIfRunning(true).setSilentInterruption(true).start();
+                .setMayInterruptIfRunning(true).start();
 
         sleepUnchecked(1500);
 
@@ -482,33 +446,26 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(2)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
-    public void silentCancellationException() {
+    public void shutdownBeforeDelayedExecution() {
         final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
         final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(2).setExecution(localRunnableWithException)
-                .setDelay(5000).setUncaughtExceptionConsumer(throwableConsumer).setSilentInterruption(true).start();
+                .setDelay(5000).setUncaughtExceptionConsumer(throwableConsumer).start();
 
         result.getExecutorService().shutdownNow();
 
         verify(localRunnableWithException, times(0)).run();
-        verify(throwableConsumer, times(0)).accept(any());
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
     public void throwingInterruptedException() {
         final ThrowableConsumer throwableConsumer = spy(new ThrowableConsumer());
-        final LocalRunnableWithException localRunnableWithException = spy(new LocalRunnableWithException());
         final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(2).setExecution(() -> sleepUnchecked(5000))
                 .setUncaughtExceptionConsumer(throwableConsumer).start();
 
@@ -518,11 +475,10 @@ public class TimingRunnableThreadBuilderTest {
 
         sleepUnchecked(1000);
 
-        verify(localRunnableWithException, times(0)).run();
-        verify(throwableConsumer, times(1)).accept(any());
+        assertThrows(ExecutionException.class, () -> result.getFuture(0).get(5, TimeUnit.SECONDS));
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -534,14 +490,10 @@ public class TimingRunnableThreadBuilderTest {
 
         sleepUnchecked(1500);
 
-        verify(throwableConsumer, times(1)).accept(any());
+        assertThrows(CancellationException.class, () -> result.getFuture(0).get(5, TimeUnit.SECONDS));
+        verifyNoInteractions(throwableConsumer);
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -562,14 +514,13 @@ public class TimingRunnableThreadBuilderTest {
                 notNullValue());
 
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
     public void useIntervalForFiveTimes() {
         final LocalRunnable localRunnable = spy(new LocalRunnable());
         final ExecutorResult<?> result = TimingRunnableBuilder.newBuilder(1).setExecution(localRunnable)
-                .setTimeout(500).setInterval(100).setMayInterruptIfRunning(true).setSilentInterruption(true).start();
+                .setTimeout(500).setInterval(100).setMayInterruptIfRunning(true).start();
 
         sleepUnchecked(410);
 
@@ -580,11 +531,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, atMost(7)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(1)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(1));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -598,11 +544,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(2)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(2)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(2)));
-        assertThat(result.getTimeoutExecutorResults(), hasSize(2));
-        assertThat(result.getTimeoutExecutorResults(),
-                hasItem(hasProperty("executorService", notNullValue())));
-        assertThat(result.getTimeoutExecutorResults(), hasItem(hasProperty("futures", hasSize(1))));
     }
 
     @Test
@@ -620,7 +561,6 @@ public class TimingRunnableThreadBuilderTest {
         verify(localRunnable, times(0)).run();
         assertThat(result, hasProperty("executorService", notNullValue()));
         assertThat(result, hasProperty("futures", hasSize(1)));
-        assertThat(result, hasProperty("timeoutExecutorResults", hasSize(0)));
     }
 
     @Test
@@ -628,11 +568,14 @@ public class TimingRunnableThreadBuilderTest {
         final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> {
-        }).createExecutorAndRunThread();
+        });
+        final TaskConfiguration<Runnable> task = builder.taskConfiguration;
+        builder.createExecutorAndRunThread();
 
-        final Future<?> schedule = builder.schedule(0, TimeUnit.MILLISECONDS);
+        final Future<?> schedule = builder.schedule(task, 0, TimeUnit.MILLISECONDS);
 
         assertNotNull(schedule);
+        builder.executor.shutdown();
     }
 
     @Test
@@ -640,11 +583,19 @@ public class TimingRunnableThreadBuilderTest {
         final TimingRunnableThreadBuilderTestArtifact<?> builder = spy(TimingRunnableThreadBuilderTestArtifact.newBuilder());
 
         builder.setExecution(() -> {
-        }).createExecutorAndRunThread();
+        });
+        final TaskConfiguration<Runnable> task = builder.taskConfiguration;
+        builder.createExecutorAndRunThread();
 
-        final Future<?> scheduleAtFixedRate = builder.scheduleAtFixedRate(0, 1, TimeUnit.MILLISECONDS);
+        final Future<?> scheduleAtFixedRate = builder.scheduleAtFixedRate(task, 0, 1, TimeUnit.MILLISECONDS);
 
         assertNotNull(scheduleAtFixedRate);
+        builder.executor.shutdownNow();
+    }
+
+    private static void assertFailedFuture(final ExecutorResult<?> result) {
+        assertSame(RUNTIME_EXCEPTION, assertThrows(ExecutionException.class,
+                () -> result.getFuture(0).get(5, TimeUnit.SECONDS)).getCause());
     }
 
     private static class LocalRunnable implements Runnable {
