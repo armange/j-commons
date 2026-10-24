@@ -186,7 +186,6 @@ public class AbstractThreadBuilderIntegrationTest {
         assertNotNull(builder.executor);
         assertThat(builder.executor.getAfterExecuteConsumers(), hasSize(1));
         assertThat(builder.executorResult.getFutures(), hasSize(1));
-//        verify(builder).handleException(any());
         verify(builder).submit();
         verify(builder).getSelf();
         verify(builder).getThreadFactory();
